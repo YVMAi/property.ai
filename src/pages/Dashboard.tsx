@@ -1,10 +1,7 @@
-import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, Users, FileText, ClipboardList, TrendingUp, DollarSign, Home, Calendar } from 'lucide-react';
 
 export default function Dashboard() {
-  const { user } = useAuth();
-
   const stats = [
     { title: 'Total Properties', value: '24', icon: Building2, change: '+2 this month' },
     { title: 'Active Tenants', value: '156', icon: Users, change: '+12 this month' },
@@ -21,15 +18,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-fade-in">
-      {/* Welcome Section */}
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">
-          Welcome back, {user?.name?.split(' ')[0] || 'User'}
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Here's an overview of your property portfolio
-        </p>
-      </div>
 
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
