@@ -2,6 +2,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Menu, Bell } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 
 export default function Header() {
   const { toggleSidebar, isMobile } = useSidebar();
+  const { user } = useAuth();
 
   // Mock notifications
   const notifications = [
@@ -21,8 +23,8 @@ export default function Header() {
   ];
 
   return (
-    <header className="h-14 bg-card border-b border-border/50 shadow-soft px-4 flex items-center justify-between gap-4 sticky top-0 z-40">
-      <div className="flex items-center gap-4 flex-1">
+    <header className="h-16 bg-card border-b border-border/50 shadow-soft px-4 flex items-center justify-between gap-4 sticky top-0 z-40">
+      <div className="flex items-center gap-4">
         {isMobile && (
           <Button
             variant="ghost"
@@ -34,15 +36,24 @@ export default function Header() {
           </Button>
         )}
         
-        <div className="flex-1 max-w-md">
-          <GlobalSearch />
+        <div className="hidden sm:block">
+          <h1 className="text-lg font-semibold text-foreground">
+            Welcome back, {user?.name?.split(' ')[0] || 'User'}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Here's an overview of your property portfolio
+          </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4 flex-1 justify-end">
+        <div className="w-full max-w-md">
+          <GlobalSearch />
+        </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative shrink-0">
               <Bell className="h-5 w-5 text-muted-foreground" />
               <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-primary-foreground">
                 {notifications.length}

@@ -97,13 +97,13 @@ export default function GlobalSearch() {
     <>
       <Button
         variant="outline"
-        className="relative h-9 w-full max-w-sm justify-start bg-muted/50 text-sm text-muted-foreground hover:bg-muted sm:pr-12"
+        className="relative h-9 w-full max-w-sm justify-start bg-background text-sm text-muted-foreground hover:bg-background/80 sm:pr-12"
         onClick={() => setOpen(true)}
       >
         <Search className="mr-2 h-4 w-4" />
         <span className="hidden sm:inline-flex">Search properties, tenants...</span>
         <span className="inline-flex sm:hidden">Search...</span>
-        <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-6 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+        <kbd className="pointer-events-none absolute right-1.5 top-1.5 hidden h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
           <span className="text-xs">⌘</span>K
         </kbd>
       </Button>
