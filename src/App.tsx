@@ -3,24 +3,63 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+
+// Pages
 import Index from "./pages/Index";
+import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import Dashboard from "./pages/Dashboard";
+import Reports from "./pages/Reports";
+import Accounting from "./pages/Accounting";
+import Tasks from "./pages/Tasks";
+import Leases from "./pages/Leases";
+import Properties from "./pages/Properties";
+import Owners from "./pages/users/Owners";
+import Tenants from "./pages/users/Tenants";
+import Vendors from "./pages/users/Vendors";
+import Communications from "./pages/Communications";
+import Files from "./pages/Files";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Protected route wrapper
+const ProtectedPage = ({ children }: { children: React.ReactNode }) => (
+  <DashboardLayout>{children}</DashboardLayout>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            
+            {/* Protected Routes */}
+            <Route path="/dashboard" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
+            <Route path="/reports" element={<ProtectedPage><Reports /></ProtectedPage>} />
+            <Route path="/accounting" element={<ProtectedPage><Accounting /></ProtectedPage>} />
+            <Route path="/tasks" element={<ProtectedPage><Tasks /></ProtectedPage>} />
+            <Route path="/leases" element={<ProtectedPage><Leases /></ProtectedPage>} />
+            <Route path="/properties" element={<ProtectedPage><Properties /></ProtectedPage>} />
+            <Route path="/users/owners" element={<ProtectedPage><Owners /></ProtectedPage>} />
+            <Route path="/users/tenants" element={<ProtectedPage><Tenants /></ProtectedPage>} />
+            <Route path="/users/vendors" element={<ProtectedPage><Vendors /></ProtectedPage>} />
+            <Route path="/communications" element={<ProtectedPage><Communications /></ProtectedPage>} />
+            <Route path="/files" element={<ProtectedPage><Files /></ProtectedPage>} />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
