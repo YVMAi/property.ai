@@ -36,7 +36,7 @@ export default function Dashboard() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title} className="border-border/50 shadow-soft hover:shadow-elevated transition-shadow">
+            <Card key={stat.title} className="border-l-4 border-l-primary border-border/50 shadow-soft hover:shadow-elevated transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
