@@ -12,6 +12,11 @@ import {
   FolderOpen,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
+  Search,
+  LogOut,
+  User,
+  Settings,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -24,10 +29,23 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarHeader,
+  SidebarFooter,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface MenuItem {
   title: string;
@@ -59,9 +77,10 @@ const menuItems: MenuItem[] = [
 
 export default function AppSidebar() {
   const location = useLocation();
-  const { state } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const collapsed = state === 'collapsed';
   const [openItems, setOpenItems] = useState<string[]>(['Users']);
+  const { user, logout } = useAuth();
 
   const isActive = (url: string) => location.pathname === url;
   const isParentActive = (item: MenuItem) => {
@@ -77,9 +96,81 @@ export default function AppSidebar() {
     );
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
-    <Sidebar className="border-r border-sidebar-border bg-sidebar">
-      <SidebarContent className="pt-4">
+    <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
+      <SidebarHeader className="p-4 border-b border-sidebar-border">
+        <div className="flex items-center justify-between">
+          <div className={cn("flex items-center gap-3", collapsed && "justify-center w-full")}>
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+              <Building2 className="h-5 w-5 text-primary-foreground" />
+            </div>
+            {!collapsed && (
+              <span className="text-lg font-semibold text-foreground tracking-tight">
+                PropertyAI
+              </span>
+            )}
+          </div>
+          {!collapsed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              aria-label="Collapse sidebar"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        
+        {collapsed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+            className="h-8 w-8 mt-2 text-muted-foreground hover:text-foreground mx-auto"
+            aria-label="Expand sidebar"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
+      </SidebarHeader>
+
+      {!collapsed && (
+        <div className="px-4 py-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              className="pl-9 h-9 bg-sidebar-accent/50"
+            />
+          </div>
+        </div>
+      )}
+
+      {collapsed && (
+        <div className="flex justify-center py-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground"
+            aria-label="Search"
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+
+      <SidebarContent className="pt-2">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -93,7 +184,7 @@ export default function AppSidebar() {
                   return (
                     <Collapsible
                       key={item.title}
-                      open={isOpen}
+                      open={isOpen && !collapsed}
                       onOpenChange={() => toggleItem(item.title)}
                     >
                       <SidebarMenuItem>
@@ -101,9 +192,11 @@ export default function AppSidebar() {
                           <SidebarMenuButton
                             className={cn(
                               'sidebar-item w-full',
-                              active && 'sidebar-item-active'
+                              active && 'sidebar-item-active',
+                              collapsed && 'justify-center px-2'
                             )}
                             aria-label={item.title}
+                            tooltip={collapsed ? item.title : undefined}
                           >
                             <Icon className="h-5 w-5 shrink-0" />
                             {!collapsed && (
@@ -118,25 +211,27 @@ export default function AppSidebar() {
                             )}
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <SidebarMenuSub>
-                            {item.subItems?.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.url}>
-                                <SidebarMenuSubButton
-                                  asChild
-                                  className={cn(
-                                    'sidebar-item pl-10',
-                                    isActive(subItem.url) && 'sidebar-item-active'
-                                  )}
-                                >
-                                  <NavLink to={subItem.url} aria-label={subItem.title}>
-                                    {subItem.title}
-                                  </NavLink>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                          </SidebarMenuSub>
-                        </CollapsibleContent>
+                        {!collapsed && (
+                          <CollapsibleContent>
+                            <SidebarMenuSub>
+                              {item.subItems?.map((subItem) => (
+                                <SidebarMenuSubItem key={subItem.url}>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    className={cn(
+                                      'sidebar-item pl-10',
+                                      isActive(subItem.url) && 'sidebar-item-active'
+                                    )}
+                                  >
+                                    <NavLink to={subItem.url} aria-label={subItem.title}>
+                                      {subItem.title}
+                                    </NavLink>
+                                  </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                              ))}
+                            </SidebarMenuSub>
+                          </CollapsibleContent>
+                        )}
                       </SidebarMenuItem>
                     </Collapsible>
                   );
@@ -148,8 +243,10 @@ export default function AppSidebar() {
                       asChild
                       className={cn(
                         'sidebar-item',
-                        active && 'sidebar-item-active'
+                        active && 'sidebar-item-active',
+                        collapsed && 'justify-center px-2'
                       )}
+                      tooltip={collapsed ? item.title : undefined}
                     >
                       <NavLink to={item.url} aria-label={item.title}>
                         <Icon className="h-5 w-5 shrink-0" />
@@ -163,6 +260,57 @@ export default function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="border-t border-sidebar-border p-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="ghost" 
+              className={cn(
+                "w-full flex items-center gap-3 px-2 py-2 h-auto",
+                collapsed && "justify-center"
+              )}
+            >
+              <Avatar className="h-8 w-8 shrink-0">
+                <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                  {user?.name ? getInitials(user.name) : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              {!collapsed && (
+                <>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {user?.name || 'User'}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user?.email || 'user@example.com'}
+                    </p>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                </>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align={collapsed ? "center" : "end"} side="top" className="w-48">
+            <DropdownMenuItem className="cursor-pointer">
+              <User className="h-4 w-4 mr-2" />
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              className="cursor-pointer text-destructive focus:text-destructive"
+              onClick={logout}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Log Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
