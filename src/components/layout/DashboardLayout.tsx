@@ -1,7 +1,7 @@
 import { ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AppSidebar from './AppSidebar';
 import Header from './Header';
 import { Loader2 } from 'lucide-react';
@@ -39,9 +39,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <SidebarInset className="flex-1 flex flex-col">
           <Header />
           <main className="flex-1 p-6 overflow-auto">
-            <div className="hidden lg:block absolute top-4 left-4 z-50">
-              <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
-            </div>
             {children}
           </main>
         </SidebarInset>
