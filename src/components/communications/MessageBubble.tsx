@@ -1,4 +1,4 @@
-import { Mail, MessageSquare } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import type { Message } from '@/types/communication';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +12,6 @@ function formatTime(timestamp: string): string {
 
 export default function MessageBubble({ message }: MessageBubbleProps) {
   const isSent = message.direction === 'sent';
-  const isEmail = message.type === 'email';
 
   return (
     <div className={cn('flex mb-3', isSent ? 'justify-end' : 'justify-start')}>
@@ -24,25 +23,16 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
             : 'bg-card text-foreground border border-border rounded-bl-md'
         )}
       >
-        {/* Type label */}
+        {/* Status indicator */}
         <div className="flex items-center gap-1.5 mb-1">
-          {isEmail ? (
-            <Mail className="h-3 w-3 text-muted-foreground" />
-          ) : (
-            <MessageSquare className="h-3 w-3 text-muted-foreground" />
-          )}
+          <MessageSquare className="h-3 w-3 text-muted-foreground" />
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {isEmail ? 'Email' : 'Text'}
+            {isSent ? 'Sent' : 'Received'}
           </span>
           <span className="text-[10px] text-muted-foreground ml-auto">
             {message.status === 'read' ? '✓✓' : message.status === 'delivered' ? '✓' : '○'}
           </span>
         </div>
-
-        {/* Subject for emails */}
-        {isEmail && message.subject && (
-          <p className="text-xs font-semibold text-foreground mb-1">{message.subject}</p>
-        )}
 
         {/* Content */}
         <p className="text-sm leading-relaxed text-foreground/90">{message.content}</p>
