@@ -8,10 +8,12 @@ import PersonalDetailsStep from '@/components/owners/PersonalDetailsStep';
 import TaxDetailsStep from '@/components/owners/TaxDetailsStep';
 import EmailsStep from '@/components/owners/EmailsStep';
 import PropertiesDocumentsStep from '@/components/owners/PropertiesDocumentsStep';
+import PaymentFeesStep from '@/components/owners/PaymentFeesStep';
 import { useOwnersContext } from '@/contexts/OwnersContext';
-import type { OwnerFormData, OwnerType, TaxClassification, OwnerAddress } from '@/types/owner';
+import type { OwnerFormData, OwnerType, TaxClassification, OwnerAddress, PaymentSetup } from '@/types/owner';
+import { emptyPaymentSetup } from '@/types/owner';
 
-const STEPS = ['Personal Details', 'Tax Details', 'Emails & Invites', 'Properties & Documents'];
+const STEPS = ['Personal Details', 'Tax Details', 'Emails & Invites', 'Properties & Documents', 'Payment & Fees'];
 
 const emptyAddress: OwnerAddress = { street: '', city: '', state: '', zip: '' };
 
@@ -43,6 +45,9 @@ export default function OwnerFormPage() {
     editingOwner?.linkedPropertyIds || []
   );
   const [documents, setDocuments] = useState(editingOwner?.documents || []);
+  const [paymentSetup, setPaymentSetup] = useState<PaymentSetup>(
+    editingOwner?.paymentSetup || { ...emptyPaymentSetup }
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateStep = (): boolean => {
@@ -60,6 +65,19 @@ export default function OwnerFormPage() {
     }
     if (step === 2) {
       if (emails.length === 0) newErrors.emails = 'At least one email is required';
+    }
+    if (step === 4) {
+      if (paymentSetup.payoutMethod === 'ach') {
+        if (!paymentSetup.bankName.trim()) newErrors.bankName = 'Bank name is required';
+        if (!paymentSetup.accountNumber.trim()) newErrors.accountNumber = 'Account number is required';
+        if (!paymentSetup.routingNumber.trim()) newErrors.routingNumber = 'Routing number is required';
+      }
+      if (paymentSetup.payoutMethod === 'other' && !paymentSetup.payoutMethodOther.trim()) {
+        newErrors.payoutMethodOther = 'Specify the payout method';
+      }
+      if (paymentSetup.managementFeeEnabled && (paymentSetup.managementFeeValue === '' || paymentSetup.managementFeeValue <= 0)) {
+        newErrors.managementFeeValue = 'Set a fee amount';
+      }
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -104,6 +122,7 @@ export default function OwnerFormPage() {
         tags: d.tags,
         uploadedAt: d.uploadedAt,
       })) as any,
+      paymentSetup,
     };
 
     if (isEditing && editingOwner) {
@@ -237,6 +256,14 @@ export default function OwnerFormPage() {
               documents={documents}
               onPropertyChange={setLinkedPropertyIds}
               onDocumentsChange={(docs) => setDocuments(docs as any)}
+            />
+          )}
+          {step === 4 && (
+            <PaymentFeesStep
+              data={paymentSetup}
+              linkedPropertyIds={linkedPropertyIds}
+              onChange={(d) => setPaymentSetup((prev) => ({ ...prev, ...d }))}
+              errors={errors}
             />
           )}
         </CardContent>

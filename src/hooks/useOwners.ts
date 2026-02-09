@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { Owner, OwnerFormData, OwnerStatus } from '@/types/owner';
+import { emptyPaymentSetup } from '@/types/owner';
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
 
@@ -25,6 +26,7 @@ const MOCK_OWNERS: Owner[] = [
     documents: [
       { id: 'd1', fileName: 'Management_Agreement_2026.pdf', fileUrl: '#', tags: ['Agreement2026', 'PropertyX'], uploadedAt: '2026-01-15T10:00:00Z' },
     ],
+    paymentSetup: { ...emptyPaymentSetup, payoutMethod: 'ach', bankName: 'Chase', accountNumber: '****1234', routingNumber: '****5678', managementFeeEnabled: true, managementFeeType: 'percentage', managementFeeValue: 8, managementFeeMinimum: 50, managementFeeApplyTo: 'all', managementFeePropertyIds: [] },
     status: 'active',
     createdAt: '2025-06-01T00:00:00Z',
     updatedAt: '2026-02-08T14:30:00Z',
@@ -47,6 +49,7 @@ const MOCK_OWNERS: Owner[] = [
     ],
     linkedPropertyIds: ['p4', 'p5'],
     documents: [],
+    paymentSetup: { ...emptyPaymentSetup, payoutMethod: 'check', payoutFrequency: 'monthly', payoutDay: '15th' },
     status: 'active',
     createdAt: '2025-03-15T00:00:00Z',
     updatedAt: '2026-02-09T08:45:00Z',
@@ -71,6 +74,7 @@ const MOCK_OWNERS: Owner[] = [
     documents: [
       { id: 'd2', fileName: 'W9_Form.pdf', fileUrl: '#', tags: ['W9', 'Tax'], uploadedAt: '2025-12-01T00:00:00Z' },
     ],
+    paymentSetup: { ...emptyPaymentSetup },
     status: 'deactivated',
     createdAt: '2025-01-10T00:00:00Z',
     updatedAt: '2026-01-30T16:20:00Z',
@@ -93,6 +97,7 @@ const MOCK_OWNERS: Owner[] = [
     ],
     linkedPropertyIds: [],
     documents: [],
+    paymentSetup: { ...emptyPaymentSetup },
     status: 'deleted',
     createdAt: '2024-11-20T00:00:00Z',
     updatedAt: '2025-08-15T00:00:00Z',
