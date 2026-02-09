@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, useState } from 'react';
+import { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import { MessageSquareOff, Search } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,8 @@ import ChatComposer from './ChatComposer';
 interface ChatTimelineProps {
   messages: Message[];
   selectedUser: CommunicationUser | undefined;
-  onSendMessage: (content: string, attachments: string[]) => void;
+  onSendMessage: (content: string, attachments: string[], replyToId?: string) => void;
+  getMessageById: (id: string) => Message | undefined;
 }
 
 function formatDateHeader(timestamp: string): string {
@@ -23,9 +24,10 @@ function formatDateHeader(timestamp: string): string {
   return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 }
 
-export default function ChatTimeline({ messages, selectedUser, onSendMessage }: ChatTimelineProps) {
+export default function ChatTimeline({ messages, selectedUser, onSendMessage, getMessageById }: ChatTimelineProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [chatSearch, setChatSearch] = useState('');
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
 
   const filteredMessages = useMemo(() => {
     if (!chatSearch.trim()) return messages;
@@ -53,6 +55,14 @@ export default function ChatTimeline({ messages, selectedUser, onSendMessage }: 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [filteredMessages]);
+
+  const handleReply = useCallback((msg: Message) => {
+    setReplyTo(msg);
+  }, []);
+
+  const handleCancelReply = useCallback(() => {
+    setReplyTo(null);
+  }, []);
 
   if (!selectedUser) {
     return (
@@ -108,7 +118,12 @@ export default function ChatTimeline({ messages, selectedUser, onSendMessage }: 
               </div>
 
               {group.messages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  replyToMessage={msg.replyToId ? getMessageById(msg.replyToId) : undefined}
+                  onReply={handleReply}
+                />
               ))}
             </div>
           ))
@@ -117,7 +132,11 @@ export default function ChatTimeline({ messages, selectedUser, onSendMessage }: 
       </ScrollArea>
 
       {/* Composer */}
-      <ChatComposer onSend={onSendMessage} />
+      <ChatComposer
+        onSend={onSendMessage}
+        replyTo={replyTo}
+        onCancelReply={handleCancelReply}
+      />
     </div>
   );
 }

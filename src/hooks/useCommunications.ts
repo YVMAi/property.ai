@@ -24,27 +24,33 @@ const MOCK_MESSAGES: Message[] = [
   {
     id: 'm3', senderId: 'admin', receiverId: 'o1', direction: 'sent', type: 'text',
     content: 'Hi John, the plumber has been dispatched to Sunset Apartments unit 3B. ETA 2pm today.',
-    timestamp: '2026-02-03T09:15:00Z', status: 'delivered',
+    timestamp: '2026-02-03T09:15:00Z', status: 'delivered', senderName: 'Admin',
   },
   {
     id: 'm4', senderId: 'o1', receiverId: 'admin', direction: 'received', type: 'text',
     content: 'Great, thank you for the quick response!',
-    timestamp: '2026-02-03T09:30:00Z', status: 'read',
+    timestamp: '2026-02-03T09:30:00Z', status: 'read', senderName: 'John Anderson',
   },
   {
     id: 'm15', senderId: 'admin', receiverId: 'o1', direction: 'sent', type: 'text',
     content: 'Rent collected for February. Your payout will be processed on the 5th.',
-    timestamp: '2026-02-04T10:00:00Z', status: 'read',
+    timestamp: '2026-02-04T10:00:00Z', status: 'read', senderName: 'Admin',
+  },
+  // System automated reminder
+  {
+    id: 'm_sys1', senderId: 'system', receiverId: 'o1', direction: 'received', type: 'text',
+    content: '⏰ Reminder: Monthly owner statement for February is due in 3 days.',
+    timestamp: '2026-02-04T08:00:00Z', status: 'read', senderName: 'System',
   },
   {
     id: 'm16', senderId: 'o1', receiverId: 'admin', direction: 'received', type: 'text',
     content: 'Perfect. Also, can you check if tenant in unit 5A renewed?',
-    timestamp: '2026-02-04T10:15:00Z', status: 'read',
+    timestamp: '2026-02-04T10:15:00Z', status: 'read', senderName: 'John Anderson',
   },
   {
     id: 'm17', senderId: 'admin', receiverId: 'o1', direction: 'sent', type: 'text',
     content: 'Yes, unit 5A renewed for another 12 months with a 3% increase. Signed yesterday.',
-    timestamp: '2026-02-04T10:30:00Z', status: 'delivered',
+    timestamp: '2026-02-04T10:30:00Z', status: 'delivered', senderName: 'Admin',
     attachments: ['Lease_Renewal_5A.pdf'],
   },
   // John Anderson - emails
@@ -52,76 +58,82 @@ const MOCK_MESSAGES: Message[] = [
     id: 'm1', senderId: 'admin', receiverId: 'o1', direction: 'sent', type: 'email',
     subject: 'Monthly Statement – January 2026',
     content: 'Hi John, please find your January 2026 owner statement attached. Your net disbursement of $1,840 has been processed via ACH. Let us know if you have any questions.',
-    timestamp: '2026-02-01T10:00:00Z', status: 'read',
+    timestamp: '2026-02-01T10:00:00Z', status: 'read', senderName: 'Admin',
     attachments: ['Statement_Jan2026.pdf'],
   },
   {
     id: 'm2', senderId: 'o1', receiverId: 'admin', direction: 'received', type: 'email',
     subject: 'Re: Monthly Statement – January 2026',
     content: 'Thanks for the statement. Everything looks good. Could you also send me the maintenance invoice for unit 3B?',
-    timestamp: '2026-02-01T14:22:00Z', status: 'read',
+    timestamp: '2026-02-01T14:22:00Z', status: 'read', senderName: 'John Anderson',
   },
   {
     id: 'm5', senderId: 'admin', receiverId: 'o1', direction: 'sent', type: 'email',
     subject: 'Lease Renewal – Downtown Lofts Unit 4A',
     content: 'Hi John, the lease for Downtown Lofts Unit 4A is up for renewal on March 31st. The tenant has expressed interest in renewing at a 3% increase. Please confirm if you\'d like to proceed.',
-    timestamp: '2026-02-05T11:00:00Z', status: 'read',
+    timestamp: '2026-02-05T11:00:00Z', status: 'read', senderName: 'Admin',
   },
   {
     id: 'm6', senderId: 'o1', receiverId: 'admin', direction: 'received', type: 'email',
     subject: 'Re: Lease Renewal – Downtown Lofts Unit 4A',
     content: 'Yes, a 3% increase sounds fair. Please go ahead with the renewal. Can you send me the updated lease for review before signing?',
-    timestamp: '2026-02-05T16:45:00Z', status: 'read',
+    timestamp: '2026-02-05T16:45:00Z', status: 'read', senderName: 'John Anderson',
   },
   {
     id: 'm14', senderId: 'admin', receiverId: 'o1', direction: 'sent', type: 'email',
     subject: 'Updated Lease Draft – Downtown Lofts 4A',
     content: 'Hi John, attached is the updated lease draft for your review. Please let me know if everything looks good or if you need any changes.',
-    timestamp: '2026-02-07T09:00:00Z', status: 'delivered',
+    timestamp: '2026-02-07T09:00:00Z', status: 'delivered', senderName: 'Admin',
     attachments: ['Lease_Draft_4A.pdf'],
   },
   // Alice Walker (tenant) - texts
   {
     id: 'm8', senderId: 't1', receiverId: 'admin', direction: 'received', type: 'text',
     content: 'Thank you! Quick question – is there assigned parking or first-come-first-served?',
-    timestamp: '2026-02-04T12:10:00Z', status: 'read',
+    timestamp: '2026-02-04T12:10:00Z', status: 'read', senderName: 'Alice Walker',
   },
   {
     id: 'm9', senderId: 'admin', receiverId: 't1', direction: 'sent', type: 'text',
     content: 'Parking is assigned. You\'ll have spot #14 in the covered garage. The access card will be included with your keys.',
-    timestamp: '2026-02-04T12:25:00Z', status: 'delivered',
+    timestamp: '2026-02-04T12:25:00Z', status: 'delivered', senderName: 'Admin',
+  },
+  // System reminder for Alice
+  {
+    id: 'm_sys2', senderId: 'system', receiverId: 't1', direction: 'received', type: 'text',
+    content: '⏰ Reminder: Rent payment of $1,200 is due on Feb 15, 2026.',
+    timestamp: '2026-02-10T08:00:00Z', status: 'read', senderName: 'System',
   },
   // Alice Walker - emails
   {
     id: 'm7', senderId: 'admin', receiverId: 't1', direction: 'sent', type: 'email',
     subject: 'Welcome to Sunset Apartments!',
     content: 'Dear Alice, welcome to Sunset Apartments! Your move-in date is confirmed for February 15th. Please find the move-in checklist and building guidelines attached.',
-    timestamp: '2026-02-04T08:00:00Z', status: 'read',
+    timestamp: '2026-02-04T08:00:00Z', status: 'read', senderName: 'Admin',
     attachments: ['MoveIn_Checklist.pdf', 'Building_Guidelines.pdf'],
   },
   // QuickFix Plumbing (vendor) - texts
   {
     id: 'm12', senderId: 'admin', receiverId: 'v1', direction: 'sent', type: 'text',
     content: 'Monday at 2pm works perfectly. Please proceed. Access code for the building is #4521.',
-    timestamp: '2026-02-02T17:15:00Z', status: 'delivered',
+    timestamp: '2026-02-02T17:15:00Z', status: 'delivered', senderName: 'Admin',
   },
   {
     id: 'm13', senderId: 'v1', receiverId: 'admin', direction: 'received', type: 'text',
     content: 'Confirmed. Technician Mike will be there Monday 2pm. Thanks!',
-    timestamp: '2026-02-02T17:30:00Z', status: 'read',
+    timestamp: '2026-02-02T17:30:00Z', status: 'read', senderName: 'QuickFix Plumbing',
   },
   // QuickFix - emails
   {
     id: 'm10', senderId: 'admin', receiverId: 'v1', direction: 'sent', type: 'email',
     subject: 'Service Request – Sunset Apartments 3B',
     content: 'Hi QuickFix team, we have a leaking faucet in unit 3B at Sunset Apartments. Please schedule a repair at your earliest convenience. Tenant is available Mon-Fri after 10am.',
-    timestamp: '2026-02-02T15:30:00Z', status: 'read',
+    timestamp: '2026-02-02T15:30:00Z', status: 'read', senderName: 'Admin',
   },
   {
     id: 'm11', senderId: 'v1', receiverId: 'admin', direction: 'received', type: 'email',
     subject: 'Re: Service Request – Sunset Apartments 3B',
     content: 'We can send a technician on Monday Feb 3rd at 2pm. Will that work? Estimated cost: $150-$200 depending on parts needed.',
-    timestamp: '2026-02-02T17:00:00Z', status: 'read',
+    timestamp: '2026-02-02T17:00:00Z', status: 'read', senderName: 'QuickFix Plumbing',
   },
 ];
 
@@ -130,6 +142,8 @@ export function useCommunications() {
   const [selectedUserType, setSelectedUserType] = useState<UserType | ''>('');
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const allUsers = MOCK_USERS;
 
   const filteredUsers = useMemo(() => {
     if (!selectedUserType) return [];
@@ -155,7 +169,8 @@ export function useCommunications() {
         (m) =>
           m.type === 'text' &&
           ((m.senderId === selectedUserId && m.receiverId === 'admin') ||
-            (m.senderId === 'admin' && m.receiverId === selectedUserId))
+            (m.senderId === 'admin' && m.receiverId === selectedUserId) ||
+            (m.senderId === 'system' && m.receiverId === selectedUserId))
       )
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   }, [selectedUserId, messages]);
@@ -173,7 +188,7 @@ export function useCommunications() {
   }, [selectedUserId, messages]);
 
   const sendTextMessage = useCallback(
-    (content: string, attachments: string[]) => {
+    (content: string, attachments: string[], replyToId?: string) => {
       if (!selectedUserId) return;
       const newMessage: Message = {
         id: generateId(),
@@ -184,11 +199,34 @@ export function useCommunications() {
         content,
         timestamp: new Date().toISOString(),
         status: 'sent',
+        senderName: 'Admin',
         attachments: attachments.length > 0 ? attachments : undefined,
+        replyToId: replyToId || undefined,
       };
       setMessages((prev) => [...prev, newMessage]);
     },
     [selectedUserId]
+  );
+
+  const sendBroadcastMessage = useCallback(
+    (content: string, attachments: string[], recipientIds: string[]) => {
+      const now = new Date().toISOString();
+      const newMessages: Message[] = recipientIds.map((recipientId) => ({
+        id: generateId(),
+        senderId: 'admin',
+        receiverId: recipientId,
+        direction: 'sent' as const,
+        type: 'text' as const,
+        content,
+        timestamp: now,
+        status: 'sent' as const,
+        senderName: 'Admin',
+        attachments: attachments.length > 0 ? attachments : undefined,
+        broadcastRecipients: recipientIds,
+      }));
+      setMessages((prev) => [...prev, ...newMessages]);
+    },
+    []
   );
 
   const sendEmail = useCallback(
@@ -204,6 +242,7 @@ export function useCommunications() {
         content: data.body,
         timestamp: new Date().toISOString(),
         status: 'sent',
+        senderName: 'Admin',
         attachments: data.attachments.length > 0 ? data.attachments : undefined,
       };
       setMessages((prev) => [...prev, newMessage]);
@@ -221,18 +260,26 @@ export function useCommunications() {
     setSelectedUserId(userId);
   }, []);
 
+  const getMessageById = useCallback(
+    (id: string) => messages.find((m) => m.id === id),
+    [messages]
+  );
+
   return {
     selectedUserType,
     selectedUserId,
     selectedUser,
     searchQuery,
     filteredUsers,
+    allUsers,
     userTextMessages,
     userEmailMessages,
     selectUserType,
     selectUser,
     setSearchQuery,
     sendTextMessage,
+    sendBroadcastMessage,
     sendEmail,
+    getMessageById,
   };
 }
