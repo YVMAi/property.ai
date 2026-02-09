@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, Pencil, Building2, FileText, DollarSign, Mail, CreditCard, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Pencil, Building2, FileText, DollarSign, Mail, CreditCard, CalendarDays, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOwnersContext } from '@/contexts/OwnersContext';
 import { MOCK_PROPERTIES } from '@/hooks/useOwners';
 
@@ -17,7 +18,8 @@ function getOwnerDisplayName(owner: { ownerType: string; companyName: string; fi
 export default function OwnerViewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getOwnerById } = useOwnersContext();
+  const { getOwnerById, owners } = useOwnersContext();
+  const allOwners = owners.filter((o) => o.status !== 'deleted');
 
   const owner = id ? getOwnerById(id) : undefined;
 
@@ -62,9 +64,24 @@ export default function OwnerViewPage() {
             </p>
           </div>
         </div>
-        <Button onClick={() => navigate(`/users/owners/${owner.id}/edit`)} className="btn-primary">
-          <Pencil className="h-4 w-4 mr-2" /> Edit Owner
-        </Button>
+        <div className="flex items-center gap-3">
+          <Select value={owner.id} onValueChange={(val) => navigate(`/users/owners/${val}`)}>
+            <SelectTrigger className="w-[200px]">
+              <ChevronsUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Switch Owner" />
+            </SelectTrigger>
+            <SelectContent>
+              {allOwners.map((o) => (
+                <SelectItem key={o.id} value={o.id}>
+                  {getOwnerDisplayName(o)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={() => navigate(`/users/owners/${owner.id}/edit`)} className="btn-primary">
+            <Pencil className="h-4 w-4 mr-2" /> Edit Owner
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
