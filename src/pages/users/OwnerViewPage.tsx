@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, Pencil, Building2, FileText, DollarSign, Mail, CreditCard, CalendarDays, ChevronsUpDown } from 'lucide-react';
+import { ArrowLeft, Pencil, Building2, FileText, DollarSign, Mail, CreditCard, CalendarDays, ChevronsUpDown, Wrench, Bell, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,36 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useOwnersContext } from '@/contexts/OwnersContext';
+import { useToast } from '@/hooks/use-toast';
 import { MOCK_PROPERTIES } from '@/hooks/useOwners';
+
+type ApprovalStatus = 'pending' | 'approved' | 'rejected';
+
+interface MaintenanceApproval {
+  id: string;
+  title: string;
+  description: string;
+  property: string;
+  unit: string;
+  amount: number;
+  requestedDate: string;
+  status: ApprovalStatus;
+  vendor?: string;
+  category: string;
+}
+
+const MOCK_APPROVALS: Record<string, MaintenanceApproval[]> = {
+  '1': [
+    { id: 'ma1', title: 'HVAC Repair', description: 'AC unit not cooling in unit 4B', property: 'Sunset Apartments', unit: '4B', amount: 1200, requestedDate: '2026-02-05', status: 'pending', vendor: 'CoolAir Services', category: 'HVAC' },
+    { id: 'ma2', title: 'Plumbing Fix', description: 'Kitchen sink leak in unit 2A', property: 'Downtown Lofts', unit: '2A', amount: 450, requestedDate: '2026-02-03', status: 'pending', vendor: 'QuickFix Plumbing', category: 'Plumbing' },
+    { id: 'ma3', title: 'Roof Inspection', description: 'Annual roof inspection for the building', property: 'Riverside Condos', unit: 'Common', amount: 800, requestedDate: '2026-01-28', status: 'approved', vendor: 'TopRoof Inc', category: 'Inspection' },
+    { id: 'ma4', title: 'Parking Lot Repaving', description: 'Repave section B of parking lot', property: 'Sunset Apartments', unit: 'Common', amount: 3500, requestedDate: '2026-01-15', status: 'rejected', category: 'Exterior' },
+  ],
+  '2': [
+    { id: 'ma5', title: 'Window Replacement', description: 'Broken window in unit 3C', property: 'Hilltop Villas', unit: '3C', amount: 650, requestedDate: '2026-02-07', status: 'pending', vendor: 'GlassPro', category: 'Windows' },
+    { id: 'ma6', title: 'Elevator Maintenance', description: 'Quarterly elevator service', property: 'Garden Estates', unit: 'Common', amount: 1800, requestedDate: '2026-02-01', status: 'approved', vendor: 'LiftTech', category: 'Elevator' },
+  ],
+};
 
 function getOwnerDisplayName(owner: { ownerType: string; companyName: string; firstName: string; lastName: string }) {
   return owner.ownerType === 'company' ? owner.companyName : `${owner.firstName} ${owner.lastName}`;
@@ -18,6 +47,7 @@ function getOwnerDisplayName(owner: { ownerType: string; companyName: string; fi
 export default function OwnerViewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { getOwnerById, owners } = useOwnersContext();
   const allOwners = owners.filter((o) => o.status !== 'deleted');
 
@@ -144,6 +174,14 @@ export default function OwnerViewPage() {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="approvals">
+            Approvals
+            {(MOCK_APPROVALS[owner.id] || []).filter(a => a.status === 'pending').length > 0 && (
+              <Badge className="ml-2 bg-warning text-warning-foreground border-0 text-xs px-1.5 py-0">
+                {(MOCK_APPROVALS[owner.id] || []).filter(a => a.status === 'pending').length}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="properties">Properties & Units</TabsTrigger>
           <TabsTrigger value="agreements">Agreements</TabsTrigger>
           <TabsTrigger value="payouts">Payout History</TabsTrigger>
@@ -249,6 +287,11 @@ export default function OwnerViewPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Approvals Tab */}
+        <TabsContent value="approvals">
+          <ApprovalsSection ownerId={owner.id} toast={toast} />
         </TabsContent>
 
         {/* Properties Tab */}
@@ -429,6 +472,158 @@ export default function OwnerViewPage() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function ApprovalsSection({ ownerId, toast }: { ownerId: string; toast: ReturnType<typeof useToast>['toast'] }) {
+  const approvals = MOCK_APPROVALS[ownerId] || [];
+  const pending = approvals.filter((a) => a.status === 'pending');
+  const historic = approvals.filter((a) => a.status !== 'pending');
+
+  const handleSendReminder = (approval: MaintenanceApproval) => {
+    toast({
+      title: 'Reminder sent',
+      description: `Approval reminder sent for "${approval.title}" ($${approval.amount.toLocaleString()}).`,
+    });
+  };
+
+  const handleSendAllReminders = () => {
+    toast({
+      title: 'Reminders sent',
+      description: `Sent ${pending.length} approval reminder(s) to the owner.`,
+    });
+  };
+
+  const getStatusBadge = (status: ApprovalStatus) => {
+    switch (status) {
+      case 'pending':
+        return <Badge className="bg-warning text-warning-foreground border-0">Pending</Badge>;
+      case 'approved':
+        return <Badge className="bg-secondary text-secondary-foreground border-0">Approved</Badge>;
+      case 'rejected':
+        return <Badge className="bg-destructive text-destructive-foreground border-0">Rejected</Badge>;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Pending Approvals */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-warning-foreground" />
+              Pending Approvals ({pending.length})
+            </CardTitle>
+            {pending.length > 0 && (
+              <Button size="sm" variant="outline" onClick={handleSendAllReminders}>
+                <Bell className="h-4 w-4 mr-2" />
+                Send All Reminders
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {pending.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No pending approvals.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Request</TableHead>
+                  <TableHead>Property / Unit</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Vendor</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Requested</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pending.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">{item.property}</span>
+                      <span className="text-muted-foreground"> / {item.unit}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">{item.category}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{item.vendor || '—'}</TableCell>
+                    <TableCell className="text-right font-medium">${item.amount.toLocaleString()}</TableCell>
+                    <TableCell className="text-muted-foreground">{format(new Date(item.requestedDate), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-right">
+                      <Button size="sm" variant="outline" onClick={() => handleSendReminder(item)}>
+                        <Bell className="h-3.5 w-3.5 mr-1" />
+                        Remind
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Historic Approvals */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
+            Approval History ({historic.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {historic.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No approval history.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Request</TableHead>
+                  <TableHead>Property / Unit</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Vendor</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {historic.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">{item.property}</span>
+                      <span className="text-muted-foreground"> / {item.unit}</span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">{item.category}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{item.vendor || '—'}</TableCell>
+                    <TableCell className="text-right font-medium">${item.amount.toLocaleString()}</TableCell>
+                    <TableCell className="text-muted-foreground">{format(new Date(item.requestedDate), 'MMM d, yyyy')}</TableCell>
+                    <TableCell>{getStatusBadge(item.status)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
