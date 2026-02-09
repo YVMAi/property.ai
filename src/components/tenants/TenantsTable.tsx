@@ -191,7 +191,7 @@ export default function TenantsTable({
             <TableRow className="bg-card hover:bg-card">
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Type</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Invite</TableHead>
               <TableHead className="text-center">Leases</TableHead>
               <TableHead>Payment Due</TableHead>
@@ -285,7 +285,7 @@ export default function TenantsTable({
           }
           description={
             confirmAction.type === 'deactivate'
-              ? `Are you sure you want to deactivate ${getTenantDisplayName(confirmAction.tenant)}?`
+              ? `Are you sure you want to deactivate ${getTenantDisplayName(confirmAction.tenant)}? Once deactivated, they will no longer be able to access the tenant portal or any associated services.`
               : confirmAction.type === 'activate'
               ? `Reactivate ${getTenantDisplayName(confirmAction.tenant)}?`
               : confirmAction.type === 'delete'
