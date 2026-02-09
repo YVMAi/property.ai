@@ -1,7 +1,8 @@
-import { Mail } from 'lucide-react';
+import { MessageSquare, Mail } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UserSelector from '@/components/communications/UserSelector';
 import ChatTimeline from '@/components/communications/ChatTimeline';
-import ComposeEmail from '@/components/communications/ComposeEmail';
+import EmailSection from '@/components/communications/EmailSection';
 import { useCommunications } from '@/hooks/useCommunications';
 
 export default function Communications() {
@@ -11,10 +12,12 @@ export default function Communications() {
     selectedUser,
     searchQuery,
     filteredUsers,
-    userMessages,
+    userTextMessages,
+    userEmailMessages,
     selectUserType,
     selectUser,
     setSearchQuery,
+    sendTextMessage,
     sendEmail,
   } = useCommunications();
 
@@ -23,14 +26,14 @@ export default function Communications() {
       {/* Page header */}
       <div className="flex items-center gap-3">
         <div className="h-9 w-9 rounded-lg bg-primary/20 flex items-center justify-center">
-          <Mail className="h-5 w-5 text-primary-foreground" />
+          <MessageSquare className="h-5 w-5 text-primary-foreground" />
         </div>
         <div>
           <h1 className="text-xl font-semibold text-foreground tracking-tight">
             Communications & Notices
           </h1>
           <p className="text-xs text-muted-foreground">
-            View and manage all messages with owners, tenants, and vendors
+            Portal messages and email correspondence with owners, tenants, and vendors
           </p>
         </div>
       </div>
@@ -46,13 +49,45 @@ export default function Communications() {
         onSearchChange={setSearchQuery}
       />
 
-      {/* Chat timeline */}
-      <div className="flex-1 flex flex-col min-h-0" style={{ minHeight: '350px' }}>
-        <ChatTimeline messages={userMessages} selectedUser={selectedUser} />
-      </div>
+      {/* Tabs: Chat & Email */}
+      <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0">
+        <TabsList className="self-start mb-3">
+          <TabsTrigger value="chat" className="gap-1.5">
+            <MessageSquare className="h-4 w-4" />
+            Chat Messages
+            {selectedUser && userTextMessages.length > 0 && (
+              <span className="ml-1 text-[10px] bg-primary/20 text-primary-foreground rounded-full px-1.5 py-0.5">
+                {userTextMessages.length}
+              </span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="email" className="gap-1.5">
+            <Mail className="h-4 w-4" />
+            Email History
+            {selectedUser && userEmailMessages.length > 0 && (
+              <span className="ml-1 text-[10px] bg-primary/20 text-primary-foreground rounded-full px-1.5 py-0.5">
+                {userEmailMessages.length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Compose email */}
-      <ComposeEmail selectedUser={selectedUser} onSend={sendEmail} />
+        <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 mt-0" style={{ minHeight: '350px' }}>
+          <ChatTimeline
+            messages={userTextMessages}
+            selectedUser={selectedUser}
+            onSendMessage={sendTextMessage}
+          />
+        </TabsContent>
+
+        <TabsContent value="email" className="flex-1 flex flex-col min-h-0 mt-0" style={{ minHeight: '350px' }}>
+          <EmailSection
+            emails={userEmailMessages}
+            selectedUser={selectedUser}
+            onSendEmail={sendEmail}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

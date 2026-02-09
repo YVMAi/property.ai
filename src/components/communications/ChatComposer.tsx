@@ -1,0 +1,95 @@
+import { useState } from 'react';
+import { Send, Paperclip, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+
+interface ChatComposerProps {
+  onSend: (content: string, attachments: string[]) => void;
+}
+
+export default function ChatComposer({ onSend }: ChatComposerProps) {
+  const [text, setText] = useState('');
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const { toast } = useToast();
+
+  const handleAttach = () => {
+    // Simulate file selection
+    const mockFile = `Attachment_${Date.now().toString(36)}.pdf`;
+    setAttachments((prev) => [...prev, mockFile]);
+    toast({ title: 'File attached', description: mockFile });
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSend = () => {
+    if (!text.trim() && attachments.length === 0) return;
+    onSend(text.trim(), attachments);
+    setText('');
+    setAttachments([]);
+    toast({ title: 'Message sent', description: 'Your message has been shared on the portal.' });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  return (
+    <div className="border-t border-border px-4 md:px-5 py-3">
+      {/* Attachments preview */}
+      {attachments.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {attachments.map((att, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-1 text-xs bg-accent text-accent-foreground rounded-full px-2.5 py-1"
+            >
+              📎 {att}
+              <button
+                onClick={() => removeAttachment(i)}
+                className="ml-0.5 hover:text-destructive-foreground transition-colors"
+                aria-label={`Remove ${att}`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+          onClick={handleAttach}
+          aria-label="Attach file"
+        >
+          <Paperclip className="h-4 w-4" />
+        </Button>
+        <Input
+          placeholder="Type a message…"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="bg-background border-input h-10 flex-1"
+          maxLength={2000}
+        />
+        <Button
+          size="icon"
+          className="h-9 w-9 shrink-0"
+          onClick={handleSend}
+          disabled={!text.trim() && attachments.length === 0}
+          aria-label="Send message"
+        >
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
