@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -53,17 +53,30 @@ export default function TenantsTable({
     return matchesSearch && matchesType;
   });
 
+  const getPaymentDueDays = (tenant: Tenant): number | null => {
+    const activeLease = tenant.leases.find((l) => l.status === 'active');
+    if (!activeLease) return null;
+    // Assume rent due on 1st of each month
+    const now = new Date();
+    const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const lastPaid = tenant.payments.length ? new Date(tenant.payments[0].date) : null;
+    // If already paid this month
+    if (lastPaid && lastPaid >= currentMonth) return 0;
+    // Days until next due
+    return differenceInDays(nextMonth, now);
+  };
+
   const exportCsv = () => {
-    const headers = ['Name', 'Email', 'Type', 'Status', 'Leases', 'Last Payment'];
+    const headers = ['Name', 'Email', 'Type', 'Leases', 'Payment Due In Days'];
     const rows = filtered.map((t) => {
-      const lastPay = t.payments.length ? format(new Date(t.payments[0].date), 'MMM d, yyyy') : 'N/A';
+      const dueDays = getPaymentDueDays(t);
       return [
         getTenantDisplayName(t),
         t.email,
         getTenantCategory(t),
-        t.status,
         t.leases.length.toString(),
-        lastPay,
+        dueDays !== null ? dueDays.toString() : 'N/A',
       ];
     });
     const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
@@ -104,16 +117,6 @@ export default function TenantsTable({
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="outline" className="text-secondary-foreground border-secondary">Active</Badge>;
-      case 'deactivated':
-        return <Badge variant="outline" className="text-warning-foreground border-warning">Deactivated</Badge>;
-      default:
-        return null;
-    }
-  };
 
   const getInviteBadge = (inviteStatus: string) => {
     switch (inviteStatus) {
@@ -189,38 +192,36 @@ export default function TenantsTable({
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Invite</TableHead>
               <TableHead className="text-center">Leases</TableHead>
-              <TableHead>Last Payment</TableHead>
+              <TableHead>Payment Due</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                   No tenants match your search.
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((tenant) => {
                 const category = getTenantCategory(tenant);
-                const lastPayment = tenant.payments.length
-                  ? format(new Date(tenant.payments[0].date), 'MMM d, yyyy')
-                  : '—';
+                const dueDays = getPaymentDueDays(tenant);
                 const hasActiveLease = tenant.leases.some((l) => l.status === 'active');
                 return (
                   <TableRow key={tenant.id} className="bg-card">
                     <TableCell className="font-medium">{getTenantDisplayName(tenant)}</TableCell>
                     <TableCell className="text-muted-foreground">{tenant.email}</TableCell>
                     <TableCell>{getCategoryBadge(category)}</TableCell>
-                    <TableCell>{getStatusBadge(tenant.status)}</TableCell>
                     <TableCell>{getInviteBadge(tenant.inviteStatus)}</TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline" className="bg-background">{tenant.leases.length}</Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{lastPayment}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {dueDays === null ? '—' : dueDays === 0 ? <Badge className="bg-secondary text-secondary-foreground border-0 text-xs">Paid</Badge> : `${dueDays} days`}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         {isArchived ? (

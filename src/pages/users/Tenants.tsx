@@ -11,6 +11,7 @@ export default function Tenants() {
   const {
     activeTenants,
     archivedTenants,
+    deletedTenants,
     getAllEmails,
     addTenant,
     updateTenant,
@@ -77,9 +78,9 @@ export default function Tenants() {
     toast({ title: 'Notes saved', description: 'Tenant notes have been updated.' });
   };
 
-  // Keep viewing tenant in sync with latest data
+  const allVisible = [...activeTenants, ...archivedTenants, ...deletedTenants];
   const currentViewingTenant = viewingTenant
-    ? [...activeTenants, ...archivedTenants].find((t) => t.id === viewingTenant.id) || viewingTenant
+    ? allVisible.find((t) => t.id === viewingTenant.id) || viewingTenant
     : null;
 
   return (
@@ -93,6 +94,7 @@ export default function Tenants() {
         <TabsList>
           <TabsTrigger value="active">Active ({activeTenants.length})</TabsTrigger>
           <TabsTrigger value="archived">Archived ({archivedTenants.length})</TabsTrigger>
+          <TabsTrigger value="deleted">Deleted ({deletedTenants.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="active">
@@ -109,6 +111,17 @@ export default function Tenants() {
         <TabsContent value="archived">
           <TenantsTable
             tenants={archivedTenants}
+            onView={handleView}
+            onEdit={handleEdit}
+            onToggleStatus={handleToggleStatus}
+            onSoftDelete={handleSoftDelete}
+            onAddNew={handleAddNew}
+          />
+        </TabsContent>
+
+        <TabsContent value="deleted">
+          <TenantsTable
+            tenants={deletedTenants}
             isArchived
             onView={handleView}
             onEdit={handleEdit}
