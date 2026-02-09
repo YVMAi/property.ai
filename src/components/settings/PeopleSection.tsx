@@ -10,62 +10,106 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Search, UserPlus, MoreHorizontal, Shield, ShieldOff, Trash2, Mail } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Search, UserPlus, MoreHorizontal, Shield, ShieldOff, Trash2, Mail, UserX, UserCheck, KeyRound } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
+
+type UserStatus = 'active' | 'inactive' | 'invitation_accepted';
 
 interface SystemUser {
   id: string;
   name: string;
   email: string;
   role: 'admin' | 'user';
-  status: 'active' | 'inactive';
+  status: UserStatus;
   lastLogin: string;
+  lastPasswordReset: string | null;
+  isRemoved: boolean;
 }
+
+type AuditAction = 'login' | 'invite' | 'role_change' | 'password_reset' | 'status_change' | 'other';
 
 interface AuditLog {
   id: string;
   user: string;
   action: string;
+  actionType: AuditAction;
   timestamp: string;
 }
 
 const DEMO_USERS: SystemUser[] = [
-  { id: '1', name: 'Admin User', email: 'admin@propertyai.com', role: 'admin', status: 'active', lastLogin: '2026-02-09 10:30' },
-  { id: '2', name: 'Property Manager', email: 'manager@propertyai.com', role: 'user', status: 'active', lastLogin: '2026-02-08 15:12' },
-  { id: '3', name: 'Sarah Wilson', email: 'sarah@propertyai.com', role: 'user', status: 'active', lastLogin: '2026-02-07 09:45' },
-  { id: '4', name: 'James Brown', email: 'james@propertyai.com', role: 'user', status: 'inactive', lastLogin: '2026-01-20 14:22' },
+  { id: '1', name: 'Admin User', email: 'admin@propertyai.com', role: 'admin', status: 'active', lastLogin: '2026-02-09 10:30', lastPasswordReset: '2026-01-15 08:00', isRemoved: false },
+  { id: '2', name: 'Property Manager', email: 'manager@propertyai.com', role: 'user', status: 'active', lastLogin: '2026-02-08 15:12', lastPasswordReset: null, isRemoved: false },
+  { id: '3', name: 'Sarah Wilson', email: 'sarah@propertyai.com', role: 'user', status: 'invitation_accepted', lastLogin: '2026-02-07 09:45', lastPasswordReset: '2026-02-01 12:00', isRemoved: false },
+  { id: '4', name: 'James Brown', email: 'james@propertyai.com', role: 'user', status: 'inactive', lastLogin: '2026-01-20 14:22', lastPasswordReset: null, isRemoved: false },
 ];
 
 const DEMO_LOGS: AuditLog[] = [
-  { id: '1', user: 'Admin User', action: 'Logged in', timestamp: '2026-02-09 10:30' },
-  { id: '2', user: 'Admin User', action: 'Changed role: Sarah Wilson → User', timestamp: '2026-02-09 09:15' },
-  { id: '3', user: 'Property Manager', action: 'Logged in', timestamp: '2026-02-08 15:12' },
-  { id: '4', user: 'Admin User', action: 'Invited james@propertyai.com', timestamp: '2026-02-06 11:00' },
-  { id: '5', user: 'Sarah Wilson', action: 'Logged in', timestamp: '2026-02-07 09:45' },
+  { id: '1', user: 'Admin User', action: 'Logged in', actionType: 'login', timestamp: '2026-02-09 10:30' },
+  { id: '2', user: 'Admin User', action: 'Changed role: Sarah Wilson → User', actionType: 'role_change', timestamp: '2026-02-09 09:15' },
+  { id: '3', user: 'Property Manager', action: 'Logged in', actionType: 'login', timestamp: '2026-02-08 15:12' },
+  { id: '4', user: 'Admin User', action: 'Invited james@propertyai.com', actionType: 'invite', timestamp: '2026-02-06 11:00' },
+  { id: '5', user: 'Sarah Wilson', action: 'Logged in', actionType: 'login', timestamp: '2026-02-07 09:45' },
+  { id: '6', user: 'Admin User', action: 'Reset password for Sarah Wilson', actionType: 'password_reset', timestamp: '2026-02-01 12:00' },
+  { id: '7', user: 'Admin User', action: 'Deactivated James Brown', actionType: 'status_change', timestamp: '2026-01-25 16:30' },
 ];
+
+const STATUS_CONFIG: Record<UserStatus, { label: string; variant: 'default' | 'outline' | 'secondary' }> = {
+  active: { label: 'Active', variant: 'default' },
+  inactive: { label: 'Inactive', variant: 'outline' },
+  invitation_accepted: { label: 'Invitation Accepted', variant: 'secondary' },
+};
+
+const ACTION_TYPE_LABELS: Record<AuditAction, string> = {
+  login: 'Login',
+  invite: 'Invite',
+  role_change: 'Role Change',
+  password_reset: 'Password Reset',
+  status_change: 'Status Change',
+  other: 'Other',
+};
 
 export default function PeopleSection() {
   const { toast } = useToast();
   const [users, setUsers] = useState<SystemUser[]>(DEMO_USERS);
+  const [auditLogs] = useState<AuditLog[]>(DEMO_LOGS);
   const [searchQuery, setSearchQuery] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'admin' | 'user'>('user');
   const [inviteMessage, setInviteMessage] = useState('');
 
-  const filteredUsers = users.filter(
+  // Audit log filters
+  const [logSearchQuery, setLogSearchQuery] = useState('');
+  const [logActionFilter, setLogActionFilter] = useState<AuditAction | 'all'>('all');
+  const [logUserFilter, setLogUserFilter] = useState<string>('all');
+
+  // Only show non-removed users
+  const visibleUsers = users.filter((u) => !u.isRemoved);
+
+  const filteredUsers = visibleUsers.filter(
     (u) =>
       u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const filteredLogs = auditLogs.filter((log) => {
+    const matchesSearch =
+      log.user.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
+      log.action.toLowerCase().includes(logSearchQuery.toLowerCase());
+    const matchesAction = logActionFilter === 'all' || log.actionType === logActionFilter;
+    const matchesUser = logUserFilter === 'all' || log.user === logUserFilter;
+    return matchesSearch && matchesAction && matchesUser;
+  });
+
+  const uniqueLogUsers = [...new Set(auditLogs.map((l) => l.user))];
 
   const handleInvite = () => {
     if (!inviteEmail.trim()) {
       toast({ title: 'Email required', variant: 'destructive' });
       return;
     }
-    if (users.some((u) => u.email.toLowerCase() === inviteEmail.toLowerCase())) {
+    if (users.some((u) => u.email.toLowerCase() === inviteEmail.toLowerCase() && !u.isRemoved)) {
       toast({ title: 'Duplicate email', description: 'This email is already in the system.', variant: 'destructive' });
       return;
     }
@@ -76,23 +120,50 @@ export default function PeopleSection() {
     setInviteMessage('');
   };
 
-  const toggleStatus = (id: string) => {
+  const deactivateUser = (id: string) => {
     setUsers((prev) =>
       prev.map((u) =>
-        u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u
+        u.id === id ? { ...u, status: 'inactive' as UserStatus } : u
       )
     );
-    toast({ title: 'Status updated' });
+    toast({ title: 'User deactivated', description: 'The user has been deactivated.' });
+  };
+
+  const activateUser = (id: string) => {
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === id ? { ...u, status: 'active' as UserStatus } : u
+      )
+    );
+    toast({ title: 'User activated', description: 'The user has been activated.' });
   };
 
   const removeUser = (id: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    toast({ title: 'User removed' });
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === id ? { ...u, isRemoved: true, status: 'inactive' as UserStatus } : u
+      )
+    );
+    toast({ title: 'User removed', description: 'The user has been soft-deleted.' });
   };
 
   const changeRole = (id: string, role: 'admin' | 'user') => {
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, role } : u)));
     toast({ title: 'Role updated' });
+  };
+
+  const resetPassword = (user: SystemUser) => {
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === user.id
+          ? { ...u, lastPasswordReset: new Date().toISOString().slice(0, 16).replace('T', ' ') }
+          : u
+      )
+    );
+    toast({
+      title: 'Password reset link sent',
+      description: `A reset password link has been sent to ${user.email}.`,
+    });
   };
 
   return (
@@ -165,68 +236,96 @@ export default function PeopleSection() {
                   <TableHead>Role</TableHead>
                   <TableHead>Last Login</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Last Password Reset</TableHead>
                   <TableHead className="w-12" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={u.role === 'admin' ? 'default' : 'secondary'} className="capitalize">
-                        {u.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{u.lastLogin}</TableCell>
-                    <TableCell>
-                      <Badge variant={u.status === 'active' ? 'default' : 'outline'} className="capitalize">
-                        {u.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => changeRole(u.id, u.role === 'admin' ? 'user' : 'admin')}>
-                            {u.role === 'admin' ? <ShieldOff className="h-4 w-4 mr-2" /> : <Shield className="h-4 w-4 mr-2" />}
-                            {u.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleStatus(u.id)}>
-                            {u.status === 'active' ? 'Deactivate' : 'Activate'}
-                          </DropdownMenuItem>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive-foreground">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Remove
+                {filteredUsers.map((u) => {
+                  const statusConfig = STATUS_CONFIG[u.status];
+                  return (
+                    <TableRow key={u.id}>
+                      <TableCell className="font-medium">{u.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                      <TableCell>
+                        <Badge variant={u.role === 'admin' ? 'default' : 'secondary'} className="capitalize">
+                          {u.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{u.lastLogin}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusConfig.variant} className="capitalize whitespace-nowrap">
+                          {statusConfig.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {u.lastPasswordReset ?? '—'}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {/* Role toggle */}
+                            <DropdownMenuItem onClick={() => changeRole(u.id, u.role === 'admin' ? 'user' : 'admin')}>
+                              {u.role === 'admin' ? <ShieldOff className="h-4 w-4 mr-2" /> : <Shield className="h-4 w-4 mr-2" />}
+                              {u.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
+                            </DropdownMenuItem>
+
+                            {/* Reset Password */}
+                            <DropdownMenuItem onClick={() => resetPassword(u)}>
+                              <KeyRound className="h-4 w-4 mr-2" />
+                              Reset Password
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator />
+
+                            {/* Deactivate / Activate */}
+                            {u.status !== 'inactive' ? (
+                              <DropdownMenuItem onClick={() => deactivateUser(u.id)}>
+                                <UserX className="h-4 w-4 mr-2" />
+                                Deactivate
                               </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Remove User</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to remove {u.name}? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => removeUser(u.id)}>Remove</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                            ) : (
+                              <DropdownMenuItem onClick={() => activateUser(u.id)}>
+                                <UserCheck className="h-4 w-4 mr-2" />
+                                Activate
+                              </DropdownMenuItem>
+                            )}
+
+                            {/* Remove (soft delete) */}
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive-foreground">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Remove
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Remove User</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to remove {u.name}? The user will be soft-deleted and hidden from the list.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => removeUser(u.id)}>Remove</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {filteredUsers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                       No users found.
                     </TableCell>
                   </TableRow>
@@ -237,7 +336,56 @@ export default function PeopleSection() {
         </TabsContent>
 
         {/* Audit Logs Tab */}
-        <TabsContent value="audit" className="mt-4">
+        <TabsContent value="audit" className="mt-4 space-y-4">
+          {/* Audit Filters */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search logs…"
+                className="pl-9"
+                value={logSearchQuery}
+                onChange={(e) => setLogSearchQuery(e.target.value)}
+              />
+            </div>
+            <Select value={logActionFilter} onValueChange={(v) => setLogActionFilter(v as AuditAction | 'all')}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by action" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Actions</SelectItem>
+                {Object.entries(ACTION_TYPE_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={logUserFilter} onValueChange={setLogUserFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by user" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                {uniqueLogUsers.map((name) => (
+                  <SelectItem key={name} value={name}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(logSearchQuery || logActionFilter !== 'all' || logUserFilter !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setLogSearchQuery('');
+                  setLogActionFilter('all');
+                  setLogUserFilter('all');
+                }}
+                className="text-muted-foreground"
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
+
           <Card className="card-elevated overflow-hidden">
             <CardHeader>
               <CardTitle className="text-lg">Recent Activity</CardTitle>
@@ -248,17 +396,30 @@ export default function PeopleSection() {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Action</TableHead>
+                    <TableHead>Type</TableHead>
                     <TableHead>Timestamp</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {DEMO_LOGS.map((log) => (
+                  {filteredLogs.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell className="font-medium">{log.user}</TableCell>
                       <TableCell className="text-muted-foreground">{log.action}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize text-xs">
+                          {ACTION_TYPE_LABELS[log.actionType]}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-muted-foreground text-sm">{log.timestamp}</TableCell>
                     </TableRow>
                   ))}
+                  {filteredLogs.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        No audit logs match the current filters.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
