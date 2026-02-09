@@ -43,9 +43,7 @@ export default function Owners() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Owners</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage property owners, their details, emails, and linked properties.
-        </p>
+        <div className="h-1 w-16 bg-secondary rounded-full mt-2" />
       </div>
 
       <Tabs defaultValue="active" className="w-full">
