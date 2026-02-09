@@ -272,7 +272,7 @@ export default function OwnersTable({
           }
           description={
             confirmAction.type === 'deactivate'
-              ? `Are you sure you want to deactivate ${getOwnerDisplayName(confirmAction.owner)}? They will not be able to log in.`
+              ? `Are you sure you want to deactivate ${getOwnerDisplayName(confirmAction.owner)}? Once deactivated, they will no longer be able to access the owner portal or any associated services.`
               : confirmAction.type === 'activate'
               ? `Reactivate ${getOwnerDisplayName(confirmAction.owner)}?`
               : confirmAction.type === 'delete'
