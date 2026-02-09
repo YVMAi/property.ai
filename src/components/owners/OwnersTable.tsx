@@ -22,6 +22,10 @@ interface OwnersTableProps {
   onAddNew: () => void;
 }
 
+function getOwnerDisplayName(owner: Owner): string {
+  return owner.ownerType === 'company' ? owner.companyName : `${owner.firstName} ${owner.lastName}`;
+}
+
 export default function OwnersTable({
   owners,
   isArchived = false,
@@ -40,23 +44,22 @@ export default function OwnersTable({
   const filtered = owners.filter((o) => {
     const term = search.toLowerCase();
     const primaryEmail = o.emails.find((e) => e.isPrimary)?.email || '';
-    return (
-      o.firstName.toLowerCase().includes(term) ||
-      o.lastName.toLowerCase().includes(term) ||
-      primaryEmail.toLowerCase().includes(term)
-    );
+    const displayName = getOwnerDisplayName(o).toLowerCase();
+    return displayName.includes(term) || primaryEmail.toLowerCase().includes(term);
   });
 
   const exportCsv = () => {
-    const headers = ['Name', 'Primary Email', 'Status', 'Linked Properties', 'Last Login'];
+    const headers = ['Name', 'Type', 'Primary Email', 'Status', 'Linked Properties', 'Auto-Pay', 'Last Login'];
     const rows = filtered.map((o) => {
       const primary = o.emails.find((e) => e.isPrimary);
       const lastLogin = primary?.lastLogin ? format(new Date(primary.lastLogin), 'MMM d, yyyy') : 'Never';
       return [
-        o.ownerType === 'company' ? o.companyName : `${o.firstName} ${o.lastName}`,
+        getOwnerDisplayName(o),
+        o.ownerType,
         primary?.email || '',
         o.status,
         o.linkedPropertyIds.length.toString(),
+        o.paymentSetup.autoPayEnabled ? 'Yes' : 'No',
         lastLogin,
       ];
     });
@@ -166,13 +169,10 @@ export default function OwnersTable({
                 const lastLogin = primaryEmail?.lastLogin
                   ? format(new Date(primaryEmail.lastLogin), 'MMM d, yyyy h:mm a')
                   : 'Never';
+                const displayName = getOwnerDisplayName(owner);
                 return (
                   <TableRow key={owner.id} className="bg-card">
-                    <TableCell className="font-medium">
-                      {owner.ownerType === 'company'
-                        ? owner.companyName
-                        : `${owner.firstName} ${owner.lastName}`}
-                    </TableCell>
+                    <TableCell className="font-medium">{displayName}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {primaryEmail?.email || '—'}
                     </TableCell>
@@ -191,9 +191,7 @@ export default function OwnersTable({
                             size="icon"
                             className="h-8 w-8"
                             title="Restore"
-                            onClick={() =>
-                              setConfirmAction({ type: 'restore', owner })
-                            }
+                            onClick={() => setConfirmAction({ type: 'restore', owner })}
                           >
                             <RotateCcw className="h-4 w-4 text-primary" />
                           </Button>
@@ -231,9 +229,7 @@ export default function OwnersTable({
                               size="icon"
                               className="h-8 w-8"
                               title="Archive"
-                              onClick={() =>
-                                setConfirmAction({ type: 'delete', owner })
-                              }
+                              onClick={() => setConfirmAction({ type: 'delete', owner })}
                             >
                               <Trash2 className="h-4 w-4 text-destructive-foreground" />
                             </Button>
@@ -265,12 +261,12 @@ export default function OwnersTable({
           }
           description={
             confirmAction.type === 'deactivate'
-              ? `Are you sure you want to deactivate ${confirmAction.owner.firstName} ${confirmAction.owner.lastName}? They will not be able to log in.`
+              ? `Are you sure you want to deactivate ${getOwnerDisplayName(confirmAction.owner)}? They will not be able to log in.`
               : confirmAction.type === 'activate'
-              ? `Reactivate ${confirmAction.owner.firstName} ${confirmAction.owner.lastName}?`
+              ? `Reactivate ${getOwnerDisplayName(confirmAction.owner)}?`
               : confirmAction.type === 'delete'
-              ? `Archive ${confirmAction.owner.firstName} ${confirmAction.owner.lastName}? Their data will be retained but hidden from the main list.`
-              : `Restore ${confirmAction.owner.firstName} ${confirmAction.owner.lastName} to the active owners list?`
+              ? `Archive ${getOwnerDisplayName(confirmAction.owner)}? Their data will be retained but hidden from the main list.`
+              : `Restore ${getOwnerDisplayName(confirmAction.owner)} to the active owners list?`
           }
           variant={confirmAction.type === 'delete' ? 'destructive' : 'default'}
         />

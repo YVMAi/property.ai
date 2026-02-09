@@ -1,13 +1,15 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useOwners } from '@/hooks/useOwners';
-import type { Owner, OwnerFormData } from '@/types/owner';
+import type { Owner, OwnerFormData, OwnerPayment } from '@/types/owner';
 
 interface OwnersContextType {
   owners: Owner[];
   activeOwners: Owner[];
   archivedOwners: Owner[];
+  getAllEmails: (excludeOwnerId?: string) => string[];
   addOwner: (data: OwnerFormData) => Owner;
   updateOwner: (id: string, data: Partial<OwnerFormData>) => void;
+  addPayment: (ownerId: string, payment: Omit<OwnerPayment, 'id'>) => void;
   toggleOwnerStatus: (id: string) => void;
   softDeleteOwner: (id: string) => void;
   restoreOwner: (id: string) => void;

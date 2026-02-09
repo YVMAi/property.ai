@@ -19,14 +19,36 @@ const MOCK_OWNERS: Owner[] = [
     taxId: '',
     taxClassification: 'individual',
     emails: [
-      { id: 'e1', email: 'john.anderson@email.com', isPrimary: true, status: 'active', loginCount: 12, lastLogin: '2026-02-08T14:30:00Z' },
-      { id: 'e2', email: 'john.a@work.com', isPrimary: false, status: 'active', loginCount: 3, lastLogin: '2026-01-20T09:15:00Z' },
+      { id: 'e1', email: 'john.anderson@email.com', isPrimary: true, status: 'active', inviteStatus: 'accepted', loginCount: 12, lastLogin: '2026-02-08T14:30:00Z' },
+      { id: 'e2', email: 'john.a@work.com', isPrimary: false, status: 'active', inviteStatus: 'shared', loginCount: 3, lastLogin: '2026-01-20T09:15:00Z' },
     ],
     linkedPropertyIds: ['p1', 'p2', 'p3'],
+    agreements: [
+      { id: 'ag1', fileName: 'Global_Agreement_2026.pdf', fileUrl: '#', feePerUnit: 50, feePercentRent: 8, createdAt: '2026-01-01T00:00:00Z' },
+    ],
+    agreementMode: 'single',
     documents: [
       { id: 'd1', fileName: 'Management_Agreement_2026.pdf', fileUrl: '#', tags: ['Agreement2026', 'PropertyX'], uploadedAt: '2026-01-15T10:00:00Z' },
     ],
-    paymentSetup: { ...emptyPaymentSetup, payoutMethod: 'ach', bankName: 'Chase', accountNumber: '****1234', routingNumber: '****5678', managementFeeEnabled: true, managementFeeType: 'percentage', managementFeeValue: 8, managementFeeMinimum: 50, managementFeeApplyTo: 'all', managementFeePropertyIds: [] },
+    payments: [
+      { id: 'pay1', amount: 1840, date: '2026-02-01', method: 'ACH', status: 'paid', invoiceUrl: '#', receiptUrl: '#' },
+      { id: 'pay2', amount: 1840, date: '2026-01-01', method: 'ACH', status: 'paid', invoiceUrl: '#', receiptUrl: '#' },
+      { id: 'pay3', amount: 1900, date: '2025-12-01', method: 'ACH', status: 'paid', invoiceUrl: '#', receiptUrl: '#' },
+    ],
+    paymentSetup: {
+      ...emptyPaymentSetup,
+      payoutMethod: 'ach',
+      bankName: 'Chase',
+      accountNumber: '****1234',
+      routingNumber: '****5678',
+      autoPayEnabled: true,
+      managementFeeEnabled: true,
+      managementFeeType: 'percentage',
+      managementFeeValue: 8,
+      managementFeeMinimum: 50,
+      managementFeeApplyTo: 'all',
+      managementFeePropertyIds: [],
+    },
     status: 'active',
     createdAt: '2025-06-01T00:00:00Z',
     updatedAt: '2026-02-08T14:30:00Z',
@@ -45,11 +67,20 @@ const MOCK_OWNERS: Owner[] = [
     taxId: '',
     taxClassification: 'llc',
     emails: [
-      { id: 'e3', email: 'sarah.mitchell@email.com', isPrimary: true, status: 'active', loginCount: 28, lastLogin: '2026-02-09T08:45:00Z' },
+      { id: 'e3', email: 'sarah.mitchell@email.com', isPrimary: true, status: 'active', inviteStatus: 'accepted', loginCount: 28, lastLogin: '2026-02-09T08:45:00Z' },
     ],
     linkedPropertyIds: ['p4', 'p5'],
+    agreements: [
+      { id: 'ag2', propertyId: 'p4', fileName: 'Hilltop_Agreement.pdf', fileUrl: '#', feePerUnit: 75, feePercentRent: 6, createdAt: '2025-06-01T00:00:00Z' },
+      { id: 'ag3', propertyId: 'p5', fileName: 'Garden_Agreement.pdf', fileUrl: '#', feePerUnit: 60, feePercentRent: 7, createdAt: '2025-06-01T00:00:00Z' },
+    ],
+    agreementMode: 'per_property',
     documents: [],
-    paymentSetup: { ...emptyPaymentSetup, payoutMethod: 'check', payoutFrequency: 'monthly', payoutDay: '15th' },
+    payments: [
+      { id: 'pay4', amount: 2200, date: '2026-02-01', method: 'Check', status: 'paid', invoiceUrl: '#', receiptUrl: '#' },
+      { id: 'pay5', amount: 2200, date: '2026-01-01', method: 'Check', status: 'pending' },
+    ],
+    paymentSetup: { ...emptyPaymentSetup, payoutMethod: 'check', payoutFrequency: 'monthly', payoutDay: '15th', autoPayEnabled: false },
     status: 'active',
     createdAt: '2025-03-15T00:00:00Z',
     updatedAt: '2026-02-09T08:45:00Z',
@@ -68,12 +99,15 @@ const MOCK_OWNERS: Owner[] = [
     taxId: '',
     taxClassification: 'corporation',
     emails: [
-      { id: 'e4', email: 'mchen@company.com', isPrimary: true, status: 'active', loginCount: 5, lastLogin: '2026-01-30T16:20:00Z' },
+      { id: 'e4', email: 'mchen@company.com', isPrimary: true, status: 'active', inviteStatus: 'pending', loginCount: 5, lastLogin: '2026-01-30T16:20:00Z' },
     ],
     linkedPropertyIds: ['p6'],
+    agreements: [],
+    agreementMode: 'single',
     documents: [
       { id: 'd2', fileName: 'W9_Form.pdf', fileUrl: '#', tags: ['W9', 'Tax'], uploadedAt: '2025-12-01T00:00:00Z' },
     ],
+    payments: [],
     paymentSetup: { ...emptyPaymentSetup },
     status: 'deactivated',
     createdAt: '2025-01-10T00:00:00Z',
@@ -93,10 +127,13 @@ const MOCK_OWNERS: Owner[] = [
     taxId: '',
     taxClassification: 'trust',
     emails: [
-      { id: 'e5', email: 'emily.r@trust.com', isPrimary: true, status: 'deactivated', loginCount: 0 },
+      { id: 'e5', email: 'emily.r@trust.com', isPrimary: true, status: 'deactivated', inviteStatus: 'rejected', loginCount: 0 },
     ],
     linkedPropertyIds: [],
+    agreements: [],
+    agreementMode: 'single',
     documents: [],
+    payments: [],
     paymentSetup: { ...emptyPaymentSetup },
     status: 'deleted',
     createdAt: '2024-11-20T00:00:00Z',
@@ -105,14 +142,14 @@ const MOCK_OWNERS: Owner[] = [
 ];
 
 export const MOCK_PROPERTIES = [
-  { id: 'p1', name: 'Sunset Apartments' },
-  { id: 'p2', name: 'Downtown Lofts' },
-  { id: 'p3', name: 'Riverside Condos' },
-  { id: 'p4', name: 'Hilltop Villas' },
-  { id: 'p5', name: 'Garden Estates' },
-  { id: 'p6', name: 'Metro Tower' },
-  { id: 'p7', name: 'Lakeside Manor' },
-  { id: 'p8', name: 'Pine Ridge' },
+  { id: 'p1', name: 'Sunset Apartments', units: 12, rent: 1200 },
+  { id: 'p2', name: 'Downtown Lofts', units: 8, rent: 1800 },
+  { id: 'p3', name: 'Riverside Condos', units: 6, rent: 2200 },
+  { id: 'p4', name: 'Hilltop Villas', units: 4, rent: 3000 },
+  { id: 'p5', name: 'Garden Estates', units: 10, rent: 1500 },
+  { id: 'p6', name: 'Metro Tower', units: 20, rent: 2500 },
+  { id: 'p7', name: 'Lakeside Manor', units: 3, rent: 4000 },
+  { id: 'p8', name: 'Pine Ridge', units: 5, rent: 1600 },
 ];
 
 export function useOwners() {
@@ -121,6 +158,15 @@ export function useOwners() {
   const activeOwners = owners.filter((o) => o.status !== 'deleted');
   const archivedOwners = owners.filter((o) => o.status === 'deleted');
 
+  const getAllEmails = useCallback(
+    (excludeOwnerId?: string): string[] => {
+      return owners
+        .filter((o) => !excludeOwnerId || o.id !== excludeOwnerId)
+        .flatMap((o) => o.emails.map((e) => e.email.toLowerCase()));
+    },
+    [owners]
+  );
+
   const addOwner = useCallback((data: OwnerFormData) => {
     const now = new Date().toISOString();
     const newOwner: Owner = {
@@ -128,13 +174,18 @@ export function useOwners() {
       ...data,
       emails: data.emails.map((e) => ({
         ...e,
-        id: generateId(),
+        id: (e as any).id || generateId(),
         loginCount: 0,
+      })),
+      agreements: data.agreements.map((a) => ({
+        ...a,
+        id: generateId(),
       })),
       documents: data.documents.map((d) => ({
         ...d,
         id: generateId(),
       })),
+      payments: [],
       status: 'active',
       createdAt: now,
       updatedAt: now,
@@ -158,12 +209,31 @@ export function useOwners() {
                 lastLogin: (e as any).lastLogin,
               }))
             : o.emails,
+          agreements: data.agreements
+            ? data.agreements.map((a) => ({
+                ...a,
+                id: (a as any).id || generateId(),
+              }))
+            : o.agreements,
           documents: data.documents
             ? data.documents.map((d) => ({
                 ...d,
                 id: (d as any).id || generateId(),
               }))
             : o.documents,
+          updatedAt: new Date().toISOString(),
+        };
+      })
+    );
+  }, []);
+
+  const addPayment = useCallback((ownerId: string, payment: Omit<Owner['payments'][0], 'id'>) => {
+    setOwners((prev) =>
+      prev.map((o) => {
+        if (o.id !== ownerId) return o;
+        return {
+          ...o,
+          payments: [...o.payments, { ...payment, id: generateId() }],
           updatedAt: new Date().toISOString(),
         };
       })
@@ -210,8 +280,10 @@ export function useOwners() {
     owners,
     activeOwners,
     archivedOwners,
+    getAllEmails,
     addOwner,
     updateOwner,
+    addPayment,
     toggleOwnerStatus,
     softDeleteOwner,
     restoreOwner,
