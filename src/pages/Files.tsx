@@ -35,8 +35,11 @@ export default function Files() {
 
   const treeContent = (
     <div className="h-full">
-      <div className="px-3 py-3 border-b border-border">
+      <div className="px-3 py-3 border-b border-border flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">Folders</h3>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { fm.setSelectedFolderId(null); setNewFolderOpen(true); }} title="New root folder">
+          <FolderPlus className="h-4 w-4" />
+        </Button>
       </div>
       <div className="overflow-y-auto px-1" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         <FolderTree
@@ -44,6 +47,12 @@ export default function Files() {
           selectedFolderId={fm.selectedFolderId}
           onSelect={fm.setSelectedFolderId}
           getChildren={fm.getChildren}
+          onDeleteFolder={fm.deleteFolder}
+          onRenameFolder={fm.renameFolder}
+          onCreateSubfolder={(parentId) => {
+            if (parentId) fm.setSelectedFolderId(parentId);
+            setNewFolderOpen(true);
+          }}
         />
       </div>
     </div>
