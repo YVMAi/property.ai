@@ -144,6 +144,29 @@ export function useFileManager() {
     [toast]
   );
 
+  const deleteFolder = useCallback(
+    (folderId: string) => {
+      // Recursively collect all descendant folder ids
+      const getDescendantIds = (id: string): string[] => {
+        const children = folders.filter((f) => f.parentId === id);
+        return [id, ...children.flatMap((c) => getDescendantIds(c.id))];
+      };
+      const idsToRemove = new Set(getDescendantIds(folderId));
+      // Move files to trash
+      setFiles((prev) =>
+        prev.map((f) =>
+          idsToRemove.has(f.folderId) ? { ...f, isDeleted: true, folderId: 'f-trash' } : f
+        )
+      );
+      setFolders((prev) => prev.filter((f) => !idsToRemove.has(f.id)));
+      if (selectedFolderId && idsToRemove.has(selectedFolderId)) {
+        setSelectedFolderId(null);
+      }
+      toast({ title: 'Folder deleted', description: 'Folder and its contents moved to Trash.' });
+    },
+    [folders, selectedFolderId, toast]
+  );
+
   const updateFileTags = useCallback(
     (fileId: string, tagIds: string[]) => {
       setFiles((prev) => prev.map((f) => (f.id === fileId ? { ...f, tags: tagIds } : f)));
@@ -188,6 +211,6 @@ export function useFileManager() {
     viewMode, setViewMode,
     getChildren, getBreadcrumb,
     createFolder, uploadFiles, deleteFile, restoreFile, permanentDeleteFile,
-    renameFile, renameFolder, updateFileTags, addTag, deleteTag,
+    renameFile, renameFolder, deleteFolder, updateFileTags, addTag, deleteTag,
   };
 }
