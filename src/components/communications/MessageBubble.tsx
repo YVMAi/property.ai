@@ -1,6 +1,7 @@
 import { MessageSquare, Reply, Bot } from 'lucide-react';
 import type { Message } from '@/types/communication';
 import { cn } from '@/lib/utils';
+import AttachmentPreview from './AttachmentPreview';
 
 interface MessageBubbleProps {
   message: Message;
@@ -91,9 +92,7 @@ export default function MessageBubble({ message, replyToMessage, onReply }: Mess
         {message.attachments && message.attachments.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
             {message.attachments.map((att, i) => (
-              <span key={i} className="text-[10px] bg-accent rounded px-1.5 py-0.5 text-accent-foreground">
-                📎 {att}
-              </span>
+              <AttachmentPreview key={i} filename={att} variant="chip" />
             ))}
           </div>
         )}

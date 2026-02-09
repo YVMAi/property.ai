@@ -24,6 +24,7 @@ import {
 import type { Message, CommunicationUser, ComposeEmailData } from '@/types/communication';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import AttachmentPreview from './AttachmentPreview';
 
 interface EmailSectionProps {
   emails: Message[];
@@ -200,12 +201,7 @@ export default function EmailSection({ emails, selectedUser, onSendEmail }: Emai
                             {email.attachments && email.attachments.length > 0 && (
                               <div className="mt-2 flex flex-wrap gap-1">
                                 {email.attachments.map((att, i) => (
-                                  <span
-                                    key={i}
-                                    className="inline-flex items-center gap-1 text-[10px] bg-accent rounded-full px-2 py-0.5 text-accent-foreground"
-                                  >
-                                    📎 {att}
-                                  </span>
+                                  <AttachmentPreview key={i} filename={att} variant="badge" />
                                 ))}
                               </div>
                             )}
