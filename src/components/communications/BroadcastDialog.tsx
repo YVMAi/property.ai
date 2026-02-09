@@ -7,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useToast } from '@/hooks/use-toast';
-import type { CommunicationUser } from '@/types/communication';
+import type { CommunicationUser, UserType } from '@/types/communication';
 
 interface BroadcastDialogProps {
   users: CommunicationUser[];
@@ -21,15 +22,17 @@ export default function BroadcastDialog({ users, onSendBroadcast }: BroadcastDia
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | UserType>('all');
   const { toast } = useToast();
 
-  const filteredUsers = searchQuery.trim()
-    ? users.filter(
-        (u) =>
-          u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : users;
+  const filteredUsers = users.filter((u) => {
+    const matchesType = typeFilter === 'all' || u.type === typeFilter;
+    const matchesSearch =
+      !searchQuery.trim() ||
+      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesType && matchesSearch;
+  });
 
   const toggleRecipient = (userId: string) => {
     setSelectedRecipients((prev) =>
@@ -65,6 +68,7 @@ export default function BroadcastDialog({ users, onSendBroadcast }: BroadcastDia
     setAttachments([]);
     setSelectedRecipients([]);
     setSearchQuery('');
+    setTypeFilter('all');
     setOpen(false);
   };
 
@@ -102,6 +106,30 @@ export default function BroadcastDialog({ users, onSendBroadcast }: BroadcastDia
             <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
               Recipients ({selectedRecipients.length} selected)
             </label>
+
+            {/* Recipient type filter */}
+            <ToggleGroup
+              type="single"
+              value={typeFilter}
+              onValueChange={(val) => {
+                if (val) setTypeFilter(val as 'all' | UserType);
+              }}
+              className="justify-start mb-2"
+            >
+              <ToggleGroupItem value="all" size="sm" className="h-7 text-[11px] px-2.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                All
+              </ToggleGroupItem>
+              <ToggleGroupItem value="owner" size="sm" className="h-7 text-[11px] px-2.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                Owners
+              </ToggleGroupItem>
+              <ToggleGroupItem value="tenant" size="sm" className="h-7 text-[11px] px-2.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                Tenants
+              </ToggleGroupItem>
+              <ToggleGroupItem value="vendor" size="sm" className="h-7 text-[11px] px-2.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                Vendors
+              </ToggleGroupItem>
+            </ToggleGroup>
+
             <div className="relative mb-2">
               <Input
                 placeholder="Search contacts…"
