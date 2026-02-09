@@ -2,6 +2,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Menu, Bell } from 'lucide-react';
 import GlobalSearch from './GlobalSearch';
+import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
@@ -50,6 +51,8 @@ export default function Header() {
         <div className="w-full max-w-md">
           <GlobalSearch />
         </div>
+
+        <ThemeToggle />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
