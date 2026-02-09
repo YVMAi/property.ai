@@ -75,6 +75,10 @@ const menuItems: MenuItem[] = [
   { title: 'Files', url: '/files', icon: FolderOpen },
 ];
 
+const adminMenuItems: MenuItem[] = [
+  { title: 'Settings', url: '/settings', icon: Settings },
+];
+
 export default function AppSidebar() {
   const location = useLocation();
   const { state, toggleSidebar } = useSidebar();
@@ -103,6 +107,89 @@ export default function AppSidebar() {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const renderMenuItem = (item: MenuItem) => {
+    const Icon = item.icon;
+    const hasSubItems = item.subItems && item.subItems.length > 0;
+    const isOpen = openItems.includes(item.title);
+    const active = isActive(item.url) || isParentActive(item);
+
+    if (hasSubItems) {
+      return (
+        <Collapsible
+          key={item.title}
+          open={isOpen && !collapsed}
+          onOpenChange={() => toggleItem(item.title)}
+        >
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                className={cn(
+                  'sidebar-item w-full',
+                  active && 'sidebar-item-active',
+                  collapsed && 'justify-center px-2'
+                )}
+                aria-label={item.title}
+                tooltip={collapsed ? item.title : undefined}
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left">{item.title}</span>
+                    {isOpen ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </>
+                )}
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            {!collapsed && (
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  {item.subItems?.map((subItem) => (
+                    <SidebarMenuSubItem key={subItem.url}>
+                      <SidebarMenuSubButton
+                        asChild
+                        className={cn(
+                          'sidebar-item pl-10',
+                          isActive(subItem.url) && 'sidebar-item-active'
+                        )}
+                      >
+                        <NavLink to={subItem.url} aria-label={subItem.title}>
+                          {subItem.title}
+                        </NavLink>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            )}
+          </SidebarMenuItem>
+        </Collapsible>
+      );
+    }
+
+    return (
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton
+          asChild
+          className={cn(
+            'sidebar-item',
+            active && 'sidebar-item-active',
+            collapsed && 'justify-center px-2'
+          )}
+          tooltip={collapsed ? item.title : undefined}
+        >
+          <NavLink to={item.url} aria-label={item.title}>
+            <Icon className="h-5 w-5 shrink-0" />
+            {!collapsed && <span>{item.title}</span>}
+          </NavLink>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
   };
 
   return (
@@ -174,91 +261,21 @@ export default function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                const hasSubItems = item.subItems && item.subItems.length > 0;
-                const isOpen = openItems.includes(item.title);
-                const active = isActive(item.url) || isParentActive(item);
-
-                if (hasSubItems) {
-                  return (
-                    <Collapsible
-                      key={item.title}
-                      open={isOpen && !collapsed}
-                      onOpenChange={() => toggleItem(item.title)}
-                    >
-                      <SidebarMenuItem>
-                        <CollapsibleTrigger asChild>
-                          <SidebarMenuButton
-                            className={cn(
-                              'sidebar-item w-full',
-                              active && 'sidebar-item-active',
-                              collapsed && 'justify-center px-2'
-                            )}
-                            aria-label={item.title}
-                            tooltip={collapsed ? item.title : undefined}
-                          >
-                            <Icon className="h-5 w-5 shrink-0" />
-                            {!collapsed && (
-                              <>
-                                <span className="flex-1 text-left">{item.title}</span>
-                                {isOpen ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                              </>
-                            )}
-                          </SidebarMenuButton>
-                        </CollapsibleTrigger>
-                        {!collapsed && (
-                          <CollapsibleContent>
-                            <SidebarMenuSub>
-                              {item.subItems?.map((subItem) => (
-                                <SidebarMenuSubItem key={subItem.url}>
-                                  <SidebarMenuSubButton
-                                    asChild
-                                    className={cn(
-                                      'sidebar-item pl-10',
-                                      isActive(subItem.url) && 'sidebar-item-active'
-                                    )}
-                                  >
-                                    <NavLink to={subItem.url} aria-label={subItem.title}>
-                                      {subItem.title}
-                                    </NavLink>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
-                            </SidebarMenuSub>
-                          </CollapsibleContent>
-                        )}
-                      </SidebarMenuItem>
-                    </Collapsible>
-                  );
-                }
-
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      className={cn(
-                        'sidebar-item',
-                        active && 'sidebar-item-active',
-                        collapsed && 'justify-center px-2'
-                      )}
-                      tooltip={collapsed ? item.title : undefined}
-                    >
-                      <NavLink to={item.url} aria-label={item.title}>
-                        <Icon className="h-5 w-5 shrink-0" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {menuItems.map((item) => renderMenuItem(item))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Admin-only Settings */}
+        {user?.role === 'admin' && (
+          <SidebarGroup className="mt-auto pt-2 border-t border-sidebar-border">
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminMenuItems.map((item) => renderMenuItem(item))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
