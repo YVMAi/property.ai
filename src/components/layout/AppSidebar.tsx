@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Home,
   BarChart3,
@@ -17,6 +17,10 @@ import {
   LogOut,
   User,
   Settings,
+  ArrowLeft,
+  CreditCard,
+  Plug,
+  HelpCircle,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -75,6 +79,16 @@ const menuItems: MenuItem[] = [
   { title: 'Files', url: '/files', icon: FolderOpen },
 ];
 
+export type SettingsTab = 'profile' | 'people' | 'billing' | 'connectors' | 'help';
+
+const settingsMenuItems: { id: SettingsTab; title: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: 'profile', title: 'Profile', icon: User },
+  { id: 'people', title: 'People', icon: Users },
+  { id: 'billing', title: 'Billing', icon: CreditCard },
+  { id: 'connectors', title: 'Connectors', icon: Plug },
+  { id: 'help', title: 'Help & Support', icon: HelpCircle },
+];
+
 
 export default function AppSidebar() {
   const location = useLocation();
@@ -83,6 +97,12 @@ export default function AppSidebar() {
   const collapsed = state === 'collapsed';
   const [openItems, setOpenItems] = useState<string[]>(['Users']);
   const { user, logout } = useAuth();
+  const isOnSettings = location.pathname === '/settings';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeSettingsTab = (searchParams.get('tab') as SettingsTab) || 'profile';
+  const setActiveSettingsTab = (tab: SettingsTab) => {
+    setSearchParams({ tab }, { replace: true });
+  };
 
   const isActive = (url: string) => location.pathname === url;
   const isParentActive = (item: MenuItem) => {
@@ -256,14 +276,65 @@ export default function AppSidebar() {
       )}
 
       <SidebarContent className="pt-2">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => renderMenuItem(item))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {isOnSettings && user?.role === 'admin' ? (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {/* Back to main nav */}
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    className={cn(
+                      'sidebar-item w-full',
+                      collapsed && 'justify-center px-2'
+                    )}
+                    onClick={() => navigate('/dashboard')}
+                    tooltip={collapsed ? 'Back' : undefined}
+                  >
+                    <ArrowLeft className="h-5 w-5 shrink-0" />
+                    {!collapsed && <span>Back</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
 
+                {!collapsed && (
+                  <li className="px-3 py-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Settings
+                    </span>
+                  </li>
+                )}
+
+                {settingsMenuItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = activeSettingsTab === item.id;
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        className={cn(
+                          'sidebar-item',
+                          active && 'sidebar-item-active',
+                          collapsed && 'justify-center px-2'
+                        )}
+                        onClick={() => setActiveSettingsTab(item.id)}
+                        tooltip={collapsed ? item.title : undefined}
+                      >
+                        <Icon className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {menuItems.map((item) => renderMenuItem(item))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
@@ -297,12 +368,12 @@ export default function AppSidebar() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align={collapsed ? "center" : "end"} side="top" className="w-48">
-            <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings?tab=profile')}>
               <User className="h-4 w-4 mr-2" />
               Profile
             </DropdownMenuItem>
             {user?.role === 'admin' && (
-              <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
+              <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings?tab=profile')}>
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </DropdownMenuItem>
