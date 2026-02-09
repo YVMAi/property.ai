@@ -22,7 +22,7 @@ export default function Communications() {
   } = useCommunications();
 
   return (
-    <div className="flex flex-col gap-5 h-full animate-fade-in">
+    <div className="flex flex-col gap-4 h-full animate-fade-in">
       {/* Page header */}
       <div className="flex items-center gap-3">
         <div className="h-9 w-9 rounded-lg bg-primary/20 flex items-center justify-center">
@@ -51,7 +51,7 @@ export default function Communications() {
 
       {/* Tabs: Chat & Email */}
       <Tabs defaultValue="chat" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="self-start mb-3">
+        <TabsList className="self-start mb-2">
           <TabsTrigger value="chat" className="gap-1.5">
             <MessageSquare className="h-4 w-4" />
             Chat Messages
@@ -72,7 +72,7 @@ export default function Communications() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 mt-0" style={{ minHeight: '350px' }}>
+        <TabsContent value="chat" className="flex-1 flex flex-col min-h-0 mt-0 data-[state=inactive]:hidden">
           <ChatTimeline
             messages={userTextMessages}
             selectedUser={selectedUser}
@@ -80,7 +80,7 @@ export default function Communications() {
           />
         </TabsContent>
 
-        <TabsContent value="email" className="flex-1 flex flex-col min-h-0 mt-0" style={{ minHeight: '350px' }}>
+        <TabsContent value="email" className="flex-1 flex flex-col min-h-0 mt-0 data-[state=inactive]:hidden">
           <EmailSection
             emails={userEmailMessages}
             selectedUser={selectedUser}
