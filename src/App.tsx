@@ -24,6 +24,7 @@ import Tenants from "./pages/users/Tenants";
 import Vendors from "./pages/users/Vendors";
 import Communications from "./pages/Communications";
 import Files from "./pages/Files";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/users/vendors" element={<ProtectedPage><Vendors /></ProtectedPage>} />
               <Route path="/communications" element={<ProtectedPage><Communications /></ProtectedPage>} />
               <Route path="/files" element={<ProtectedPage><Files /></ProtectedPage>} />
+              <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

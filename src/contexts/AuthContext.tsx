@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+export type UserRole = 'admin' | 'user';
+
 interface User {
   id: string;
   email: string;
   name: string;
   avatar?: string;
+  role: UserRole;
 }
 
 interface AuthContextType {
@@ -23,8 +26,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Simulated users for demo
 const DEMO_USERS = [
-  { id: '1', email: 'admin@propertyai.com', password: 'password123', name: 'Admin User' },
-  { id: '2', email: 'manager@propertyai.com', password: 'password123', name: 'Property Manager' },
+  { id: '1', email: 'admin@propertyai.com', password: 'password123', name: 'Admin User', role: 'admin' as UserRole },
+  { id: '2', email: 'manager@propertyai.com', password: 'password123', name: 'Property Manager', role: 'user' as UserRole },
 ];
 
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
@@ -84,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Store pending user for MFA verification
-    setPendingUser({ id: foundUser.id, email: foundUser.email, name: foundUser.name });
+    setPendingUser({ id: foundUser.id, email: foundUser.email, name: foundUser.name, role: foundUser.role });
     
     return { success: true, requiresMfa: true };
   };
