@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
-  Plus, Trash2, Send, ToggleLeft, ToggleRight, KeyRound,
+  Plus, Trash2, Send, ToggleLeft, ToggleRight, KeyRound, XCircle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { OwnerEmail, EmailStatus } from '@/types/owner';
+import type { OwnerEmail, EmailStatus, InviteStatus } from '@/types/owner';
 
 type EmailEntry = Omit<OwnerEmail, 'loginCount' | 'lastLogin'> & {
   loginCount?: number;
@@ -19,9 +19,18 @@ interface EmailsStepProps {
   emails: EmailEntry[];
   onChange: (emails: EmailEntry[]) => void;
   errors: Record<string, string>;
+  allOwnerEmails: string[];
 }
 
-export default function EmailsStep({ emails, onChange, errors }: EmailsStepProps) {
+const INVITE_STATUS_STYLES: Record<InviteStatus, { bg: string; text: string; label: string }> = {
+  pending: { bg: 'bg-warning/30', text: 'text-warning-foreground', label: 'Pending' },
+  shared: { bg: 'bg-primary/20', text: 'text-primary-foreground', label: 'Shared' },
+  accepted: { bg: 'bg-secondary/30', text: 'text-secondary-foreground', label: 'Accepted' },
+  rejected: { bg: 'bg-destructive/30', text: 'text-destructive-foreground', label: 'Rejected' },
+  withdrawn: { bg: 'bg-muted', text: 'text-muted-foreground', label: 'Withdrawn' },
+};
+
+export default function EmailsStep({ emails, onChange, errors, allOwnerEmails }: EmailsStepProps) {
   const [newEmail, setNewEmail] = useState('');
   const { toast } = useToast();
 
@@ -29,19 +38,15 @@ export default function EmailsStep({ emails, onChange, errors }: EmailsStepProps
     if (!newEmail.trim()) return;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newEmail)) {
-      toast({
-        title: 'Invalid email',
-        description: 'Please enter a valid email address.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Invalid email', description: 'Please enter a valid email address.', variant: 'destructive' });
       return;
     }
     if (emails.some((e) => e.email.toLowerCase() === newEmail.toLowerCase())) {
-      toast({
-        title: 'Duplicate email',
-        description: 'This email is already added.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Duplicate email', description: 'This email is already added to this owner.', variant: 'destructive' });
+      return;
+    }
+    if (allOwnerEmails.includes(newEmail.toLowerCase())) {
+      toast({ title: 'Email already in use', description: 'This email is already assigned to another owner.', variant: 'destructive' });
       return;
     }
     const entry: EmailEntry = {
@@ -49,6 +54,7 @@ export default function EmailsStep({ emails, onChange, errors }: EmailsStepProps
       email: newEmail,
       isPrimary: emails.length === 0,
       status: 'active' as EmailStatus,
+      inviteStatus: 'pending' as InviteStatus,
     };
     onChange([...emails, entry]);
     setNewEmail('');
@@ -76,26 +82,48 @@ export default function EmailsStep({ emails, onChange, errors }: EmailsStepProps
     onChange(emails.map((e) => ({ ...e, isPrimary: e.id === id })));
   };
 
-  const sendInvite = (email: string) => {
-    toast({
-      title: 'Invite sent',
-      description: `Invitation email sent to ${email}.`,
-    });
+  const sendInvite = (id: string, email: string) => {
+    onChange(
+      emails.map((e) =>
+        e.id === id
+          ? { ...e, inviteStatus: 'shared' as InviteStatus, inviteSentAt: new Date().toISOString() }
+          : e
+      )
+    );
+    toast({ title: 'Invite sent', description: `Invitation email sent to ${email}. Status updated to Shared.` });
+  };
+
+  const withdrawInvite = (id: string, email: string) => {
+    onChange(
+      emails.map((e) =>
+        e.id === id ? { ...e, inviteStatus: 'withdrawn' as InviteStatus } : e
+      )
+    );
+    toast({ title: 'Invite withdrawn', description: `Invitation for ${email} has been withdrawn.` });
   };
 
   const sendPasswordReset = (email: string) => {
-    toast({
-      title: 'Password reset sent',
-      description: `Password reset link sent to ${email}.`,
-    });
+    toast({ title: 'Password reset sent', description: `Password reset link sent to ${email}.` });
   };
+
+  const getInviteStatusBadge = (status: InviteStatus) => {
+    const style = INVITE_STATUS_STYLES[status];
+    return (
+      <Badge className={`${style.bg} ${style.text} border-0 text-xs shrink-0`}>
+        {style.label}
+      </Badge>
+    );
+  };
+
+  const canWithdraw = (status: InviteStatus) => status === 'shared' || status === 'pending';
+  const canSendInvite = (status: InviteStatus) => status === 'pending' || status === 'rejected' || status === 'withdrawn';
 
   return (
     <div className="space-y-4">
       <div>
         <Label>Owner Emails</Label>
         <p className="text-sm text-muted-foreground mb-3">
-          Add one or more emails. The primary email is used for login and notifications.
+          Add one or more emails. The primary email is used for login and notifications. Emails must be unique across all owners.
         </p>
       </div>
 
@@ -134,7 +162,7 @@ export default function EmailsStep({ emails, onChange, errors }: EmailsStepProps
                   {entry.email}
                 </Label>
                 {entry.isPrimary && (
-                  <Badge className="bg-primary/20 text-primary border-0 text-xs shrink-0">
+                  <Badge className="bg-primary/20 text-primary-foreground border-0 text-xs shrink-0">
                     Primary
                   </Badge>
                 )}
@@ -147,18 +175,33 @@ export default function EmailsStep({ emails, onChange, errors }: EmailsStepProps
                 >
                   {entry.status}
                 </Badge>
+                {getInviteStatusBadge(entry.inviteStatus)}
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  title="Send Invite"
-                  onClick={() => sendInvite(entry.email)}
-                >
-                  <Send className="h-3.5 w-3.5" />
-                </Button>
+                {canSendInvite(entry.inviteStatus) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    title="Send Invite"
+                    onClick={() => sendInvite(entry.id, entry.email)}
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                  </Button>
+                )}
+                {canWithdraw(entry.inviteStatus) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    title="Withdraw Invite"
+                    onClick={() => withdrawInvite(entry.id, entry.email)}
+                  >
+                    <XCircle className="h-3.5 w-3.5 text-warning-foreground" />
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="ghost"
@@ -199,8 +242,8 @@ export default function EmailsStep({ emails, onChange, errors }: EmailsStepProps
         </RadioGroup>
       )}
 
-      {/* Login Logs for existing emails */}
-      {emails.some((e) => (e as any).loginCount > 0) && (
+      {/* Login Logs */}
+      {emails.some((e) => (e.loginCount ?? 0) > 0) && (
         <div className="mt-4">
           <Label className="mb-2 block">Login Activity</Label>
           <div className="rounded-lg border border-border/50 overflow-hidden">
@@ -214,15 +257,13 @@ export default function EmailsStep({ emails, onChange, errors }: EmailsStepProps
               </thead>
               <tbody>
                 {emails
-                  .filter((e) => (e as any).loginCount > 0)
+                  .filter((e) => (e.loginCount ?? 0) > 0)
                   .map((e) => (
                     <tr key={e.id} className="border-t border-border/30">
                       <td className="p-2">{e.email}</td>
-                      <td className="p-2 text-center">{(e as any).loginCount}</td>
+                      <td className="p-2 text-center">{e.loginCount}</td>
                       <td className="p-2 text-muted-foreground">
-                        {(e as any).lastLogin
-                          ? new Date((e as any).lastLogin).toLocaleDateString()
-                          : '—'}
+                        {e.lastLogin ? new Date(e.lastLogin).toLocaleDateString() : '—'}
                       </td>
                     </tr>
                   ))}

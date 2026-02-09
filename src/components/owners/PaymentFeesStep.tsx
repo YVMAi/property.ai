@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Landmark, Calculator, ShieldCheck, Info } from 'lucide-react';
+import { Landmark, Calculator, ShieldCheck, Info, Zap, ClipboardList } from 'lucide-react';
 import { MOCK_PROPERTIES } from '@/hooks/useOwners';
 import type {
   PaymentSetup,
@@ -19,11 +19,13 @@ import type {
   PayoutAccountType,
   ManagementFeeType,
   ManagementFeeApplyTo,
+  OwnerAgreement,
 } from '@/types/owner';
 
 interface PaymentFeesStepProps {
   data: PaymentSetup;
   linkedPropertyIds: string[];
+  agreements: (Omit<OwnerAgreement, 'id'> & { id?: string })[];
   onChange: (data: Partial<PaymentSetup>) => void;
   errors: Record<string, string>;
 }
@@ -32,43 +34,43 @@ const PAYOUT_DAYS = [
   '1st', '5th', '10th', '15th', '20th', '25th', 'End of month',
 ];
 
-function FeePreview({ feeType, feeValue }: { feeType: ManagementFeeType; feeValue: number | '' }) {
-  if (!feeValue || feeValue <= 0) return null;
+function AgreementFeePreview({
+  agreements,
+  linkedPropertyIds,
+}: {
+  agreements: PaymentFeesStepProps['agreements'];
+  linkedPropertyIds: string[];
+}) {
+  const linkedProps = MOCK_PROPERTIES.filter((p) => linkedPropertyIds.includes(p.id));
+  if (linkedProps.length === 0 || agreements.length === 0) return null;
 
-  if (feeType === 'percentage') {
-    const rent = 2000;
-    const fee = (rent * Number(feeValue)) / 100;
-    const net = rent - fee;
-    return (
-      <div className="p-3 rounded-lg bg-accent/50 border border-border/50 text-sm text-muted-foreground flex items-start gap-2">
-        <Calculator className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
-        <span>
-          Example: On <strong>${rent.toLocaleString()}</strong> monthly rent →{' '}
-          <strong>${fee.toFixed(0)}</strong> fee ({feeValue}%) deducted → Owner receives{' '}
-          <strong>${net.toFixed(0)}</strong>.
-        </span>
-      </div>
-    );
-  }
+  const hasAnyFee = agreements.some((a) => a.feePerUnit || a.feePercentRent);
+  if (!hasAnyFee) return null;
 
-  if (feeType === 'flat_monthly') {
-    return (
-      <div className="p-3 rounded-lg bg-accent/50 border border-border/50 text-sm text-muted-foreground flex items-start gap-2">
-        <Calculator className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
-        <span>
-          A flat fee of <strong>${Number(feeValue).toLocaleString()}</strong> will be deducted each
-          month before disbursement.
-        </span>
-      </div>
-    );
-  }
+  let totalFees = 0;
+  let totalRent = 0;
+
+  linkedProps.forEach((prop) => {
+    const propAgreement = agreements.find((a) => a.propertyId === prop.id) || agreements.find((a) => !a.propertyId);
+    if (!propAgreement) return;
+
+    const unitFee = Number(propAgreement.feePerUnit) || 0;
+    const percentFee = Number(propAgreement.feePercentRent) || 0;
+    const propRent = prop.units * prop.rent;
+
+    totalRent += propRent;
+    totalFees += (unitFee * prop.units) + (propRent * percentFee / 100);
+  });
+
+  const netAmount = totalRent - totalFees;
 
   return (
     <div className="p-3 rounded-lg bg-accent/50 border border-border/50 text-sm text-muted-foreground flex items-start gap-2">
       <Calculator className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
       <span>
-        A flat fee of <strong>${Number(feeValue).toLocaleString()}</strong> per property will be
-        deducted each month.
+        Example: On <strong>{linkedProps.length}</strong> propert{linkedProps.length === 1 ? 'y' : 'ies'} with{' '}
+        <strong>${totalRent.toLocaleString()}</strong> total rent → <strong>${totalFees.toFixed(0)}</strong> fees
+        (per-unit + % of rent) deducted → Owner receives <strong>${netAmount.toFixed(0)}</strong>.
       </span>
     </div>
   );
@@ -77,6 +79,7 @@ function FeePreview({ feeType, feeValue }: { feeType: ManagementFeeType; feeValu
 export default function PaymentFeesStep({
   data,
   linkedPropertyIds,
+  agreements,
   onChange,
   errors,
 }: PaymentFeesStepProps) {
@@ -93,6 +96,43 @@ export default function PaymentFeesStep({
 
   return (
     <div className="space-y-8">
+      {/* ─── Auto-Pay ─── */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Zap className="h-5 w-5 text-primary" />
+          <h3 className="text-base font-semibold text-foreground">Auto-Pay</h3>
+        </div>
+
+        <div className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-card">
+          <div className="space-y-0.5">
+            <Label className="cursor-pointer" htmlFor="autopay-toggle">
+              Enable Auto-Pay for Owner Disbursements
+            </Label>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Info className="h-3 w-3" />
+              {data.autoPayEnabled
+                ? 'Payouts will be processed automatically based on frequency.'
+                : 'Manual tasks will be created for each payout due date.'}
+            </p>
+          </div>
+          <Switch
+            id="autopay-toggle"
+            checked={data.autoPayEnabled}
+            onCheckedChange={(checked) => onChange({ autoPayEnabled: checked })}
+          />
+        </div>
+
+        {!data.autoPayEnabled && (
+          <div className="p-3 rounded-lg bg-warning/10 border border-warning/30 text-sm flex items-start gap-2 animate-fade-in">
+            <ClipboardList className="h-4 w-4 mt-0.5 shrink-0 text-warning-foreground" />
+            <span className="text-warning-foreground">
+              With auto-pay disabled, a task will be auto-created in the Tasks section on each payout due date:
+              &quot;Process Manual Payment for [Owner] - [Amount]&quot;.
+            </span>
+          </div>
+        )}
+      </section>
+
       {/* ─── Payout Method ─── */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
@@ -120,9 +160,6 @@ export default function PaymentFeesStep({
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-            {errors.payoutMethod && (
-              <p className="text-sm text-destructive-foreground">{errors.payoutMethod}</p>
-            )}
           </div>
 
           {data.payoutMethod === 'other' && (
@@ -141,7 +178,6 @@ export default function PaymentFeesStep({
           )}
         </div>
 
-        {/* ACH Bank Details */}
         {data.payoutMethod === 'ach' && (
           <div className="space-y-4 p-4 rounded-lg border border-border/50 bg-card">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -245,9 +281,7 @@ export default function PaymentFeesStep({
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">
                   {PAYOUT_DAYS.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -310,9 +344,7 @@ export default function PaymentFeesStep({
                   step={data.managementFeeType === 'percentage' ? '0.5' : '1'}
                   value={data.managementFeeValue}
                   onChange={(e) =>
-                    onChange({
-                      managementFeeValue: e.target.value === '' ? '' : Number(e.target.value),
-                    })
+                    onChange({ managementFeeValue: e.target.value === '' ? '' : Number(e.target.value) })
                   }
                   placeholder={data.managementFeeType === 'percentage' ? 'e.g. 8' : 'e.g. 150'}
                   className={errors.managementFeeValue ? 'border-destructive' : ''}
@@ -331,9 +363,7 @@ export default function PaymentFeesStep({
                   min={0}
                   value={data.managementFeeMinimum}
                   onChange={(e) =>
-                    onChange({
-                      managementFeeMinimum: e.target.value === '' ? '' : Number(e.target.value),
-                    })
+                    onChange({ managementFeeMinimum: e.target.value === '' ? '' : Number(e.target.value) })
                   }
                   placeholder="e.g. 50 (optional)"
                 />
@@ -343,7 +373,6 @@ export default function PaymentFeesStep({
               </div>
             )}
 
-            {/* Apply To */}
             <div className="space-y-3">
               <Label>Apply To</Label>
               <Select
@@ -385,7 +414,6 @@ export default function PaymentFeesStep({
               )}
             </div>
 
-            {/* Notes */}
             <div className="space-y-2">
               <Label>Additional Notes</Label>
               <Textarea
@@ -396,11 +424,11 @@ export default function PaymentFeesStep({
                 className="resize-none"
               />
             </div>
-
-            {/* Fee Preview */}
-            <FeePreview feeType={data.managementFeeType} feeValue={data.managementFeeValue} />
           </div>
         )}
+
+        {/* Agreement-Based Fee Preview */}
+        <AgreementFeePreview agreements={agreements} linkedPropertyIds={linkedPropertyIds} />
       </section>
     </div>
   );
