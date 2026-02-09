@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,10 +10,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
-import { Search, UserPlus, MoreHorizontal, Shield, ShieldOff, Trash2, Mail, UserX, UserCheck, KeyRound } from 'lucide-react';
+import { Search, UserPlus, MoreHorizontal, Shield, ShieldOff, Trash2, Mail, UserX, UserCheck, KeyRound, CalendarIcon, Download } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 
 type UserStatus = 'active' | 'inactive' | 'invitation_accepted';
 
@@ -83,6 +87,8 @@ export default function PeopleSection() {
   const [logSearchQuery, setLogSearchQuery] = useState('');
   const [logActionFilter, setLogActionFilter] = useState<AuditAction | 'all'>('all');
   const [logUserFilter, setLogUserFilter] = useState<string>('all');
+  const [logDateFrom, setLogDateFrom] = useState<Date | undefined>(undefined);
+  const [logDateTo, setLogDateTo] = useState<Date | undefined>(undefined);
 
   // Only show non-removed users
   const visibleUsers = users.filter((u) => !u.isRemoved);
@@ -99,8 +105,70 @@ export default function PeopleSection() {
       log.action.toLowerCase().includes(logSearchQuery.toLowerCase());
     const matchesAction = logActionFilter === 'all' || log.actionType === logActionFilter;
     const matchesUser = logUserFilter === 'all' || log.user === logUserFilter;
-    return matchesSearch && matchesAction && matchesUser;
+
+    let matchesDate = true;
+    if (logDateFrom || logDateTo) {
+      const logDate = parseISO(log.timestamp.replace(' ', 'T'));
+      if (logDateFrom && logDateTo) {
+        matchesDate = isWithinInterval(logDate, {
+          start: startOfDay(logDateFrom),
+          end: endOfDay(logDateTo),
+        });
+      } else if (logDateFrom) {
+        matchesDate = logDate >= startOfDay(logDateFrom);
+      } else if (logDateTo) {
+        matchesDate = logDate <= endOfDay(logDateTo);
+      }
+    }
+
+    return matchesSearch && matchesAction && matchesUser && matchesDate;
   });
+
+  const hasActiveFilters = logSearchQuery || logActionFilter !== 'all' || logUserFilter !== 'all' || logDateFrom || logDateTo;
+
+  const clearAllFilters = () => {
+    setLogSearchQuery('');
+    setLogActionFilter('all');
+    setLogUserFilter('all');
+    setLogDateFrom(undefined);
+    setLogDateTo(undefined);
+  };
+
+  const exportLogsToCSV = () => {
+    if (filteredLogs.length === 0) {
+      toast({ title: 'No data to export', description: 'No audit logs match the current filters.', variant: 'destructive' });
+      return;
+    }
+
+    const headers = ['User', 'Action', 'Type', 'Timestamp'];
+    const rows = filteredLogs.map((log) => [
+      log.user,
+      log.action,
+      ACTION_TYPE_LABELS[log.actionType],
+      log.timestamp,
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+
+    const dateRange = logDateFrom && logDateTo
+      ? `_${format(logDateFrom, 'yyyy-MM-dd')}_to_${format(logDateTo, 'yyyy-MM-dd')}`
+      : '';
+    link.download = `audit_logs${dateRange}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({ title: 'Export complete', description: `${filteredLogs.length} audit log(s) exported.` });
+  };
 
   const uniqueLogUsers = [...new Set(auditLogs.map((l) => l.user))];
 
@@ -337,7 +405,7 @@ export default function PeopleSection() {
 
         {/* Audit Logs Tab */}
         <TabsContent value="audit" className="mt-4 space-y-4">
-          {/* Audit Filters */}
+          {/* Audit Filters Row 1: Search + Dropdowns */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -370,20 +438,74 @@ export default function PeopleSection() {
                 ))}
               </SelectContent>
             </Select>
-            {(logSearchQuery || logActionFilter !== 'all' || logUserFilter !== 'all') && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setLogSearchQuery('');
-                  setLogActionFilter('all');
-                  setLogUserFilter('all');
-                }}
-                className="text-muted-foreground"
-              >
-                Clear filters
+          </div>
+
+          {/* Audit Filters Row 2: Date Range + Actions */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'w-full sm:w-48 justify-start text-left font-normal',
+                    !logDateFrom && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  {logDateFrom ? format(logDateFrom, 'PPP') : 'From date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={logDateFrom}
+                  onSelect={setLogDateFrom}
+                  initialFocus
+                  className={cn('p-3 pointer-events-auto')}
+                />
+              </PopoverContent>
+            </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'w-full sm:w-48 justify-start text-left font-normal',
+                    !logDateTo && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  {logDateTo ? format(logDateTo, 'PPP') : 'To date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={logDateTo}
+                  onSelect={setLogDateTo}
+                  disabled={(date) => logDateFrom ? date < logDateFrom : false}
+                  initialFocus
+                  className={cn('p-3 pointer-events-auto')}
+                />
+              </PopoverContent>
+            </Popover>
+
+            <div className="flex items-center gap-2 ml-auto">
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="text-muted-foreground"
+                >
+                  Clear filters
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={exportLogsToCSV}>
+                <Download className="h-4 w-4 mr-1.5" />
+                Export CSV
               </Button>
-            )}
+            </div>
           </div>
 
           <Card className="card-elevated overflow-hidden">
