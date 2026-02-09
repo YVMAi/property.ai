@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { getTenantCategory } from '@/types/tenant';
 import type { Tenant, TenantFormData, TenantStatus, BGVReport, TenantPayment } from '@/types/tenant';
 
 const generateId = () => Math.random().toString(36).substring(2, 11);
@@ -166,8 +167,10 @@ const MOCK_TENANTS: Tenant[] = [
 export function useTenants() {
   const [tenants, setTenants] = useState<Tenant[]>(MOCK_TENANTS);
 
-  const activeTenants = tenants.filter((t) => t.status !== 'deleted');
-  const archivedTenants = tenants.filter((t) => t.status === 'deleted');
+  const nonDeleted = tenants.filter((t) => t.status !== 'deleted');
+  const activeTenants = useMemo(() => nonDeleted.filter((t) => getTenantCategory(t) !== 'archived'), [nonDeleted]);
+  const archivedTenants = useMemo(() => nonDeleted.filter((t) => getTenantCategory(t) === 'archived'), [nonDeleted]);
+  const deletedTenants = tenants.filter((t) => t.status === 'deleted');
 
   const getAllEmails = useCallback(
     (excludeId?: string): string[] =>
@@ -295,6 +298,7 @@ export function useTenants() {
     tenants,
     activeTenants,
     archivedTenants,
+    deletedTenants,
     getAllEmails,
     addTenant,
     updateTenant,
