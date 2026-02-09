@@ -15,7 +15,7 @@ import ConfirmActionDialog from './ConfirmActionDialog';
 interface OwnersTableProps {
   owners: Owner[];
   isArchived?: boolean;
-  onEdit: (owner: Owner) => void;
+  onEdit: (owner: { id: string }) => void;
   onToggleStatus: (id: string) => void;
   onSoftDelete: (id: string) => void;
   onRestore?: (id: string) => void;
