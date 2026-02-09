@@ -1,42 +1,27 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useOwners } from '@/hooks/useOwners';
+import { useOwnersContext } from '@/contexts/OwnersContext';
 import OwnersTable from '@/components/owners/OwnersTable';
-import OwnerWizard from '@/components/owners/OwnerWizard';
-import type { Owner, OwnerFormData } from '@/types/owner';
 
 export default function Owners() {
   const {
     activeOwners,
     archivedOwners,
-    addOwner,
-    updateOwner,
     toggleOwnerStatus,
     softDeleteOwner,
     restoreOwner,
-  } = useOwners();
+  } = useOwnersContext();
 
-  const [wizardOpen, setWizardOpen] = useState(false);
-  const [editingOwner, setEditingOwner] = useState<Owner | null>(null);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleAddNew = () => {
-    setEditingOwner(null);
-    setWizardOpen(true);
+    navigate('/users/owners/new');
   };
 
-  const handleEdit = (owner: Owner) => {
-    setEditingOwner(owner);
-    setWizardOpen(true);
-  };
-
-  const handleSave = (data: OwnerFormData) => {
-    if (editingOwner) {
-      updateOwner(editingOwner.id, data);
-    } else {
-      addOwner(data);
-    }
+  const handleEdit = (owner: { id: string }) => {
+    navigate(`/users/owners/${owner.id}/edit`);
   };
 
   const handleToggleStatus = (id: string) => {
@@ -95,13 +80,6 @@ export default function Owners() {
           />
         </TabsContent>
       </Tabs>
-
-      <OwnerWizard
-        open={wizardOpen}
-        onClose={() => setWizardOpen(false)}
-        onSave={handleSave}
-        editingOwner={editingOwner}
-      />
     </div>
   );
 }
