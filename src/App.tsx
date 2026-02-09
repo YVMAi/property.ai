@@ -21,6 +21,7 @@ import Leases from "./pages/Leases";
 import Properties from "./pages/Properties";
 import Owners from "./pages/users/Owners";
 import OwnerFormPage from "./pages/users/OwnerFormPage";
+import OwnerViewPage from "./pages/users/OwnerViewPage";
 import Tenants from "./pages/users/Tenants";
 import TenantFormPage from "./pages/users/TenantFormPage";
 import TenantViewPage from "./pages/users/TenantViewPage";
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/properties" element={<ProtectedPage><Properties /></ProtectedPage>} />
               <Route path="/users/owners" element={<ProtectedPage><Owners /></ProtectedPage>} />
               <Route path="/users/owners/new" element={<ProtectedPage><OwnerFormPage /></ProtectedPage>} />
+              <Route path="/users/owners/:id" element={<ProtectedPage><OwnerViewPage /></ProtectedPage>} />
               <Route path="/users/owners/:id/edit" element={<ProtectedPage><OwnerFormPage /></ProtectedPage>} />
               <Route path="/users/tenants" element={<ProtectedPage><Tenants /></ProtectedPage>} />
               <Route path="/users/tenants/new" element={<ProtectedPage><TenantFormPage /></ProtectedPage>} />

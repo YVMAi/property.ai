@@ -20,6 +20,10 @@ export default function Owners() {
     navigate('/users/owners/new');
   };
 
+  const handleView = (owner: { id: string }) => {
+    navigate(`/users/owners/${owner.id}`);
+  };
+
   const handleEdit = (owner: { id: string }) => {
     navigate(`/users/owners/${owner.id}/edit`);
   };
@@ -59,6 +63,7 @@ export default function Owners() {
         <TabsContent value="active">
           <OwnersTable
             owners={activeOwners}
+            onView={handleView}
             onEdit={handleEdit}
             onToggleStatus={handleToggleStatus}
             onSoftDelete={handleSoftDelete}
@@ -70,6 +75,7 @@ export default function Owners() {
           <OwnersTable
             owners={archivedOwners}
             isArchived
+            onView={handleView}
             onEdit={handleEdit}
             onToggleStatus={handleToggleStatus}
             onSoftDelete={handleSoftDelete}

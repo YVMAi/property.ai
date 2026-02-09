@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  Pencil, Trash2, ToggleLeft, ToggleRight, Download, Plus, Search, RotateCcw,
+  Eye, Pencil, Trash2, ToggleLeft, ToggleRight, Download, Plus, Search, RotateCcw,
 } from 'lucide-react';
 import type { Owner } from '@/types/owner';
 import ConfirmActionDialog from './ConfirmActionDialog';
@@ -15,6 +15,7 @@ import ConfirmActionDialog from './ConfirmActionDialog';
 interface OwnersTableProps {
   owners: Owner[];
   isArchived?: boolean;
+  onView: (owner: { id: string }) => void;
   onEdit: (owner: { id: string }) => void;
   onToggleStatus: (id: string) => void;
   onSoftDelete: (id: string) => void;
@@ -29,6 +30,7 @@ function getOwnerDisplayName(owner: Owner): string {
 export default function OwnersTable({
   owners,
   isArchived = false,
+  onView,
   onEdit,
   onToggleStatus,
   onSoftDelete,
@@ -197,6 +199,15 @@ export default function OwnersTable({
                           </Button>
                         ) : (
                           <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              title="View"
+                              onClick={() => onView(owner)}
+                            >
+                              <Eye className="h-4 w-4 text-muted-foreground" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
