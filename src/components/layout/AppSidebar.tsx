@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
   BarChart3,
@@ -75,12 +75,10 @@ const menuItems: MenuItem[] = [
   { title: 'Files', url: '/files', icon: FolderOpen },
 ];
 
-const adminMenuItems: MenuItem[] = [
-  { title: 'Settings', url: '/settings', icon: Settings },
-];
 
 export default function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === 'collapsed';
   const [openItems, setOpenItems] = useState<string[]>(['Users']);
@@ -266,16 +264,6 @@ export default function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Admin-only Settings */}
-        {user?.role === 'admin' && (
-          <SidebarGroup className="mt-auto pt-2 border-t border-sidebar-border">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminMenuItems.map((item) => renderMenuItem(item))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
@@ -309,14 +297,16 @@ export default function AppSidebar() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align={collapsed ? "center" : "end"} side="top" className="w-48">
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
               <User className="h-4 w-4 mr-2" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </DropdownMenuItem>
+            {user?.role === 'admin' && (
+              <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="cursor-pointer text-destructive focus:text-destructive"
