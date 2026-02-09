@@ -53,7 +53,7 @@ export default function OwnersTable({
       const primary = o.emails.find((e) => e.isPrimary);
       const lastLogin = primary?.lastLogin ? format(new Date(primary.lastLogin), 'MMM d, yyyy') : 'Never';
       return [
-        `${o.firstName} ${o.lastName}`,
+        o.ownerType === 'company' ? o.companyName : `${o.firstName} ${o.lastName}`,
         primary?.email || '',
         o.status,
         o.linkedPropertyIds.length.toString(),
@@ -169,7 +169,9 @@ export default function OwnersTable({
                 return (
                   <TableRow key={owner.id} className="bg-card">
                     <TableCell className="font-medium">
-                      {owner.firstName} {owner.lastName}
+                      {owner.ownerType === 'company'
+                        ? owner.companyName
+                        : `${owner.firstName} ${owner.lastName}`}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {primaryEmail?.email || '—'}

@@ -18,11 +18,11 @@ interface TaxDetailsStepProps {
 }
 
 const TAX_CLASSIFICATIONS: { value: TaxClassification; label: string }[] = [
-  { value: 'individual', label: 'Individual' },
+  { value: 'individual', label: 'Individual / Sole Proprietor' },
   { value: 'llc', label: 'LLC' },
-  { value: 'corporation', label: 'Corporation' },
+  { value: 'corporation', label: 'C Corporation' },
   { value: 'partnership', label: 'Partnership' },
-  { value: 'trust', label: 'Trust' },
+  { value: 'trust', label: 'Trust / Estate' },
   { value: 'other', label: 'Other' },
 ];
 
@@ -30,7 +30,7 @@ export default function TaxDetailsStep({ data, onChange }: TaxDetailsStepProps) 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="taxId">Tax ID / SSN</Label>
+        <Label htmlFor="taxId">Tax ID (if different from SSN/EIN)</Label>
         <Input
           id="taxId"
           type="password"
@@ -39,7 +39,7 @@ export default function TaxDetailsStep({ data, onChange }: TaxDetailsStepProps) 
           placeholder="•••-••-••••"
         />
         <p className="text-xs text-muted-foreground">
-          This information is securely stored and masked.
+          Optional. Leave blank if same as SSN or EIN entered in personal details.
         </p>
       </div>
 
@@ -52,7 +52,7 @@ export default function TaxDetailsStep({ data, onChange }: TaxDetailsStepProps) 
           <SelectTrigger>
             <SelectValue placeholder="Select classification" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-popover z-50">
             {TAX_CLASSIFICATIONS.map((tc) => (
               <SelectItem key={tc.value} value={tc.value}>
                 {tc.label}
