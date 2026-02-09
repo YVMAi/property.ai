@@ -1,6 +1,7 @@
 export type OwnerStatus = 'active' | 'deactivated' | 'deleted';
 export type EmailStatus = 'active' | 'deactivated';
 export type TaxClassification = 'individual' | 'llc' | 'corporation' | 'partnership' | 'trust' | 'other';
+export type OwnerType = 'individual' | 'company';
 
 export interface OwnerEmail {
   id: string;
@@ -30,10 +31,15 @@ export interface OwnerAddress {
 
 export interface Owner {
   id: string;
+  ownerType: OwnerType;
   firstName: string;
   lastName: string;
+  companyName: string;
+  contactPerson: string;
   phone: string;
   address: OwnerAddress;
+  ssn: string;
+  ein: string;
   taxId: string;
   taxClassification: TaxClassification;
   w9FileUrl?: string;
@@ -46,10 +52,15 @@ export interface Owner {
 }
 
 export interface OwnerFormData {
+  ownerType: OwnerType;
   firstName: string;
   lastName: string;
+  companyName: string;
+  contactPerson: string;
   phone: string;
   address: OwnerAddress;
+  ssn: string;
+  ein: string;
   taxId: string;
   taxClassification: TaxClassification;
   emails: Omit<OwnerEmail, 'id' | 'loginCount' | 'lastLogin'>[];

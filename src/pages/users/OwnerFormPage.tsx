@@ -9,7 +9,7 @@ import TaxDetailsStep from '@/components/owners/TaxDetailsStep';
 import EmailsStep from '@/components/owners/EmailsStep';
 import PropertiesDocumentsStep from '@/components/owners/PropertiesDocumentsStep';
 import { useOwnersContext } from '@/contexts/OwnersContext';
-import type { OwnerFormData, TaxClassification, OwnerAddress } from '@/types/owner';
+import type { OwnerFormData, OwnerType, TaxClassification, OwnerAddress } from '@/types/owner';
 
 const STEPS = ['Personal Details', 'Tax Details', 'Emails & Invites', 'Properties & Documents'];
 
@@ -25,10 +25,15 @@ export default function OwnerFormPage() {
   const isEditing = !!editingOwner;
 
   const [step, setStep] = useState(0);
+  const [ownerType, setOwnerType] = useState<OwnerType>(editingOwner?.ownerType || 'individual');
   const [firstName, setFirstName] = useState(editingOwner?.firstName || '');
   const [lastName, setLastName] = useState(editingOwner?.lastName || '');
+  const [companyName, setCompanyName] = useState(editingOwner?.companyName || '');
+  const [contactPerson, setContactPerson] = useState(editingOwner?.contactPerson || '');
   const [phone, setPhone] = useState(editingOwner?.phone || '');
   const [address, setAddress] = useState<OwnerAddress>(editingOwner?.address || { ...emptyAddress });
+  const [ssn, setSsn] = useState(editingOwner?.ssn || '');
+  const [ein, setEin] = useState(editingOwner?.ein || '');
   const [taxId, setTaxId] = useState(editingOwner?.taxId || '');
   const [taxClassification, setTaxClassification] = useState<TaxClassification>(
     editingOwner?.taxClassification || 'individual'
@@ -43,8 +48,15 @@ export default function OwnerFormPage() {
   const validateStep = (): boolean => {
     const newErrors: Record<string, string> = {};
     if (step === 0) {
-      if (!firstName.trim()) newErrors.firstName = 'First name is required';
-      if (!lastName.trim()) newErrors.lastName = 'Last name is required';
+      if (ownerType === 'individual') {
+        if (!firstName.trim()) newErrors.firstName = 'First name is required';
+        if (!lastName.trim()) newErrors.lastName = 'Last name is required';
+        if (!ssn.trim()) newErrors.ssn = 'SSN is required';
+      } else {
+        if (!companyName.trim()) newErrors.companyName = 'Company name is required';
+        if (!contactPerson.trim()) newErrors.contactPerson = 'Contact person is required';
+        if (!ein.trim()) newErrors.ein = 'EIN is required';
+      }
     }
     if (step === 2) {
       if (emails.length === 0) newErrors.emails = 'At least one email is required';
@@ -65,10 +77,15 @@ export default function OwnerFormPage() {
   const handleSave = () => {
     if (!validateStep()) return;
     const formData: OwnerFormData = {
+      ownerType,
       firstName,
       lastName,
+      companyName,
+      contactPerson,
       phone,
       address,
+      ssn,
+      ein,
       taxId,
       taxClassification,
       emails: emails.map((e) => ({
@@ -95,9 +112,13 @@ export default function OwnerFormPage() {
       addOwner(formData);
     }
 
+    const displayName = ownerType === 'individual'
+      ? `${firstName} ${lastName}`
+      : companyName;
+
     toast({
       title: isEditing ? 'Owner updated' : 'Owner created',
-      description: `${firstName} ${lastName} has been ${isEditing ? 'updated' : 'added'} successfully.`,
+      description: `${displayName} has been ${isEditing ? 'updated' : 'added'} successfully.`,
     });
     navigate('/users/owners');
   };
@@ -169,12 +190,27 @@ export default function OwnerFormPage() {
         <CardContent className="pt-6">
           {step === 0 && (
             <PersonalDetailsStep
-              data={{ firstName, lastName, phone, address }}
+              data={{
+                ownerType,
+                firstName,
+                lastName,
+                companyName,
+                contactPerson,
+                phone,
+                address,
+                ssn,
+                ein,
+              }}
               onChange={(d) => {
+                if (d.ownerType !== undefined) setOwnerType(d.ownerType);
                 if (d.firstName !== undefined) setFirstName(d.firstName);
                 if (d.lastName !== undefined) setLastName(d.lastName);
+                if (d.companyName !== undefined) setCompanyName(d.companyName);
+                if (d.contactPerson !== undefined) setContactPerson(d.contactPerson);
                 if (d.phone !== undefined) setPhone(d.phone);
                 if (d.address) setAddress(d.address);
+                if (d.ssn !== undefined) setSsn(d.ssn);
+                if (d.ein !== undefined) setEin(d.ein);
               }}
               errors={errors}
             />
