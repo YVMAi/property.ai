@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OwnersProvider } from "@/contexts/OwnersContext";
+import { TenantsProvider } from "@/contexts/TenantsContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 // Pages
@@ -21,6 +22,8 @@ import Properties from "./pages/Properties";
 import Owners from "./pages/users/Owners";
 import OwnerFormPage from "./pages/users/OwnerFormPage";
 import Tenants from "./pages/users/Tenants";
+import TenantFormPage from "./pages/users/TenantFormPage";
+import TenantViewPage from "./pages/users/TenantViewPage";
 import Vendors from "./pages/users/Vendors";
 import Communications from "./pages/Communications";
 import Files from "./pages/Files";
@@ -39,6 +42,7 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <AuthProvider>
         <OwnersProvider>
+          <TenantsProvider>
           <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -59,6 +63,9 @@ const App = () => (
               <Route path="/users/owners/new" element={<ProtectedPage><OwnerFormPage /></ProtectedPage>} />
               <Route path="/users/owners/:id/edit" element={<ProtectedPage><OwnerFormPage /></ProtectedPage>} />
               <Route path="/users/tenants" element={<ProtectedPage><Tenants /></ProtectedPage>} />
+              <Route path="/users/tenants/new" element={<ProtectedPage><TenantFormPage /></ProtectedPage>} />
+              <Route path="/users/tenants/:id" element={<ProtectedPage><TenantViewPage /></ProtectedPage>} />
+              <Route path="/users/tenants/:id/edit" element={<ProtectedPage><TenantFormPage /></ProtectedPage>} />
               <Route path="/users/vendors" element={<ProtectedPage><Vendors /></ProtectedPage>} />
               <Route path="/communications" element={<ProtectedPage><Communications /></ProtectedPage>} />
               <Route path="/files" element={<ProtectedPage><Files /></ProtectedPage>} />
@@ -68,6 +75,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
           </TooltipProvider>
+          </TenantsProvider>
         </OwnersProvider>
       </AuthProvider>
     </ThemeProvider>

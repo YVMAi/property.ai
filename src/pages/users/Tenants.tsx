@@ -1,57 +1,26 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useTenants } from '@/hooks/useTenants';
+import { useTenantsContext } from '@/contexts/TenantsContext';
 import TenantsTable from '@/components/tenants/TenantsTable';
-import TenantFormDialog from '@/components/tenants/TenantFormDialog';
-import TenantDashboard from '@/components/tenants/TenantDashboard';
-import type { Tenant, TenantFormData } from '@/types/tenant';
+import type { Tenant } from '@/types/tenant';
 
 export default function Tenants() {
   const {
     activeTenants,
     archivedTenants,
     deletedTenants,
-    getAllEmails,
-    addTenant,
-    updateTenant,
     toggleTenantStatus,
     softDeleteTenant,
     restoreTenant,
-    runBGV,
-    resendInvite,
-    updateNotes,
-  } = useTenants();
+  } = useTenantsContext();
 
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
-  const [viewingTenant, setViewingTenant] = useState<Tenant | null>(null);
 
-  const handleAddNew = () => {
-    setEditingTenant(null);
-    setFormOpen(true);
-  };
-
-  const handleEdit = (tenant: Tenant) => {
-    setEditingTenant(tenant);
-    setFormOpen(true);
-  };
-
-  const handleView = (tenant: Tenant) => {
-    setViewingTenant(tenant);
-  };
-
-  const handleSave = (data: TenantFormData) => {
-    if (editingTenant) {
-      updateTenant(editingTenant.id, data);
-    } else {
-      const newTenant = addTenant(data);
-      if (data.bgvEnabled) {
-        runBGV(newTenant.id);
-      }
-    }
-  };
+  const handleAddNew = () => navigate('/users/tenants/new');
+  const handleEdit = (tenant: Tenant) => navigate(`/users/tenants/${tenant.id}/edit`);
+  const handleView = (tenant: Tenant) => navigate(`/users/tenants/${tenant.id}`);
 
   const handleToggleStatus = (id: string) => {
     toggleTenantStatus(id);
@@ -67,21 +36,6 @@ export default function Tenants() {
     restoreTenant(id);
     toast({ title: 'Tenant restored', description: 'Tenant has been restored to the active list.' });
   };
-
-  const handleRunBGV = (id: string) => {
-    runBGV(id);
-    toast({ title: 'BGV initiated', description: 'Background verification is running. Results will appear shortly.' });
-  };
-
-  const handleUpdateNotes = (id: string, notes: string) => {
-    updateNotes(id, notes);
-    toast({ title: 'Notes saved', description: 'Tenant notes have been updated.' });
-  };
-
-  const allVisible = [...activeTenants, ...archivedTenants, ...deletedTenants];
-  const currentViewingTenant = viewingTenant
-    ? allVisible.find((t) => t.id === viewingTenant.id) || viewingTenant
-    : null;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -132,25 +86,6 @@ export default function Tenants() {
           />
         </TabsContent>
       </Tabs>
-
-      <TenantFormDialog
-        open={formOpen}
-        onClose={() => { setFormOpen(false); setEditingTenant(null); }}
-        onSave={handleSave}
-        existingEmails={getAllEmails(editingTenant?.id)}
-        editingTenant={editingTenant}
-        onResendInvite={resendInvite}
-      />
-
-      {currentViewingTenant && (
-        <TenantDashboard
-          open={!!currentViewingTenant}
-          onClose={() => setViewingTenant(null)}
-          tenant={currentViewingTenant}
-          onRunBGV={handleRunBGV}
-          onUpdateNotes={handleUpdateNotes}
-        />
-      )}
     </div>
   );
 }
