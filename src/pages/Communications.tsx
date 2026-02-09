@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import UserSelector from '@/components/communications/UserSelector';
 import ChatTimeline from '@/components/communications/ChatTimeline';
 import EmailSection from '@/components/communications/EmailSection';
+import BroadcastDialog from '@/components/communications/BroadcastDialog';
 import { useCommunications } from '@/hooks/useCommunications';
 
 export default function Communications() {
@@ -12,30 +13,36 @@ export default function Communications() {
     selectedUser,
     searchQuery,
     filteredUsers,
+    allUsers,
     userTextMessages,
     userEmailMessages,
     selectUserType,
     selectUser,
     setSearchQuery,
     sendTextMessage,
+    sendBroadcastMessage,
     sendEmail,
+    getMessageById,
   } = useCommunications();
 
   return (
     <div className="flex flex-col gap-4 h-full animate-fade-in">
       {/* Page header */}
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-lg bg-primary/20 flex items-center justify-center">
-          <MessageSquare className="h-5 w-5 text-primary-foreground" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-lg bg-primary/20 flex items-center justify-center">
+            <MessageSquare className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-foreground tracking-tight">
+              Communications & Notices
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Portal messages and email correspondence with owners, tenants, and vendors
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-semibold text-foreground tracking-tight">
-            Communications & Notices
-          </h1>
-          <p className="text-xs text-muted-foreground">
-            Portal messages and email correspondence with owners, tenants, and vendors
-          </p>
-        </div>
+        <BroadcastDialog users={allUsers} onSendBroadcast={sendBroadcastMessage} />
       </div>
 
       {/* User selector */}
@@ -77,6 +84,7 @@ export default function Communications() {
             messages={userTextMessages}
             selectedUser={selectedUser}
             onSendMessage={sendTextMessage}
+            getMessageById={getMessageById}
           />
         </TabsContent>
 

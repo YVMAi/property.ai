@@ -1,20 +1,22 @@
 import { useState } from 'react';
-import { Send, Paperclip, X } from 'lucide-react';
+import { Send, Paperclip, X, Reply } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import type { Message } from '@/types/communication';
 
 interface ChatComposerProps {
-  onSend: (content: string, attachments: string[]) => void;
+  onSend: (content: string, attachments: string[], replyToId?: string) => void;
+  replyTo?: Message | null;
+  onCancelReply?: () => void;
 }
 
-export default function ChatComposer({ onSend }: ChatComposerProps) {
+export default function ChatComposer({ onSend, replyTo, onCancelReply }: ChatComposerProps) {
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
   const { toast } = useToast();
 
   const handleAttach = () => {
-    // Simulate file selection
     const mockFile = `Attachment_${Date.now().toString(36)}.pdf`;
     setAttachments((prev) => [...prev, mockFile]);
     toast({ title: 'File attached', description: mockFile });
@@ -26,9 +28,10 @@ export default function ChatComposer({ onSend }: ChatComposerProps) {
 
   const handleSend = () => {
     if (!text.trim() && attachments.length === 0) return;
-    onSend(text.trim(), attachments);
+    onSend(text.trim(), attachments, replyTo?.id);
     setText('');
     setAttachments([]);
+    onCancelReply?.();
     toast({ title: 'Message sent', description: 'Your message has been shared on the portal.' });
   };
 
@@ -41,6 +44,26 @@ export default function ChatComposer({ onSend }: ChatComposerProps) {
 
   return (
     <div className="border-t border-border px-4 md:px-5 py-3">
+      {/* Reply preview */}
+      {replyTo && (
+        <div className="flex items-start gap-2 mb-2 p-2 bg-primary/5 border border-primary/20 rounded-lg">
+          <Reply className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-semibold text-primary-foreground/70">
+              Replying to {replyTo.senderName || 'Unknown'}
+            </p>
+            <p className="text-xs text-muted-foreground line-clamp-1">{replyTo.content}</p>
+          </div>
+          <button
+            onClick={onCancelReply}
+            className="shrink-0 hover:text-destructive-foreground transition-colors"
+            aria-label="Cancel reply"
+          >
+            <X className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </div>
+      )}
+
       {/* Attachments preview */}
       {attachments.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
@@ -73,7 +96,7 @@ export default function ChatComposer({ onSend }: ChatComposerProps) {
           <Paperclip className="h-4 w-4" />
         </Button>
         <Input
-          placeholder="Type a message…"
+          placeholder={replyTo ? 'Type a reply…' : 'Type a message…'}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
