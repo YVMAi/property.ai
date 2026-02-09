@@ -7,8 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { HelpCircle, MessageSquare, Mail, Phone, ExternalLink, Send, Paperclip } from 'lucide-react';
+import { HelpCircle, MessageSquare, Mail, Phone, ExternalLink, Send, Paperclip, Ticket, Eye } from 'lucide-react';
 
 const FAQ_ITEMS = [
   { q: 'How do I add a new property?', a: 'Navigate to Properties from the sidebar, then click "Add Property". Fill in the address, unit details, and assign an owner.' },
@@ -21,6 +24,35 @@ const FAQ_ITEMS = [
   { q: 'How do I export tenant data?', a: 'Go to Users → Tenants, use the export button at the top right to download a CSV of all tenant records.' },
 ];
 
+type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+type TicketPriority = 'low' | 'medium' | 'high';
+
+interface SupportTicket {
+  id: string;
+  subject: string;
+  description: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  createdAt: string;
+  updatedAt: string;
+  response?: string;
+}
+
+const INITIAL_TICKETS: SupportTicket[] = [
+  { id: 'TKT-001', subject: 'Unable to generate P&L report', description: 'Report page shows a blank screen when selecting Q4 2025.', status: 'resolved', priority: 'high', createdAt: '2026-01-15', updatedAt: '2026-01-17', response: 'Fixed in the latest update. Please clear your cache and retry.' },
+  { id: 'TKT-002', subject: 'Owner invite email not received', description: 'Sent invite to owner but they did not get the email.', status: 'in_progress', priority: 'medium', createdAt: '2026-01-28', updatedAt: '2026-02-01' },
+  { id: 'TKT-003', subject: 'Request to add custom fields on tenant form', description: 'We need a custom "Emergency Contact" field on tenant profiles.', status: 'open', priority: 'low', createdAt: '2026-02-05', updatedAt: '2026-02-05' },
+  { id: 'TKT-004', subject: 'MFA reset for user john@acme.com', description: 'User locked out of MFA, needs reset.', status: 'closed', priority: 'high', createdAt: '2025-12-10', updatedAt: '2025-12-11', response: 'MFA has been reset. User can re-enroll.' },
+  { id: 'TKT-005', subject: 'CSV export includes wrong columns', description: 'Tenant export CSV has duplicate address columns.', status: 'resolved', priority: 'medium', createdAt: '2026-01-20', updatedAt: '2026-01-22', response: 'Column mapping corrected. Export should work properly now.' },
+];
+
+const STATUS_BADGE: Record<TicketStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  open: { label: 'Open', variant: 'destructive' },
+  in_progress: { label: 'In Progress', variant: 'default' },
+  resolved: { label: 'Resolved', variant: 'secondary' },
+  closed: { label: 'Closed', variant: 'outline' },
+};
+
 export default function HelpSupportSection() {
   const { toast } = useToast();
   const [chatInput, setChatInput] = useState('');
@@ -30,6 +62,9 @@ export default function HelpSupportSection() {
   const [ticketOpen, setTicketOpen] = useState(false);
   const [ticketSubject, setTicketSubject] = useState('');
   const [ticketDesc, setTicketDesc] = useState('');
+  const [tickets, setTickets] = useState<SupportTicket[]>(INITIAL_TICKETS);
+  const [ticketFilter, setTicketFilter] = useState<'all' | TicketStatus>('all');
+  const [viewTicket, setViewTicket] = useState<SupportTicket | null>(null);
 
   const handleChatSend = () => {
     if (!chatInput.trim()) return;
@@ -37,7 +72,6 @@ export default function HelpSupportSection() {
     setChatMessages((prev) => [...prev, { role: 'user', text: chatInput }]);
     setChatInput('');
 
-    // Simple FAQ matching
     const match = FAQ_ITEMS.find((faq) =>
       faq.q.toLowerCase().includes(question) ||
       question.split(' ').some((w) => w.length > 3 && faq.q.toLowerCase().includes(w))
@@ -61,11 +95,23 @@ export default function HelpSupportSection() {
       toast({ title: 'Please fill all fields', variant: 'destructive' });
       return;
     }
-    toast({ title: 'Ticket submitted', description: 'Our team will respond within 24 hours.' });
+    const newTicket: SupportTicket = {
+      id: `TKT-${String(tickets.length + 1).padStart(3, '0')}`,
+      subject: ticketSubject.trim(),
+      description: ticketDesc.trim(),
+      status: 'open',
+      priority: 'medium',
+      createdAt: new Date().toISOString().split('T')[0],
+      updatedAt: new Date().toISOString().split('T')[0],
+    };
+    setTickets((prev) => [newTicket, ...prev]);
+    toast({ title: 'Ticket submitted', description: `Ticket ${newTicket.id} created. Our team will respond within 24 hours.` });
     setTicketOpen(false);
     setTicketSubject('');
     setTicketDesc('');
   };
+
+  const filteredTickets = ticketFilter === 'all' ? tickets : tickets.filter((t) => t.status === ticketFilter);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -197,6 +243,104 @@ export default function HelpSupportSection() {
           </CardContent>
         </Card>
       </div>
+
+      <Separator />
+
+      {/* Ticket History */}
+      <Card className="card-elevated">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-primary" />
+              Ticket History
+            </CardTitle>
+            <CardDescription>Track all your submitted support tickets</CardDescription>
+          </div>
+          <Select value={ticketFilter} onValueChange={(v) => setTicketFilter(v as typeof ticketFilter)}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Filter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="open">Open</SelectItem>
+              <SelectItem value="in_progress">In Progress</SelectItem>
+              <SelectItem value="resolved">Resolved</SelectItem>
+              <SelectItem value="closed">Closed</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          {filteredTickets.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">No tickets found.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Updated</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTickets.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell className="font-mono text-xs">{t.id}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">{t.subject}</TableCell>
+                    <TableCell>
+                      <Badge variant={STATUS_BADGE[t.status].variant}>{STATUS_BADGE[t.status].label}</Badge>
+                    </TableCell>
+                    <TableCell className="capitalize">{t.priority}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{t.createdAt}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{t.updatedAt}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => setViewTicket(t)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* View Ticket Dialog */}
+      <Dialog open={!!viewTicket} onOpenChange={(open) => !open && setViewTicket(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {viewTicket?.id} — {viewTicket?.subject}
+            </DialogTitle>
+          </DialogHeader>
+          {viewTicket && (
+            <div className="space-y-4 pt-2 text-sm">
+              <div className="flex gap-2">
+                <Badge variant={STATUS_BADGE[viewTicket.status].variant}>{STATUS_BADGE[viewTicket.status].label}</Badge>
+                <Badge variant="outline" className="capitalize">{viewTicket.priority} priority</Badge>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Description</Label>
+                <p className="mt-1">{viewTicket.description}</p>
+              </div>
+              {viewTicket.response && (
+                <div className="bg-muted/50 rounded-lg p-3">
+                  <Label className="text-muted-foreground">Support Response</Label>
+                  <p className="mt-1">{viewTicket.response}</p>
+                </div>
+              )}
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Created: {viewTicket.createdAt}</span>
+                <span>Updated: {viewTicket.updatedAt}</span>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
