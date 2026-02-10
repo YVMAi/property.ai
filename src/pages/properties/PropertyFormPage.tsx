@@ -295,6 +295,7 @@ export default function PropertyFormPage() {
 
       {/* Step 1: Details */}
       {step === 0 && (
+        <>
         <Card>
           <CardHeader><CardTitle className="text-lg">Property Details</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -565,64 +566,76 @@ export default function PropertyFormPage() {
               </div>
             </div>
 
-            {/* Property Groups */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <Label className="flex items-center gap-1.5">
-                  <Tag className="h-3.5 w-3.5" /> Property Groups
-                </Label>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setCreateGroupOpen(true)}
-                  className="gap-1 h-7 text-xs"
-                >
-                  <Plus className="h-3 w-3" /> Create New Group
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mb-2">
-                Group properties for easier filtering, reporting, or portfolio management.
-              </p>
-              <SearchableSelect
-                options={groups.map(g => ({
-                  value: g.id,
-                  label: `${g.name} (${getGroupPropertyCount(g.id)} properties)`,
-                }))}
-                value={selectedGroupIds.length > 0 ? selectedGroupIds[selectedGroupIds.length - 1] : ''}
-                onValueChange={(v) => {
-                  if (!selectedGroupIds.includes(v)) {
-                    setSelectedGroupIds(prev => [...prev, v]);
-                  }
-                }}
-                placeholder="Search and select groups..."
-              />
-              {selectedGroupIds.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {selectedGroupIds.map(gid => {
-                    const g = groups.find(x => x.id === gid);
-                    if (!g) return null;
-                    return (
-                      <Badge
-                        key={gid}
-                        className="gap-1 pr-1 text-xs font-medium"
-                        style={{ backgroundColor: g.color, color: 'hsl(0,0%,20%)' }}
-                      >
-                        {g.name}
-                        <button
-                          type="button"
-                          onClick={() => setSelectedGroupIds(prev => prev.filter(x => x !== gid))}
-                          className="ml-0.5 hover:opacity-70"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+          </CardContent>
+        </Card>
 
+        {/* Property Groups — separate subsection */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Tag className="h-[18px] w-[18px] text-primary" />
+                Property Groups
+              </CardTitle>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setCreateGroupOpen(true)}
+                className="gap-1 h-8 text-xs"
+              >
+                <Plus className="h-3 w-3" /> Create New Group
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Group properties for easier filtering, reporting, or portfolio management.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <SearchableSelect
+              options={groups.map(g => ({
+                value: g.id,
+                label: `${g.name} (${getGroupPropertyCount(g.id)} properties)`,
+              }))}
+              value={selectedGroupIds.length > 0 ? selectedGroupIds[selectedGroupIds.length - 1] : ''}
+              onValueChange={(v) => {
+                if (!selectedGroupIds.includes(v)) {
+                  setSelectedGroupIds(prev => [...prev, v]);
+                }
+              }}
+              placeholder="Search and select groups..."
+            />
+            {selectedGroupIds.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {selectedGroupIds.map(gid => {
+                  const g = groups.find(x => x.id === gid);
+                  if (!g) return null;
+                  return (
+                    <Badge
+                      key={gid}
+                      className="gap-1 pr-1 text-xs font-medium"
+                      style={{ backgroundColor: g.color, color: 'hsl(0,0%,20%)' }}
+                    >
+                      {g.name}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedGroupIds(prev => prev.filter(x => x !== gid))}
+                        className="ml-0.5 hover:opacity-70"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Photos & Media */}
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Photos & Media</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
             {/* Photo Upload */}
             <div>
               <Label className="mb-2 block">Property Photos</Label>
@@ -703,6 +716,7 @@ export default function PropertyFormPage() {
             </div>
           </CardContent>
         </Card>
+        </>
       )}
 
       {/* Step 2: Owner & Agreements */}
