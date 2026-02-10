@@ -2,101 +2,117 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @layer base {
   :root {
-    /* Scandinavian Pastel Theme */
-    --background: 0 0% 100%;
-    --foreground: 220 15% 20%;
+    /* Apple Liquid Glass — Light Mode */
+    --background: 240 5% 96%;
+    --foreground: 0 0% 0%;
 
-    /* Cards with colored background */
-    --card: 40 25% 97%;
-    --card-foreground: 220 15% 20%;
+    --card: 0 0% 100% / 0.55;
+    --card-foreground: 0 0% 0%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 20%;
+    --popover: 0 0% 100% / 0.72;
+    --popover-foreground: 0 0% 0%;
 
-    /* Soft Blue - Primary */
-    --primary: 210 50% 78%;
-    --primary-foreground: 220 30% 25%;
+    /* Apple Blue */
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Soft Green - Secondary */
-    --secondary: 120 30% 77%;
-    --secondary-foreground: 140 25% 25%;
+    --secondary: 240 5% 92%;
+    --secondary-foreground: 0 0% 15%;
 
-    /* Warm Beige - Muted */
-    --muted: 40 20% 94%;
-    --muted-foreground: 220 10% 45%;
+    --muted: 240 5% 92%;
+    --muted-foreground: 0 0% 40%;
 
-    /* Light Gray - Accent */
-    --accent: 40 15% 92%;
-    --accent-foreground: 220 15% 20%;
+    --accent: 0 0% 100% / 0.45;
+    --accent-foreground: 0 0% 10%;
 
-    /* Soft Red - Destructive */
-    --destructive: 0 60% 87%;
-    --destructive-foreground: 0 70% 35%;
+    /* Apple Red */
+    --destructive: 0 79% 59%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 210 30% 88%;
-    --input: 40 15% 88%;
-    --ring: 210 50% 70%;
+    --border: 0 0% 0% / 0.06;
+    --input: 0 0% 0% / 0.06;
+    --ring: 211 100% 50%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
-    /* Sidebar - Warm Beige */
-    --sidebar-background: 40 25% 97%;
-    --sidebar-foreground: 220 15% 30%;
-    --sidebar-primary: 210 50% 70%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 100% / 0.35;
+    --sidebar-foreground: 0 0% 15%;
+    --sidebar-primary: 211 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 92%;
-    --sidebar-accent-foreground: 210 50% 30%;
-    --sidebar-border: 40 15% 90%;
-    --sidebar-ring: 210 50% 70%;
+    --sidebar-accent: 211 100% 50% / 0.1;
+    --sidebar-accent-foreground: 211 100% 42%;
+    --sidebar-border: 0 0% 0% / 0.06;
+    --sidebar-ring: 211 100% 50%;
 
-    /* Custom tokens */
-    --success: 120 35% 70%;
-    --success-foreground: 140 30% 25%;
-    --warning: 45 80% 75%;
-    --warning-foreground: 45 70% 25%;
+    /* Semantic */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 95% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Glass tokens */
+    --glass-bg: rgba(255, 255, 255, 0.45);
+    --glass-bg-heavy: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.35);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    --glass-blur: 20px;
+    --glass-saturate: 180%;
   }
 
   .dark {
-    --background: 220 20% 12%;
-    --foreground: 40 20% 95%;
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
 
-    --card: 220 18% 15%;
-    --card-foreground: 40 20% 95%;
+    --card: 0 0% 100% / 0.08;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 220 18% 15%;
-    --popover-foreground: 40 20% 95%;
+    --popover: 0 0% 100% / 0.1;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 210 45% 65%;
-    --primary-foreground: 220 30% 10%;
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 120 25% 60%;
-    --secondary-foreground: 140 25% 10%;
+    --secondary: 0 0% 100% / 0.08;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 40 15% 65%;
+    --muted: 0 0% 100% / 0.06;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 220 15% 22%;
-    --accent-foreground: 40 20% 95%;
+    --accent: 0 0% 100% / 0.08;
+    --accent-foreground: 0 0% 95%;
 
-    --destructive: 0 50% 40%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive: 0 79% 59%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 25%;
-    --input: 220 15% 25%;
-    --ring: 210 45% 55%;
+    --border: 0 0% 100% / 0.08;
+    --input: 0 0% 100% / 0.08;
+    --ring: 211 100% 50%;
 
-    --sidebar-background: 220 18% 14%;
-    --sidebar-foreground: 40 20% 90%;
-    --sidebar-primary: 210 45% 60%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 100% / 0.05;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 211 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 22%;
-    --sidebar-accent-foreground: 40 20% 90%;
-    --sidebar-border: 220 15% 22%;
-    --sidebar-ring: 210 45% 55%;
+    --sidebar-accent: 211 100% 50% / 0.15;
+    --sidebar-accent-foreground: 211 100% 65%;
+    --sidebar-border: 0 0% 100% / 0.08;
+    --sidebar-ring: 211 100% 50%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 95% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Glass tokens dark */
+    --glass-bg: rgba(255, 255, 255, 0.06);
+    --glass-bg-heavy: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --glass-blur: 24px;
+    --glass-saturate: 180%;
   }
 }
 
@@ -106,44 +122,97 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-primary text-primary-foreground hover:opacity-90 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98];
+  /* Core Liquid Glass surface */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
 
-  .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:opacity-90 transition-all duration-200;
+  .glass-heavy {
+    background: var(--glass-bg-heavy);
+    backdrop-filter: blur(28px) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(28px) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
   }
 
-  .card-elevated {
-    @apply bg-card rounded-lg shadow-sm border border-border/50;
+  .glass-subtle {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
   }
 
-  .input-field {
-    @apply bg-background border-input focus:ring-2 focus:ring-ring/30 transition-all duration-200;
-  }
-
+  /* Sidebar */
   .sidebar-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all duration-200;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-foreground/70 transition-all duration-200;
+  }
+
+  .sidebar-item:hover {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .sidebar-item-active {
-    @apply bg-sidebar-accent text-sidebar-accent-foreground font-medium;
+    background: hsl(var(--sidebar-accent));
+    color: hsl(var(--sidebar-accent-foreground));
+    font-weight: 500;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-primary-foreground transition-all duration-200;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px hsl(211 100% 50% / 0.35);
+  }
+
+  .btn-secondary {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    @apply text-foreground transition-all duration-200;
+  }
+
+  .card-elevated {
+    @apply rounded-2xl;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .input-field {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    @apply transition-all duration-200;
+  }
+  .input-field:focus {
+    box-shadow: 0 0 0 3px hsl(211 100% 50% / 0.2);
   }
 }
 
 @layer utilities {
   .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.4s ease-out;
   }
 
   .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp 0.4s ease-out;
   }
 
   .animate-slide-in-left {
@@ -151,37 +220,33 @@
   }
 
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
   .loading-spinner {
     @apply animate-spin rounded-full border-2 border-muted border-t-primary;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glass, .glass-heavy, .glass-subtle {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

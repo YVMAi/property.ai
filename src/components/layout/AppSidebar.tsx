@@ -211,15 +211,15 @@ export default function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
+    <Sidebar className="border-r border-sidebar-border glass-heavy" collapsible="icon">
       <SidebarHeader className="p-4 border-b border-sidebar-border">
         <div className="flex items-center justify-between">
           <div className={cn("flex items-center gap-3", collapsed && "justify-center w-full")}>
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+            <div className="h-9 w-9 rounded-2xl bg-primary flex items-center justify-center shrink-0 shadow-glow">
               <Building2 className="h-5 w-5 text-primary-foreground" />
             </div>
             {!collapsed && (
-              <span className="text-lg font-semibold text-foreground tracking-tight">
+              <span className="text-lg font-bold text-foreground tracking-tight">
                 PropertyAI
               </span>
             )}
@@ -229,7 +229,7 @@ export default function AppSidebar() {
               variant="ghost"
               size="icon"
               onClick={toggleSidebar}
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-xl"
               aria-label="Collapse sidebar"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -242,7 +242,7 @@ export default function AppSidebar() {
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="h-8 w-8 mt-2 text-muted-foreground hover:text-foreground mx-auto"
+            className="h-8 w-8 mt-2 text-muted-foreground hover:text-foreground mx-auto rounded-xl"
             aria-label="Expand sidebar"
           >
             <ChevronRight className="h-4 w-4" />
@@ -256,7 +256,7 @@ export default function AppSidebar() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search..."
-              className="pl-9 h-9 bg-sidebar-accent/50"
+              className="pl-9 h-9 bg-background/30"
             />
           </div>
         </div>
@@ -267,7 +267,7 @@ export default function AppSidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 text-muted-foreground hover:text-foreground"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground rounded-xl"
             aria-label="Search"
           >
             <Search className="h-5 w-5" />
@@ -343,12 +343,12 @@ export default function AppSidebar() {
             <Button 
               variant="ghost" 
               className={cn(
-                "w-full flex items-center gap-3 px-2 py-2 h-auto",
+                "w-full flex items-center gap-3 px-2 py-2 h-auto rounded-xl",
                 collapsed && "justify-center"
               )}
             >
               <Avatar className="h-8 w-8 shrink-0">
-                <AvatarFallback className="bg-primary/20 text-primary text-sm">
+                <AvatarFallback className="bg-primary/15 text-primary text-sm rounded-xl">
                   {user?.name ? getInitials(user.name) : 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -367,20 +367,20 @@ export default function AppSidebar() {
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align={collapsed ? "center" : "end"} side="top" className="w-48">
-            <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings?tab=profile')}>
+          <DropdownMenuContent align={collapsed ? "center" : "end"} side="top" className="w-48 glass-heavy rounded-2xl">
+            <DropdownMenuItem className="cursor-pointer rounded-xl" onClick={() => navigate('/settings?tab=profile')}>
               <User className="h-4 w-4 mr-2" />
               Profile
             </DropdownMenuItem>
             {user?.role === 'admin' && (
-              <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings?tab=profile')}>
+              <DropdownMenuItem className="cursor-pointer rounded-xl" onClick={() => navigate('/settings?tab=profile')}>
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
             <DropdownMenuItem 
-              className="cursor-pointer text-destructive focus:text-destructive"
+              className="cursor-pointer text-destructive focus:text-destructive rounded-xl"
               onClick={logout}
             >
               <LogOut className="h-4 w-4 mr-2" />
