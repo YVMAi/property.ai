@@ -9,6 +9,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
+import { usePropertyGroupsContext } from '@/contexts/PropertyGroupsContext';
 import { useOwnersContext } from '@/contexts/OwnersContext';
 import {
   PROPERTY_TYPE_LABELS,
@@ -31,6 +32,7 @@ export default function PropertyViewPage() {
   const navigate = useNavigate();
   const { getPropertyById, changeStatus, updateProperty } = usePropertiesContext();
   const { activeOwners } = useOwnersContext();
+  const { getGroupsForProperty } = usePropertyGroupsContext();
   const [bulkOpen, setBulkOpen] = useState(false);
   const [unitSearch, setUnitSearch] = useState('');
 
@@ -114,6 +116,21 @@ export default function PropertyViewPage() {
           </Button>
         </div>
       </div>
+
+      {/* Group badges */}
+      {getGroupsForProperty(property.id).length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {getGroupsForProperty(property.id).map(g => (
+            <Badge
+              key={g.id}
+              className="text-xs"
+              style={{ backgroundColor: g.color, color: 'hsl(0,0%,20%)' }}
+            >
+              {g.name}
+            </Badge>
+          ))}
+        </div>
+      )}
 
       {/* Owner link */}
       <Card>
