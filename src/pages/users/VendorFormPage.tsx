@@ -9,8 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Check, ChevronLeft, ChevronRight, ArrowLeft, AlertCircle, X, Plus } from 'lucide-react';
-import type { VendorFormData, VendorType, PaymentTerms, PaymentMethod, BGVSchedule } from '@/types/vendor';
+import { Check, ChevronLeft, ChevronRight, ArrowLeft, AlertCircle, X, Plus, Upload, FileText, Trash2 } from 'lucide-react';
+import type { VendorFormData, VendorType, PaymentTerms, PaymentMethod, BGVSchedule, VendorFormDocument } from '@/types/vendor';
 import { emptyVendorForm, PREDEFINED_CATEGORIES, PREDEFINED_REGIONS, VENDOR_TAGS } from '@/types/vendor';
 import { useVendorsContext } from '@/contexts/VendorsContext';
 import { useOwnersContext } from '@/contexts/OwnersContext';
@@ -56,6 +56,13 @@ export default function VendorFormPage() {
           email: editingVendor.email,
           bgvEnabled: editingVendor.bgvEnabled,
           bgvSchedule: editingVendor.bgvSchedule,
+          formDocuments: editingVendor.documents.map((d) => ({
+            id: d.id,
+            fileName: d.fileName,
+            type: d.type === 'w9' ? 'w9' as const : d.type === 'insurance' ? 'insurance' as const : d.type === 'license' ? 'license' as const : 'other' as const,
+            fileSize: 0,
+            addedAt: d.uploadedAt,
+          })),
         }
       : { ...emptyVendorForm }
   );
@@ -423,9 +430,77 @@ export default function VendorFormPage() {
 
               <div>
                 <Label className="mb-2 block">Document Uploads</Label>
-                <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
-                  <p>W-9/Tax Form, Insurance Certificate, and License uploads will be available once Cloud storage is enabled. Documents can be managed from the vendor dashboard.</p>
+                <p className="text-xs text-muted-foreground mb-3">Upload Master Agreement, W-9/Tax Form, Insurance Certificate, and License/Certification documents.</p>
+                
+                {/* Uploaded documents list */}
+                {form.formDocuments.length > 0 && (
+                  <div className="space-y-2 mb-3">
+                    {form.formDocuments.map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-sm font-medium">{doc.fileName}</p>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs capitalize">{doc.type.replace('_', ' ')}</Badge>
+                              {doc.fileSize > 0 && <span className="text-xs text-muted-foreground">{(doc.fileSize / 1024).toFixed(1)} KB</span>}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={() => update({ formDocuments: form.formDocuments.filter((d) => d.id !== doc.id) })}
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-destructive-foreground" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Upload buttons */}
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { type: 'master_agreement', label: 'Master Agreement' },
+                    { type: 'w9', label: 'W-9 / Tax Form' },
+                    { type: 'insurance', label: 'Insurance Certificate' },
+                    { type: 'license', label: 'License / Certification' },
+                    { type: 'other', label: 'Other Document' },
+                  ] as { type: VendorFormDocument['type']; label: string }[]).map(({ type, label }) => (
+                    <label key={type} className="cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const newDoc: VendorFormDocument = {
+                            id: Math.random().toString(36).substring(2, 11),
+                            fileName: file.name,
+                            type,
+                            fileSize: file.size,
+                            addedAt: new Date().toISOString(),
+                          };
+                          update({ formDocuments: [...form.formDocuments, newDoc] });
+                          e.target.value = '';
+                        }}
+                      />
+                      <div className="flex items-center gap-2 p-3 rounded-lg border border-dashed border-border hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                        <Upload className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">{label}</span>
+                      </div>
+                    </label>
+                  ))}
                 </div>
+
+                {!form.formDocuments.some((d) => d.type === 'insurance') && form.formDocuments.length > 0 && (
+                  <p className="text-xs text-warning-foreground mt-2 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" /> No insurance certificate uploaded. Consider adding one.
+                  </p>
+                )}
               </div>
 
               <div>
