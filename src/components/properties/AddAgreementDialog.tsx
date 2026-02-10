@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, FileText } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { OwnerAgreement, AgreementManagementFeeType, AgreementFeeType } from '@/types/owner';
 
 const MGMT_FEE_OPTIONS = [
@@ -51,6 +52,9 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
   const [leaseFeeValue, setLeaseFeeValue] = useState<number | ''>('');
   const [renewalFeeType, setRenewalFeeType] = useState<AgreementFeeType>('fixed');
   const [renewalFeeValue, setRenewalFeeValue] = useState<number | ''>('');
+  const [managementFeeLowerCap, setManagementFeeLowerCap] = useState<number | ''>('');
+  const [managementFeeUpperCap, setManagementFeeUpperCap] = useState<number | ''>('');
+  const [chargeIfVacant, setChargeIfVacant] = useState(false);
   const [fileName, setFileName] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -69,6 +73,9 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
     setLeaseFeeValue('');
     setRenewalFeeType('fixed');
     setRenewalFeeValue('');
+    setManagementFeeLowerCap('');
+    setManagementFeeUpperCap('');
+    setChargeIfVacant(false);
     setFileName('');
     setErrors({});
   };
@@ -111,6 +118,9 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
       renewalFeeValue,
       feePerUnit: showFixed ? managementFeeFixed : '',
       feePercentRent: showPercent ? managementFeePercent : '',
+      managementFeeLowerCap,
+      managementFeeUpperCap,
+      chargeIfVacant,
       createdAt: new Date().toISOString(),
     };
 
@@ -213,6 +223,42 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
             {managementFeeType === 'combination' && (
               <p className="text-xs text-muted-foreground">Combination applies fixed per-unit fees plus percentage of both rental and total income.</p>
             )}
+
+            {/* Caps */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Lower Cap ($)</Label>
+                <Input
+                  value={formatComma(managementFeeLowerCap)}
+                  onChange={(e) => setManagementFeeLowerCap(parseComma(e.target.value))}
+                  placeholder="e.g. 100"
+                  inputMode="numeric"
+                />
+                <p className="text-xs text-muted-foreground mt-0.5">Minimum fee charged</p>
+              </div>
+              <div>
+                <Label className="text-xs">Upper Cap ($)</Label>
+                <Input
+                  value={formatComma(managementFeeUpperCap)}
+                  onChange={(e) => setManagementFeeUpperCap(parseComma(e.target.value))}
+                  placeholder="e.g. 500"
+                  inputMode="numeric"
+                />
+                <p className="text-xs text-muted-foreground mt-0.5">Maximum fee charged</p>
+              </div>
+            </div>
+
+            {/* Charge if vacant */}
+            <div className="flex items-center gap-2 pt-1">
+              <Checkbox
+                id="chargeIfVacant"
+                checked={chargeIfVacant}
+                onCheckedChange={(v) => setChargeIfVacant(v === true)}
+              />
+              <Label htmlFor="chargeIfVacant" className="text-xs font-normal cursor-pointer">
+                Charge management fee even if unit is vacant
+              </Label>
+            </div>
           </div>
 
           {/* Lease Fees */}
