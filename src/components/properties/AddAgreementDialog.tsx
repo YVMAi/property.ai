@@ -248,17 +248,19 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
               </div>
             </div>
 
-            {/* Charge if vacant */}
-            <div className="flex items-center gap-2 pt-1">
-              <Checkbox
-                id="chargeIfVacant"
-                checked={chargeIfVacant}
-                onCheckedChange={(v) => setChargeIfVacant(v === true)}
-              />
-              <Label htmlFor="chargeIfVacant" className="text-xs font-normal cursor-pointer">
-                Charge management fee even if unit is vacant
-              </Label>
-            </div>
+            {/* Charge if vacant — only for fixed_per_unit or combination */}
+            {showFixed && (
+              <div className="flex items-center gap-2 pt-1">
+                <Checkbox
+                  id="chargeIfVacant"
+                  checked={chargeIfVacant}
+                  onCheckedChange={(v) => setChargeIfVacant(v === true)}
+                />
+                <Label htmlFor="chargeIfVacant" className="text-xs font-normal cursor-pointer">
+                  Charge management fee even if unit is vacant
+                </Label>
+              </div>
+            )}
           </div>
 
           {/* Lease Fees */}
