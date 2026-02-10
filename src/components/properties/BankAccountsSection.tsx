@@ -142,7 +142,7 @@ export default function BankAccountsSection({ linkedAccounts, onLinksChange }: P
                 return (
                   <div
                     key={link.id}
-                    className="p-3 rounded-lg border border-border bg-muted/20 space-y-2"
+                    className="p-3 rounded-lg border border-border bg-card shadow-sm space-y-2"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
