@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, LayoutGrid, List, ChevronDown } from 'lucide-react';
+import { Plus, Search, Download, Eye, Pencil, Filter } from 'lucide-react';
 import { useWorkOrdersContext } from '@/contexts/WorkOrdersContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,12 +12,10 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import {
   WO_PRIORITY_LABELS, WO_PRIORITY_COLORS,
   WO_STATUS_LABELS, WO_STATUS_COLORS,
-  SERVICE_REQUEST_STATUS_LABELS,
   RFP_STATUS_LABELS,
   type WOPriority, type WorkOrderFormData,
 } from '@/types/workOrder';
@@ -27,18 +25,15 @@ export default function WorkOrdersDashboard() {
   const { toast } = useToast();
   const {
     serviceRequests, pendingRequests, rejectedRequests,
-    rfps, openRFPs,
+    rfps,
     workOrders,
     approveRequest, rejectRequest,
     createWorkOrder,
   } = useWorkOrdersContext();
 
-  const [activeTab, setActiveTab] = useState('all');
-  const [viewMode, setViewMode] = useState<'card' | 'table'>('table');
   const [search, setSearch] = useState('');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Reject dialog
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -83,168 +78,220 @@ export default function WorkOrdersDashboard() {
     toast({ title: 'Work Order Created' });
   };
 
+  const exportCsv = () => {
+    const headers = ['ID', 'Property', 'Description', 'Priority', 'Status', 'Vendor', 'Est. Cost', 'Due Date'];
+    const rows = filteredWOs.map(wo => [
+      wo.id, wo.propertyName, wo.description, WO_PRIORITY_LABELS[wo.priority],
+      WO_STATUS_LABELS[wo.status], wo.vendorName || '', wo.estimatedCost.toString(),
+      wo.dueDate ? new Date(wo.dueDate).toLocaleDateString() : '',
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'work_orders.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getPriorityBadge = (priority: WOPriority) => {
+    const colors: Record<WOPriority, string> = {
+      low: 'bg-secondary text-secondary-foreground border-0',
+      medium: 'bg-primary/20 text-primary-foreground border-0',
+      high: 'bg-warning text-warning-foreground border-0',
+      urgent: 'bg-destructive text-destructive-foreground border-0',
+      emergency: 'bg-destructive text-destructive-foreground border-0',
+    };
+    return <Badge className={colors[priority]}>{WO_PRIORITY_LABELS[priority]}</Badge>;
+  };
+
+  const getStatusBadge = (status: string) => {
+    const colors: Record<string, string> = {
+      open: 'bg-primary/20 text-primary-foreground border-0',
+      assigned: 'bg-warning text-warning-foreground border-0',
+      in_progress: 'bg-secondary text-secondary-foreground border-0',
+      completed: 'bg-muted text-muted-foreground border-0',
+      cancelled: 'bg-destructive text-destructive-foreground border-0',
+    };
+    return <Badge className={colors[status] || 'border-0'}>{WO_STATUS_LABELS[status as keyof typeof WO_STATUS_LABELS] || status}</Badge>;
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
+      {/* Header — matches Owners */}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Work Orders</h1>
-        <div className="h-1 w-16 rounded-full bg-secondary mt-2" />
+        <div className="h-1 w-16 bg-secondary rounded-full mt-2" />
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
-          <div className="relative flex-1 sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search work orders…" className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
-          <Button variant="outline" size="icon" className="shrink-0 sm:hidden" onClick={() => setFiltersOpen(!filtersOpen)}>
-            <Filter className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-2">
-            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-              <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Priority" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priorities</SelectItem>
-                {Object.entries(WO_PRIORITY_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {Object.entries(WO_STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center border rounded-lg overflow-hidden">
-            <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className="h-9 w-9 rounded-none" onClick={() => setViewMode('table')}><List className="h-4 w-4" /></Button>
-            <Button variant={viewMode === 'card' ? 'default' : 'ghost'} size="icon" className="h-9 w-9 rounded-none" onClick={() => setViewMode('card')}><LayoutGrid className="h-4 w-4" /></Button>
-          </div>
-          <Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Create New WO</Button>
-        </div>
-      </div>
-
-      {/* Mobile filters */}
-      <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <CollapsibleContent className="sm:hidden space-y-2">
-          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-            <SelectTrigger className="h-9"><SelectValue placeholder="Priority" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Priorities</SelectItem>
-              {Object.entries(WO_PRIORITY_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-9"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {Object.entries(WO_STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="requests">
-            Requests
-            {pendingRequests.length > 0 && <Badge variant="secondary" className="ml-1.5 text-xs px-1.5">{pendingRequests.length}</Badge>}
-          </TabsTrigger>
-          <TabsTrigger value="rfps">RFPs</TabsTrigger>
-          <TabsTrigger value="workorders">Work Orders</TabsTrigger>
-          <TabsTrigger value="rejected">Rejected</TabsTrigger>
+      {/* Tabs — matches Owners pattern */}
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList>
+          <TabsTrigger value="all">All ({workOrders.length})</TabsTrigger>
+          <TabsTrigger value="requests">Requests ({pendingRequests.length})</TabsTrigger>
+          <TabsTrigger value="rfps">RFPs ({rfps.length})</TabsTrigger>
+          <TabsTrigger value="workorders">Work Orders ({workOrders.length})</TabsTrigger>
+          <TabsTrigger value="rejected">Rejected ({rejectedRequests.length})</TabsTrigger>
         </TabsList>
 
-        {/* Tenant Requests Tab */}
-        <TabsContent value="requests">
-          {pendingRequests.length === 0 ? (
-            <EmptyState message="No pending service requests." />
-          ) : (
-            <div className="space-y-3">
-              {pendingRequests.map(req => (
-                <Card key={req.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm">{req.id}</span>
-                        <Badge className={WO_PRIORITY_COLORS[req.priority]}>{WO_PRIORITY_LABELS[req.priority]}</Badge>
-                        <Badge variant="outline">{req.propertyName}{req.unitNumber ? ` #${req.unitNumber}` : ''}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{req.description}</p>
-                      <p className="text-xs text-muted-foreground">By {req.tenantName} · {new Date(req.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Button size="sm" variant="outline" onClick={() => handleApprove(req.id, false)}>→ RFP</Button>
-                      <Button size="sm" variant="default" onClick={() => handleApprove(req.id, true)}>→ Direct WO</Button>
-                      <Button size="sm" variant="destructive" onClick={() => { setRejectingId(req.id); setRejectDialogOpen(true); }}>Reject</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* RFPs Tab */}
-        <TabsContent value="rfps">
-          {rfps.length === 0 ? (
-            <EmptyState message="No RFPs created yet." />
-          ) : (
-            <div className="space-y-3">
-              {rfps.map(rfp => (
-                <Card key={rfp.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/work-orders/rfp/${rfp.id}`)}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="font-medium text-sm">{rfp.id}</span>
-                      <Badge className={WO_PRIORITY_COLORS[rfp.priority]}>{WO_PRIORITY_LABELS[rfp.priority]}</Badge>
-                      <Badge variant="outline">{RFP_STATUS_LABELS[rfp.status]}</Badge>
-                      <Badge variant="outline">{rfp.propertyName}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{rfp.description}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{rfp.vendorQuotes.length} vendor(s) contacted · {new Date(rfp.createdAt).toLocaleDateString()}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Work Orders Tab */}
-        <TabsContent value="workorders">
-          <WOListView workOrders={filteredWOs} viewMode={viewMode} onView={id => navigate(`/work-orders/${id}`)} />
-        </TabsContent>
-
-        {/* Rejected Tab */}
-        <TabsContent value="rejected">
-          {rejectedRequests.length === 0 ? (
-            <EmptyState message="No rejected requests." />
-          ) : (
-            <div className="space-y-3">
-              {rejectedRequests.map(req => (
-                <Card key={req.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="font-medium text-sm">{req.id}</span>
-                      <Badge variant="destructive">Rejected</Badge>
-                      <Badge variant="outline">{req.propertyName}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{req.description}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Reason: {req.rejectionReason} {req.rejectionNotes ? `— ${req.rejectionNotes}` : ''}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* All Tab */}
+        {/* ── All / Work Orders Tab ── */}
         <TabsContent value="all">
-          <WOListView workOrders={filteredWOs} viewMode={viewMode} onView={id => navigate(`/work-orders/${id}`)} />
+          <WOTableSection
+            workOrders={filteredWOs}
+            search={search}
+            onSearchChange={setSearch}
+            priorityFilter={priorityFilter}
+            onPriorityChange={setPriorityFilter}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+            onCreateNew={() => setCreateOpen(true)}
+            onExport={exportCsv}
+            onView={id => navigate(`/work-orders/${id}`)}
+            getPriorityBadge={getPriorityBadge}
+            getStatusBadge={getStatusBadge}
+          />
+        </TabsContent>
+
+        <TabsContent value="workorders">
+          <WOTableSection
+            workOrders={filteredWOs}
+            search={search}
+            onSearchChange={setSearch}
+            priorityFilter={priorityFilter}
+            onPriorityChange={setPriorityFilter}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+            onCreateNew={() => setCreateOpen(true)}
+            onExport={exportCsv}
+            onView={id => navigate(`/work-orders/${id}`)}
+            getPriorityBadge={getPriorityBadge}
+            getStatusBadge={getStatusBadge}
+          />
+        </TabsContent>
+
+        {/* ── Requests Tab ── */}
+        <TabsContent value="requests">
+          <div className="space-y-4">
+            {pendingRequests.length === 0 ? (
+              <EmptyState message="No pending service requests." />
+            ) : (
+              <div className="card-elevated overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-card hover:bg-card">
+                      <TableHead>ID</TableHead>
+                      <TableHead>Property / Unit</TableHead>
+                      <TableHead>Tenant</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingRequests.map(req => (
+                      <TableRow key={req.id} className="bg-card">
+                        <TableCell className="font-medium">{req.id}</TableCell>
+                        <TableCell>{req.propertyName}{req.unitNumber ? ` #${req.unitNumber}` : ''}</TableCell>
+                        <TableCell className="text-muted-foreground">{req.tenantName}</TableCell>
+                        <TableCell className="max-w-[200px] truncate text-muted-foreground">{req.description}</TableCell>
+                        <TableCell>{getPriorityBadge(req.priority)}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{new Date(req.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleApprove(req.id, false)}>→ RFP</Button>
+                            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleApprove(req.id, true)}>→ WO</Button>
+                            <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive-foreground" onClick={() => { setRejectingId(req.id); setRejectDialogOpen(true); }}>Reject</Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ── RFPs Tab ── */}
+        <TabsContent value="rfps">
+          <div className="space-y-4">
+            {rfps.length === 0 ? (
+              <EmptyState message="No RFPs created yet." />
+            ) : (
+              <div className="card-elevated overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-card hover:bg-card">
+                      <TableHead>ID</TableHead>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-center">Vendors</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rfps.map(rfp => (
+                      <TableRow key={rfp.id} className="bg-card">
+                        <TableCell className="font-medium">{rfp.id}</TableCell>
+                        <TableCell>{rfp.propertyName}{rfp.unitNumber ? ` #${rfp.unitNumber}` : ''}</TableCell>
+                        <TableCell className="max-w-[200px] truncate text-muted-foreground">{rfp.description}</TableCell>
+                        <TableCell>{getPriorityBadge(rfp.priority)}</TableCell>
+                        <TableCell><Badge className="bg-secondary text-secondary-foreground border-0">{RFP_STATUS_LABELS[rfp.status]}</Badge></TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className="bg-background">{rfp.vendorQuotes.length}</Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{new Date(rfp.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" title="View" onClick={() => navigate(`/work-orders/rfp/${rfp.id}`)}>
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ── Rejected Tab ── */}
+        <TabsContent value="rejected">
+          <div className="space-y-4">
+            {rejectedRequests.length === 0 ? (
+              <EmptyState message="No rejected requests." />
+            ) : (
+              <div className="card-elevated overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-card hover:bg-card">
+                      <TableHead>ID</TableHead>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rejectedRequests.map(req => (
+                      <TableRow key={req.id} className="bg-card">
+                        <TableCell className="font-medium">{req.id}</TableCell>
+                        <TableCell>{req.propertyName}</TableCell>
+                        <TableCell className="max-w-[200px] truncate text-muted-foreground">{req.description}</TableCell>
+                        <TableCell><Badge className="bg-destructive text-destructive-foreground border-0">{req.rejectionReason}</Badge></TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{req.rejectionNotes || '—'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 
@@ -313,7 +360,7 @@ export default function WorkOrdersDashboard() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateWO} disabled={!woForm.description}>Create</Button>
+            <Button className="btn-primary" onClick={handleCreateWO} disabled={!woForm.description}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -321,75 +368,124 @@ export default function WorkOrdersDashboard() {
   );
 }
 
-/* ───── Sub-components ───── */
+/* ───── WO Table Section — mirrors OwnersTable layout ───── */
 
-function EmptyState({ message }: { message: string }) {
+interface WOTableSectionProps {
+  workOrders: any[];
+  search: string;
+  onSearchChange: (v: string) => void;
+  priorityFilter: string;
+  onPriorityChange: (v: string) => void;
+  statusFilter: string;
+  onStatusChange: (v: string) => void;
+  onCreateNew: () => void;
+  onExport: () => void;
+  onView: (id: string) => void;
+  getPriorityBadge: (p: WOPriority) => JSX.Element;
+  getStatusBadge: (s: string) => JSX.Element;
+}
+
+function WOTableSection({
+  workOrders, search, onSearchChange,
+  priorityFilter, onPriorityChange, statusFilter, onStatusChange,
+  onCreateNew, onExport, onView,
+  getPriorityBadge, getStatusBadge,
+}: WOTableSectionProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-      <p>{message}</p>
-      <p className="text-sm mt-1">Tenant requests will appear here.</p>
+    <div className="space-y-4">
+      {/* Toolbar — matches Owners: search left, buttons right */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by ID or description..."
+            value={search}
+            onChange={e => onSearchChange(e.target.value)}
+            className="pl-9 bg-background"
+          />
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={priorityFilter} onValueChange={onPriorityChange}>
+            <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Priority" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Priorities</SelectItem>
+              {Object.entries(WO_PRIORITY_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={onStatusChange}>
+            <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              {Object.entries(WO_STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={onExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+          <Button size="sm" className="btn-primary" onClick={onCreateNew}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create New WO
+          </Button>
+        </div>
+      </div>
+
+      {/* Table — card-elevated wrapper, bg-card rows like Owners */}
+      {workOrders.length === 0 ? (
+        <EmptyState message="No active work orders. Tenant requests will appear here." />
+      ) : (
+        <div className="card-elevated overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-card hover:bg-card">
+                <TableHead>ID</TableHead>
+                <TableHead>Property / Unit</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Priority</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Vendor</TableHead>
+                <TableHead className="text-right">Est. Cost</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {workOrders.map(wo => (
+                <TableRow key={wo.id} className="bg-card">
+                  <TableCell className="font-medium">{wo.id}</TableCell>
+                  <TableCell>{wo.propertyName}{wo.unitNumber ? ` #${wo.unitNumber}` : ''}</TableCell>
+                  <TableCell className="max-w-[200px] truncate text-muted-foreground">{wo.description}</TableCell>
+                  <TableCell>{getPriorityBadge(wo.priority)}</TableCell>
+                  <TableCell>{getStatusBadge(wo.status)}</TableCell>
+                  <TableCell className="text-muted-foreground">{wo.vendorName || '—'}</TableCell>
+                  <TableCell className="text-right">${wo.estimatedCost.toLocaleString()}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{wo.dueDate ? new Date(wo.dueDate).toLocaleDateString() : '—'}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="View" onClick={() => onView(wo.id)}>
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }
 
-function WOListView({ workOrders, viewMode, onView }: { workOrders: any[]; viewMode: 'card' | 'table'; onView: (id: string) => void }) {
-  if (workOrders.length === 0) return <EmptyState message="No active work orders." />;
+/* ───── Empty State ───── */
 
-  if (viewMode === 'card') {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {workOrders.map(wo => (
-          <Card key={wo.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onView(wo.id)}>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-sm">{wo.id}</span>
-                <Badge className={WO_PRIORITY_COLORS[wo.priority]}>{WO_PRIORITY_LABELS[wo.priority]}</Badge>
-              </div>
-              <p className="text-sm line-clamp-2">{wo.description}</p>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge className={WO_STATUS_COLORS[wo.status]}>{WO_STATUS_LABELS[wo.status]}</Badge>
-                <span className="text-xs text-muted-foreground">{wo.propertyName}</span>
-              </div>
-              {wo.vendorName && <p className="text-xs text-muted-foreground">Vendor: {wo.vendorName}</p>}
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Est: ${wo.estimatedCost.toLocaleString()}</span>
-                {wo.actualCost != null && <span>Act: ${wo.actualCost.toLocaleString()}</span>}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
+function EmptyState({ message }: { message: string }) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>ID</TableHead>
-          <TableHead>Property / Unit</TableHead>
-          <TableHead className="hidden md:table-cell">Description</TableHead>
-          <TableHead>Priority</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="hidden lg:table-cell">Vendor</TableHead>
-          <TableHead className="hidden lg:table-cell text-right">Est. Cost</TableHead>
-          <TableHead className="hidden xl:table-cell">Due Date</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {workOrders.map(wo => (
-          <TableRow key={wo.id} className="cursor-pointer" onClick={() => onView(wo.id)}>
-            <TableCell className="font-medium">{wo.id}</TableCell>
-            <TableCell>{wo.propertyName}{wo.unitNumber ? ` #${wo.unitNumber}` : ''}</TableCell>
-            <TableCell className="hidden md:table-cell max-w-[200px] truncate">{wo.description}</TableCell>
-            <TableCell><Badge className={WO_PRIORITY_COLORS[wo.priority]}>{WO_PRIORITY_LABELS[wo.priority]}</Badge></TableCell>
-            <TableCell><Badge className={WO_STATUS_COLORS[wo.status]}>{WO_STATUS_LABELS[wo.status]}</Badge></TableCell>
-            <TableCell className="hidden lg:table-cell">{wo.vendorName || '—'}</TableCell>
-            <TableCell className="hidden lg:table-cell text-right">${wo.estimatedCost.toLocaleString()}</TableCell>
-            <TableCell className="hidden xl:table-cell">{wo.dueDate ? new Date(wo.dueDate).toLocaleDateString() : '—'}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
+      <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+        <Search className="h-8 w-8 text-muted-foreground" />
+      </div>
+      <p className="text-lg text-muted-foreground">{message}</p>
+    </div>
   );
 }
