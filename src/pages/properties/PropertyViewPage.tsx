@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MapPin, Edit, Building2, DollarSign, FileText, Users, ChevronDown, Wand2, Plus } from 'lucide-react';
+import { ArrowLeft, MapPin, Edit, Building2, DollarSign, FileText, Users, ChevronDown, Wand2, Plus, Landmark, Check, Shield, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,10 @@ import {
   BarChart, Bar, XAxis, YAxis,
 } from 'recharts';
 import BulkUnitSetupDialog, { type BulkUnit } from '@/components/properties/BulkUnitSetupDialog';
+import AddBankAccountDialog from '@/components/properties/AddBankAccountDialog';
+import { useBankAccountsContext } from '@/contexts/BankAccountsContext';
+import { maskNumber, BANK_PURPOSE_LABELS, PURPOSE_COLORS, type BankPurpose } from '@/types/bankAccount';
+import { Switch } from '@/components/ui/switch';
 
 const needsUnits = (t: string) => ['multi_family', 'affordable_multi', 'student_housing'].includes(t);
 const isStudentType = (t: string) => t === 'student_housing';
@@ -33,8 +37,10 @@ export default function PropertyViewPage() {
   const { getPropertyById, changeStatus, updateProperty } = usePropertiesContext();
   const { activeOwners } = useOwnersContext();
   const { getGroupsForProperty } = usePropertyGroupsContext();
+  const { getLinksForProperty, getAccountById, unlinkAccount, linkAccount, updateLink, accounts } = useBankAccountsContext();
   const [bulkOpen, setBulkOpen] = useState(false);
   const [unitSearch, setUnitSearch] = useState('');
+  const [addBankOpen, setAddBankOpen] = useState(false);
 
   const property = id ? getPropertyById(id) : undefined;
 
@@ -332,6 +338,82 @@ export default function PropertyViewPage() {
         </Card>
       )}
 
+      {/* Bank Accounts */}
+      {(() => {
+        const bankLinks = id ? getLinksForProperty(id) : [];
+        const linkedAccountIds = bankLinks.map(l => l.bankAccountId);
+        const linkableAccounts = accounts.filter(a => !linkedAccountIds.includes(a.id));
+        const primaryRent = bankLinks.find(l => l.purpose === 'rent_collection' && l.primaryForPurpose);
+        const primaryRentAccount = primaryRent ? getAccountById(primaryRent.bankAccountId) : null;
+        return (
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-medium flex items-center gap-2">
+                  <Landmark className="h-4 w-4 text-primary" />
+                  Bank Accounts ({bankLinks.length})
+                </CardTitle>
+                <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setAddBankOpen(true)}>
+                  <Plus className="h-4 w-4" /> Add / Link Account
+                </Button>
+              </div>
+              {primaryRentAccount && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Primary Rent Account: <strong>{primaryRentAccount.bankName} ••••{primaryRentAccount.accountNumber.slice(-4)}</strong>
+                </p>
+              )}
+              {bankLinks.length > 0 && !primaryRent && (
+                <p className="text-xs text-warning mt-1">⚠ No primary rent collection account set</p>
+              )}
+            </CardHeader>
+            <CardContent>
+              {bankLinks.length === 0 ? (
+                <div className="p-6 text-center">
+                  <Shield className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                  <p className="text-sm text-muted-foreground">No bank accounts linked yet. Add one for rent collection, expenses, etc.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {bankLinks.map((link) => {
+                    const account = getAccountById(link.bankAccountId);
+                    if (!account) return null;
+                    return (
+                      <div key={link.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-muted/30 gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Landmark className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <span className="text-sm font-medium">{account.bankName}</span>
+                          <span className="text-xs text-muted-foreground">••••{account.accountNumber.slice(-4)}</span>
+                          <span className="text-xs text-muted-foreground">({account.accountHolderName})</span>
+                          <Badge
+                            className="text-xs"
+                            style={{ backgroundColor: PURPOSE_COLORS[link.purpose], color: 'hsl(0,0%,20%)' }}
+                          >
+                            {link.purpose === 'other' && link.customPurpose ? link.customPurpose : BANK_PURPOSE_LABELS[link.purpose]}
+                          </Badge>
+                          {link.primaryForPurpose && (
+                            <Badge variant="secondary" className="text-xs gap-0.5">
+                              <Check className="h-3 w-3" /> Primary
+                            </Badge>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs text-destructive hover:text-destructive"
+                          onClick={() => unlinkAccount(link.id)}
+                        >
+                          <X className="h-3.5 w-3.5 mr-1" /> Unlink
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* Details */}
       <Card>
         <CardHeader className="pb-2">
@@ -375,6 +457,14 @@ export default function PropertyViewPage() {
           onConfirm={handleBulkConfirm}
         />
       )}
+
+      <AddBankAccountDialog
+        open={addBankOpen}
+        onOpenChange={setAddBankOpen}
+        onCreated={(accountId) => {
+          if (id) linkAccount(id, accountId, 'rent_collection');
+        }}
+      />
     </div>
   );
 }
