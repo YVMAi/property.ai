@@ -10,6 +10,7 @@ import { TenantsProvider } from "@/contexts/TenantsContext";
 import { VendorsProvider } from "@/contexts/VendorsContext";
 import { PropertiesProvider } from "@/contexts/PropertiesContext";
 import { PropertyGroupsProvider } from "@/contexts/PropertyGroupsContext";
+import { BankAccountsProvider } from "@/contexts/BankAccountsContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 // Pages
@@ -52,6 +53,7 @@ const App = () => (
         <OwnersProvider>
           <PropertiesProvider>
           <PropertyGroupsProvider>
+          <BankAccountsProvider>
           <TenantsProvider>
           <VendorsProvider>
           <TooltipProvider>
@@ -95,6 +97,7 @@ const App = () => (
           </TooltipProvider>
           </VendorsProvider>
           </TenantsProvider>
+          </BankAccountsProvider>
           </PropertyGroupsProvider>
           </PropertiesProvider>
         </OwnersProvider>

@@ -3,6 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Upload, X, Image, Wand2, Tag, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import BulkUnitSetupDialog, { type BulkUnit } from '@/components/properties/BulkUnitSetupDialog';
 import CreateGroupDialog from '@/components/properties/CreateGroupDialog';
+import BankAccountsSection from '@/components/properties/BankAccountsSection';
+import { useBankAccountsContext } from '@/contexts/BankAccountsContext';
+import type { PropertyBankLink } from '@/types/bankAccount';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,6 +83,7 @@ export default function PropertyFormPage() {
   const { addProperty, updateProperty, getPropertyById } = usePropertiesContext();
   const { activeOwners } = useOwnersContext();
   const { groups, getGroupsForProperty, setPropertyGroups, getGroupPropertyCount } = usePropertyGroupsContext();
+  const { getLinksForProperty, setPropertyBankLinks } = useBankAccountsContext();
   const isEdit = Boolean(id);
 
   const existing = id ? getPropertyById(id) : undefined;
@@ -87,6 +91,9 @@ export default function PropertyFormPage() {
   const [step, setStep] = useState(0);
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(() =>
     existing ? getGroupsForProperty(existing.id).map(g => g.id) : []
+  );
+  const [bankLinks, setBankLinks] = useState<PropertyBankLink[]>(() =>
+    existing ? getLinksForProperty(existing.id) : []
   );
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [photoFiles, setPhotoFiles] = useState<{ name: string; url: string; tags: string[]; tagInput: string }[]>([]);
@@ -257,10 +264,12 @@ export default function PropertyFormPage() {
     if (isEdit && id) {
       updateProperty(id, form);
       setPropertyGroups(id, selectedGroupIds);
+      setPropertyBankLinks(id, bankLinks.map(l => ({ ...l, propertyId: id })));
       toast({ title: 'Property updated' });
     } else {
       const newProp = addProperty(form);
       setPropertyGroups(newProp.id, selectedGroupIds);
+      setPropertyBankLinks(newProp.id, bankLinks.map(l => ({ ...l, propertyId: newProp.id })));
       toast({ title: 'Property created' });
     }
     navigate('/properties');
@@ -664,6 +673,9 @@ export default function PropertyFormPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Bank Accounts */}
+        <BankAccountsSection linkedAccounts={bankLinks} onLinksChange={setBankLinks} />
 
         {/* Photos & Media */}
         <Card>
