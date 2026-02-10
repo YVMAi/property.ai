@@ -71,6 +71,7 @@ export interface PropertyLease {
 
 export interface Property {
   id: string;
+  name: string;
   type: PropertyType;
   address: PropertyAddress;
   sqFt: number;
@@ -105,6 +106,7 @@ export interface Property {
 }
 
 export interface PropertyFormData {
+  name: string;
   type: PropertyType;
   address: PropertyAddress;
   sqFt: number | '';

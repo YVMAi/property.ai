@@ -14,6 +14,7 @@ export function useProperties() {
     const now = new Date().toISOString();
     const newProperty: Property = {
       id: generateId(),
+      name: data.name,
       type: data.type,
       address: data.address,
       sqFt: Number(data.sqFt) || 0,
@@ -49,6 +50,7 @@ export function useProperties() {
         if (p.id !== id) return p;
         const updated: Property = {
           ...p,
+          name: data.name ?? p.name,
           type: data.type ?? p.type,
           address: data.address ?? p.address,
           sqFt: data.sqFt !== undefined ? Number(data.sqFt) || 0 : p.sqFt,
