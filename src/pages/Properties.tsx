@@ -8,11 +8,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
 import { useOwnersContext } from '@/contexts/OwnersContext';
+import type { PropertyType } from '@/types/property';
+
+import multiFamilyImg from '@/assets/properties/multi-family.jpg';
+import singleFamilyImg from '@/assets/properties/single-family.jpg';
+import studentHousingImg from '@/assets/properties/student-housing.jpg';
+import commercialImg from '@/assets/properties/commercial.jpg';
+import affordableImg from '@/assets/properties/affordable.jpg';
+import lakefrontImg from '@/assets/properties/lakefront.jpg';
+
+const PROPERTY_TYPE_IMAGES: Record<PropertyType, string> = {
+  single_family: singleFamilyImg,
+  multi_family: multiFamilyImg,
+  student_housing: studentHousingImg,
+  affordable_single: affordableImg,
+  affordable_multi: affordableImg,
+  commercial: commercialImg,
+};
+
+// Special override for specific properties by ID
+const PROPERTY_IMAGE_OVERRIDES: Record<string, string> = {
+  p7: lakefrontImg,
+};
 import {
   PROPERTY_TYPE_LABELS,
   PROPERTY_STATUS_LABELS,
   STATUS_COLORS,
-  type PropertyType,
   type PropertyStatus,
 } from '@/types/property';
 import {
@@ -437,33 +458,44 @@ export default function Properties() {
           {showArchived ? 'Archived' : 'All'} Properties ({filteredProperties.length})
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredProperties.map((p) => (
-            <Card
-              key={p.id}
-              className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.01]"
-              onClick={() => navigate(`/properties/${p.id}`)}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{p.address.street}</p>
-                    <p className="text-xs text-muted-foreground">{p.address.city}, {p.address.state} {p.address.zip}</p>
+          {filteredProperties.map((p) => {
+            const photoSrc = PROPERTY_IMAGE_OVERRIDES[p.id] || PROPERTY_TYPE_IMAGES[p.type] || multiFamilyImg;
+            return (
+              <Card
+                key={p.id}
+                className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.01] overflow-hidden"
+                onClick={() => navigate(`/properties/${p.id}`)}
+              >
+                <div className="h-40 overflow-hidden">
+                  <img
+                    src={photoSrc}
+                    alt={`${p.address.street} property`}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{p.address.street}</p>
+                      <p className="text-xs text-muted-foreground">{p.address.city}, {p.address.state} {p.address.zip}</p>
+                    </div>
+                    <Badge className={`${STATUS_COLORS[p.status]} text-xs shrink-0 ml-2`}>
+                      {PROPERTY_STATUS_LABELS[p.status]}
+                    </Badge>
                   </div>
-                  <Badge className={`${STATUS_COLORS[p.status]} text-xs shrink-0 ml-2`}>
-                    {PROPERTY_STATUS_LABELS[p.status]}
-                  </Badge>
-                </div>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  <Badge variant="outline" className="text-xs">{PROPERTY_TYPE_LABELS[p.type]}</Badge>
-                  {p.units.length > 0 && <Badge variant="outline" className="text-xs">{p.units.length} units</Badge>}
-                </div>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Owner: {getOwnerName(p.ownerId)}</span>
-                  <span>{p.leases.filter((l) => l.status === 'active').length} active leases</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    <Badge variant="outline" className="text-xs">{PROPERTY_TYPE_LABELS[p.type]}</Badge>
+                    {p.units.length > 0 && <Badge variant="outline" className="text-xs">{p.units.length} units</Badge>}
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Owner: {getOwnerName(p.ownerId)}</span>
+                    <span>{p.leases.filter((l) => l.status === 'active').length} active leases</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>
