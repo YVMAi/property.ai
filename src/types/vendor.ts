@@ -20,7 +20,7 @@ export interface VendorDocument {
   id: string;
   fileName: string;
   fileUrl: string;
-  type: 'w9' | 'insurance' | 'license' | 'other';
+  type: 'master_agreement' | 'w9' | 'insurance' | 'license' | 'other';
   uploadedAt: string;
 }
 
@@ -102,6 +102,14 @@ export interface Vendor {
   updatedAt: string;
 }
 
+export interface VendorFormDocument {
+  id: string;
+  fileName: string;
+  type: 'master_agreement' | 'w9' | 'insurance' | 'license' | 'other';
+  fileSize: number;
+  addedAt: string;
+}
+
 export interface VendorFormData {
   vendorType: VendorType;
   firstName: string;
@@ -125,6 +133,7 @@ export interface VendorFormData {
   email: string;
   bgvEnabled: boolean;
   bgvSchedule: BGVSchedule;
+  formDocuments: VendorFormDocument[];
 }
 
 export const PREDEFINED_CATEGORIES = [
@@ -163,6 +172,7 @@ export const emptyVendorForm: VendorFormData = {
   email: '',
   bgvEnabled: true,
   bgvSchedule: 'one-time',
+  formDocuments: [],
 };
 
 export function getVendorDisplayName(vendor: Vendor): string {

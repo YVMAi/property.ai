@@ -236,14 +236,22 @@ export function useVendors() {
 
   const addVendor = useCallback((data: VendorFormData) => {
     const now = new Date().toISOString();
+    const { formDocuments, ...rest } = data;
+    const documents = formDocuments.map((d) => ({
+      id: d.id,
+      fileName: d.fileName,
+      fileUrl: '#',
+      type: d.type,
+      uploadedAt: d.addedAt,
+    }));
     const newVendor: Vendor = {
       id: generateId(),
-      ...data,
+      ...rest,
       status: 'active',
       inviteStatus: 'pending',
       inviteToken: generateId(),
       inviteSentAt: now,
-      documents: [],
+      documents,
       bgvReports: [],
       workOrders: [],
       complaints: [],
@@ -258,7 +266,20 @@ export function useVendors() {
 
   const updateVendor = useCallback((id: string, data: Partial<VendorFormData>) => {
     setVendors((prev) =>
-      prev.map((v) => (v.id === id ? { ...v, ...data, updatedAt: new Date().toISOString() } : v))
+      prev.map((v) => {
+        if (v.id !== id) return v;
+        const { formDocuments, ...rest } = data as any;
+        const updatedDocs = formDocuments
+          ? (formDocuments as any[]).map((d: any) => ({
+              id: d.id,
+              fileName: d.fileName,
+              fileUrl: '#',
+              type: d.type,
+              uploadedAt: d.addedAt,
+            }))
+          : v.documents;
+        return { ...v, ...rest, documents: updatedDocs, updatedAt: new Date().toISOString() };
+      })
     );
   }, []);
 
