@@ -46,6 +46,7 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
   const [managementFeeType, setManagementFeeType] = useState<AgreementManagementFeeType>('fixed_per_unit');
   const [managementFeeFixed, setManagementFeeFixed] = useState<number | ''>('');
   const [managementFeePercent, setManagementFeePercent] = useState<number | ''>('');
+  const [managementFeePercentTotal, setManagementFeePercentTotal] = useState<number | ''>('');
   const [leaseFeeType, setLeaseFeeType] = useState<AgreementFeeType>('fixed');
   const [leaseFeeValue, setLeaseFeeValue] = useState<number | ''>('');
   const [renewalFeeType, setRenewalFeeType] = useState<AgreementFeeType>('fixed');
@@ -63,6 +64,7 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
     setManagementFeeType('fixed_per_unit');
     setManagementFeeFixed('');
     setManagementFeePercent('');
+    setManagementFeePercentTotal('');
     setLeaseFeeType('fixed');
     setLeaseFeeValue('');
     setRenewalFeeType('fixed');
@@ -102,6 +104,7 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
       managementFeeType,
       managementFeeFixed: showFixed ? managementFeeFixed : '',
       managementFeePercent: showPercent ? managementFeePercent : '',
+      managementFeePercentTotal: managementFeeType === 'combination' ? managementFeePercentTotal : '',
       leaseFeeType,
       leaseFeeValue,
       renewalFeeType,
@@ -164,7 +167,7 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
               onValueChange={(v) => setManagementFeeType(v as AgreementManagementFeeType)}
               placeholder="Select fee type"
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className={`grid gap-3 ${managementFeeType === 'combination' ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2'}`}>
               {showFixed && (
                 <div>
                   <Label className="text-xs">Fixed Amount Per Unit ($)</Label>
@@ -179,9 +182,7 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
               )}
               {showPercent && (
                 <div>
-                  <Label className="text-xs">
-                    {managementFeeType === 'percent_rent' ? '% of Rent' : managementFeeType === 'percent_total_income' ? '% of Total Income' : '% Value'}
-                  </Label>
+                  <Label className="text-xs">% of Rental Income</Label>
                   <Input
                     type="number"
                     min={0}
@@ -194,9 +195,23 @@ export default function AddAgreementDialog({ open, onOpenChange, onSave }: AddAg
                   {errors.managementFeePercent && <p className="text-xs text-destructive mt-1">{errors.managementFeePercent}</p>}
                 </div>
               )}
+              {managementFeeType === 'combination' && (
+                <div>
+                  <Label className="text-xs">% of Total Income</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.5}
+                    value={managementFeePercentTotal}
+                    onChange={(e) => setManagementFeePercentTotal(e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="e.g. 5"
+                  />
+                </div>
+              )}
             </div>
             {managementFeeType === 'combination' && (
-              <p className="text-xs text-muted-foreground">Combination applies both fixed per-unit and percentage fees.</p>
+              <p className="text-xs text-muted-foreground">Combination applies fixed per-unit fees plus percentage of both rental and total income.</p>
             )}
           </div>
 

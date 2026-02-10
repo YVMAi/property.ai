@@ -51,6 +51,7 @@ export interface OwnerAgreement {
   managementFeeType: AgreementManagementFeeType;
   managementFeeFixed: number | '';
   managementFeePercent: number | '';
+  managementFeePercentTotal: number | '';
   leaseFeeType: AgreementFeeType;
   leaseFeeValue: number | '';
   renewalFeeType: AgreementFeeType;
@@ -117,6 +118,7 @@ export const emptyAgreement: Omit<OwnerAgreement, 'id'> = {
   managementFeeType: 'fixed_per_unit',
   managementFeeFixed: '',
   managementFeePercent: '',
+  managementFeePercentTotal: '',
   leaseFeeType: 'fixed',
   leaseFeeValue: '',
   renewalFeeType: 'fixed',
