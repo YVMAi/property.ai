@@ -1,0 +1,402 @@
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Plus, Trash2, Upload } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { usePropertiesContext } from '@/contexts/PropertiesContext';
+import { useOwnersContext } from '@/contexts/OwnersContext';
+import { useToast } from '@/hooks/use-toast';
+import {
+  PROPERTY_TYPE_LABELS,
+  type PropertyType,
+  type PropertyFormData,
+  type PropertyUnit,
+} from '@/types/property';
+import { AMENITIES_OPTIONS } from '@/data/propertiesMockData';
+
+const STEPS = ['Details', 'Owner & Agreements', 'Leases & Documents'];
+
+const needsUnits = (t: PropertyType) => ['multi_family', 'affordable_multi', 'student_housing'].includes(t);
+const needsBedBath = (t: PropertyType) => ['single_family', 'affordable_single', 'commercial'].includes(t);
+const isStudentType = (t: PropertyType) => t === 'student_housing';
+
+const emptyForm: PropertyFormData = {
+  type: 'single_family',
+  address: { street: '', city: '', state: '', zip: '' },
+  sqFt: '',
+  yearBuilt: '',
+  purchasePrice: '',
+  purchaseDate: '',
+  description: '',
+  photos: [],
+  ownerId: '',
+  bedrooms: '',
+  bathrooms: '',
+  amenities: [],
+  hoaFees: '',
+  taxes: '',
+  insurance: '',
+  units: [],
+  agreementIds: [],
+  marketRentAvg: '',
+};
+
+export default function PropertyFormPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { addProperty, updateProperty, getPropertyById } = usePropertiesContext();
+  const { activeOwners } = useOwnersContext();
+  const isEdit = Boolean(id);
+
+  const existing = id ? getPropertyById(id) : undefined;
+
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState<PropertyFormData>(() => {
+    if (existing) {
+      return {
+        type: existing.type,
+        address: existing.address,
+        sqFt: existing.sqFt,
+        yearBuilt: existing.yearBuilt,
+        purchasePrice: existing.purchasePrice,
+        purchaseDate: existing.purchaseDate,
+        description: existing.description,
+        photos: existing.photos,
+        ownerId: existing.ownerId,
+        bedrooms: existing.bedrooms || '',
+        bathrooms: existing.bathrooms || '',
+        amenities: existing.amenities,
+        hoaFees: existing.hoaFees || '',
+        taxes: existing.taxes || '',
+        insurance: existing.insurance || '',
+        units: existing.units,
+        agreementIds: existing.agreementIds,
+        marketRentAvg: existing.marketRentAvg || '',
+      };
+    }
+    return { ...emptyForm };
+  });
+
+  const set = <K extends keyof PropertyFormData>(key: K, val: PropertyFormData[K]) =>
+    setForm((prev) => ({ ...prev, [key]: val }));
+
+  const setAddress = (field: string, val: string) =>
+    setForm((prev) => ({ ...prev, address: { ...prev.address, [field]: val } }));
+
+  const toggleAmenity = (amenity: string) =>
+    set('amenities', form.amenities.includes(amenity) ? form.amenities.filter((a) => a !== amenity) : [...form.amenities, amenity]);
+
+  const addUnit = () => {
+    const label = isStudentType(form.type) ? `Bed ${form.units.length + 1}` : `${100 + form.units.length + 1}`;
+    set('units', [...form.units, { unitNumber: label, size: 0, bedrooms: 1, bathrooms: 1, isShared: false }]);
+  };
+
+  const removeUnit = (idx: number) => set('units', form.units.filter((_, i) => i !== idx));
+
+  const updateUnit = (idx: number, field: string, val: any) =>
+    set('units', form.units.map((u, i) => (i === idx ? { ...u, [field]: val } : u)));
+
+  const selectedOwner = activeOwners.find((o) => o.id === form.ownerId);
+
+  const handleSave = () => {
+    if (!form.address.street || !form.ownerId) {
+      toast({ title: 'Missing required fields', description: 'Address and Owner are required.', variant: 'destructive' });
+      return;
+    }
+    if (isEdit && id) {
+      updateProperty(id, form);
+      toast({ title: 'Property updated' });
+    } else {
+      addProperty(form);
+      toast({ title: 'Property created' });
+    }
+    navigate('/properties');
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/properties')}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl font-semibold text-foreground">
+          {isEdit ? 'Edit Property' : 'Add New Property'}
+        </h1>
+      </div>
+
+      {/* Steps */}
+      <div className="flex gap-2">
+        {STEPS.map((s, i) => (
+          <button
+            key={s}
+            onClick={() => setStep(i)}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+              i === step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'
+            }`}
+          >
+            {i + 1}. {s}
+          </button>
+        ))}
+      </div>
+
+      {/* Step 1: Details */}
+      {step === 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Property Details</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Property Type *</Label>
+              <Select value={form.type} onValueChange={(v) => set('type', v as PropertyType)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PROPERTY_TYPE_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label>Street *</Label>
+                <Input value={form.address.street} onChange={(e) => setAddress('street', e.target.value)} />
+              </div>
+              <div>
+                <Label>City</Label>
+                <Input value={form.address.city} onChange={(e) => setAddress('city', e.target.value)} />
+              </div>
+              <div>
+                <Label>State</Label>
+                <Input value={form.address.state} onChange={(e) => setAddress('state', e.target.value)} />
+              </div>
+              <div>
+                <Label>ZIP</Label>
+                <Input value={form.address.zip} onChange={(e) => setAddress('zip', e.target.value)} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <Label>Sq Ft</Label>
+                <Input type="number" value={form.sqFt} onChange={(e) => set('sqFt', e.target.value ? Number(e.target.value) : '')} />
+              </div>
+              <div>
+                <Label>Year Built</Label>
+                <Input type="number" value={form.yearBuilt} onChange={(e) => set('yearBuilt', e.target.value ? Number(e.target.value) : '')} />
+              </div>
+              <div>
+                <Label>Purchase Price ($)</Label>
+                <Input type="number" value={form.purchasePrice} onChange={(e) => set('purchasePrice', e.target.value ? Number(e.target.value) : '')} />
+              </div>
+              <div>
+                <Label>Purchase Date</Label>
+                <Input type="date" value={form.purchaseDate} onChange={(e) => set('purchaseDate', e.target.value)} />
+              </div>
+            </div>
+
+            {/* Type-specific: Beds/Baths/HOA */}
+            {needsBedBath(form.type) && (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div>
+                  <Label>Bedrooms</Label>
+                  <Input type="number" value={form.bedrooms} onChange={(e) => set('bedrooms', e.target.value ? Number(e.target.value) : '')} />
+                </div>
+                <div>
+                  <Label>Bathrooms</Label>
+                  <Input type="number" value={form.bathrooms} onChange={(e) => set('bathrooms', e.target.value ? Number(e.target.value) : '')} />
+                </div>
+                <div>
+                  <Label>HOA Fees ($)</Label>
+                  <Input type="number" value={form.hoaFees} onChange={(e) => set('hoaFees', e.target.value ? Number(e.target.value) : '')} />
+                </div>
+                <div>
+                  <Label>Taxes ($)</Label>
+                  <Input type="number" value={form.taxes} onChange={(e) => set('taxes', e.target.value ? Number(e.target.value) : '')} />
+                </div>
+                <div>
+                  <Label>Insurance ($)</Label>
+                  <Input type="number" value={form.insurance} onChange={(e) => set('insurance', e.target.value ? Number(e.target.value) : '')} />
+                </div>
+              </div>
+            )}
+
+            {/* Units for multi/student */}
+            {needsUnits(form.type) && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>{isStudentType(form.type) ? 'Beds' : 'Units'}</Label>
+                  <Button size="sm" variant="outline" onClick={addUnit} className="gap-1">
+                    <Plus className="h-3 w-3" /> Add {isStudentType(form.type) ? 'Bed' : 'Unit'}
+                  </Button>
+                </div>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {form.units.map((u, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
+                      <Input className="w-20 h-8 text-sm" value={u.unitNumber} onChange={(e) => updateUnit(i, 'unitNumber', e.target.value)} placeholder="#" />
+                      <Input className="w-20 h-8 text-sm" type="number" value={u.size || ''} onChange={(e) => updateUnit(i, 'size', Number(e.target.value))} placeholder="Sq ft" />
+                      <Input className="w-16 h-8 text-sm" type="number" value={u.bedrooms} onChange={(e) => updateUnit(i, 'bedrooms', Number(e.target.value))} placeholder="Beds" />
+                      <Input className="w-16 h-8 text-sm" type="number" value={u.bathrooms} onChange={(e) => updateUnit(i, 'bathrooms', Number(e.target.value))} placeholder="Baths" />
+                      {isStudentType(form.type) && (
+                        <label className="flex items-center gap-1 text-xs">
+                          <Checkbox checked={u.isShared || false} onCheckedChange={(v) => updateUnit(i, 'isShared', v)} />
+                          Shared
+                        </label>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeUnit(i)}>
+                        <Trash2 className="h-3.5 w-3.5 text-destructive-foreground" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <Label>Description</Label>
+              <Textarea value={form.description} onChange={(e) => set('description', e.target.value)} rows={3} />
+            </div>
+
+            <div>
+              <Label>Market Rent Avg ($)</Label>
+              <Input type="number" value={form.marketRentAvg} onChange={(e) => set('marketRentAvg', e.target.value ? Number(e.target.value) : '')} placeholder="Placeholder for market data" />
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Amenities</Label>
+              <div className="flex flex-wrap gap-2">
+                {AMENITIES_OPTIONS.map((a) => (
+                  <Badge
+                    key={a}
+                    variant={form.amenities.includes(a) ? 'default' : 'outline'}
+                    className="cursor-pointer"
+                    onClick={() => toggleAmenity(a)}
+                  >
+                    {a}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 2: Owner & Agreements */}
+      {step === 1 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Owner & Agreements</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Link Owner *</Label>
+              <Select value={form.ownerId} onValueChange={(v) => set('ownerId', v)}>
+                <SelectTrigger><SelectValue placeholder="Select an owner" /></SelectTrigger>
+                <SelectContent>
+                  {activeOwners.filter((o) => o.status === 'active').map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.ownerType === 'company' ? o.companyName : `${o.firstName} ${o.lastName}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedOwner && selectedOwner.agreements.length > 0 && (
+              <div>
+                <Label className="mb-2 block">Owner's Agreements</Label>
+                <div className="space-y-2">
+                  {selectedOwner.agreements.map((ag) => (
+                    <label key={ag.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 cursor-pointer">
+                      <Checkbox
+                        checked={form.agreementIds.includes(ag.id)}
+                        onCheckedChange={(checked) => {
+                          set(
+                            'agreementIds',
+                            checked
+                              ? [...form.agreementIds, ag.id]
+                              : form.agreementIds.filter((x) => x !== ag.id)
+                          );
+                        }}
+                      />
+                      <span className="text-sm">{ag.fileName}</span>
+                      <Badge variant="outline" className="text-xs ml-auto">
+                        {ag.feePerUnit ? `$${ag.feePerUnit}/unit` : ''} {ag.feePercentRent ? `${ag.feePercentRent}%` : ''}
+                      </Badge>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="p-4 rounded-lg bg-muted/30 text-sm text-muted-foreground">
+              <Upload className="h-4 w-4 inline mr-2" />
+              Property-specific document uploads (Deed, Survey, HOA Rules) will be available with Lovable Cloud storage.
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 3: Leases & Documents */}
+      {step === 2 && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Leases & Documents</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 rounded-lg bg-muted/30 text-sm text-muted-foreground">
+              {needsUnits(form.type)
+                ? isStudentType(form.type)
+                  ? 'Leases are added at the bed level. You can manage leases after creating the property.'
+                  : 'Leases are added at the unit level. You can manage leases after creating the property.'
+                : 'Leases are added at the property level. You can manage leases after creating the property.'}
+            </div>
+
+            {existing && existing.leases.length > 0 && (
+              <div>
+                <Label className="mb-2 block">Existing Leases</Label>
+                <div className="space-y-2">
+                  {existing.leases.map((l) => (
+                    <div key={l.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
+                      <div>
+                        <p className="text-sm font-medium">{l.tenantName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {l.unitId || 'Property-level'} · ${l.rent}/mo · {l.startDate} to {l.endDate}
+                        </p>
+                      </div>
+                      <Badge variant={l.status === 'active' ? 'secondary' : 'outline'} className="text-xs">
+                        {l.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="p-4 rounded-lg bg-muted/30 text-sm text-muted-foreground">
+              <Upload className="h-4 w-4 inline mr-2" />
+              Document uploads (Inspections, Insurance) will be available with Lovable Cloud storage.
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Navigation */}
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate('/properties')}>
+          {step === 0 ? 'Cancel' : 'Previous'}
+        </Button>
+        <div className="flex gap-2">
+          {step < STEPS.length - 1 ? (
+            <Button onClick={() => setStep(step + 1)}>Next</Button>
+          ) : (
+            <Button onClick={handleSave}>{isEdit ? 'Save Changes' : 'Create Property'}</Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

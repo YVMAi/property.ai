@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { OwnersProvider } from "@/contexts/OwnersContext";
 import { TenantsProvider } from "@/contexts/TenantsContext";
 import { VendorsProvider } from "@/contexts/VendorsContext";
+import { PropertiesProvider } from "@/contexts/PropertiesContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 // Pages
@@ -20,6 +21,8 @@ import Accounting from "./pages/Accounting";
 import Tasks from "./pages/Tasks";
 import Leases from "./pages/Leases";
 import Properties from "./pages/Properties";
+import PropertyFormPage from "./pages/properties/PropertyFormPage";
+import PropertyViewPage from "./pages/properties/PropertyViewPage";
 import Owners from "./pages/users/Owners";
 import OwnerFormPage from "./pages/users/OwnerFormPage";
 import OwnerViewPage from "./pages/users/OwnerViewPage";
@@ -46,6 +49,7 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <AuthProvider>
         <OwnersProvider>
+          <PropertiesProvider>
           <TenantsProvider>
           <VendorsProvider>
           <TooltipProvider>
@@ -64,6 +68,9 @@ const App = () => (
               <Route path="/tasks" element={<ProtectedPage><Tasks /></ProtectedPage>} />
               <Route path="/leases" element={<ProtectedPage><Leases /></ProtectedPage>} />
               <Route path="/properties" element={<ProtectedPage><Properties /></ProtectedPage>} />
+              <Route path="/properties/new" element={<ProtectedPage><PropertyFormPage /></ProtectedPage>} />
+              <Route path="/properties/:id" element={<ProtectedPage><PropertyViewPage /></ProtectedPage>} />
+              <Route path="/properties/:id/edit" element={<ProtectedPage><PropertyFormPage /></ProtectedPage>} />
               <Route path="/users/owners" element={<ProtectedPage><Owners /></ProtectedPage>} />
               <Route path="/users/owners/new" element={<ProtectedPage><OwnerFormPage /></ProtectedPage>} />
               <Route path="/users/owners/:id" element={<ProtectedPage><OwnerViewPage /></ProtectedPage>} />
@@ -86,6 +93,7 @@ const App = () => (
           </TooltipProvider>
           </VendorsProvider>
           </TenantsProvider>
+          </PropertiesProvider>
         </OwnersProvider>
       </AuthProvider>
     </ThemeProvider>
