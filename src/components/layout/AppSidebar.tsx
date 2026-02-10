@@ -96,6 +96,7 @@ export default function AppSidebar() {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === 'collapsed';
   const [openItems, setOpenItems] = useState<string[]>(['Users']);
+  const [sidebarSearch, setSidebarSearch] = useState('');
   const { user, logout } = useAuth();
   const isOnSettings = location.pathname === '/settings';
   const [searchParams, setSearchParams] = useSearchParams();
@@ -126,6 +127,23 @@ export default function AppSidebar() {
       .toUpperCase()
       .slice(0, 2);
   };
+
+  const filteredMenuItems = sidebarSearch.trim()
+    ? menuItems.reduce<MenuItem[]>((acc, item) => {
+        const q = sidebarSearch.toLowerCase();
+        if (item.subItems) {
+          const matchedSubs = item.subItems.filter((sub) => sub.title.toLowerCase().includes(q));
+          if (item.title.toLowerCase().includes(q)) {
+            acc.push(item); // parent matches → show all children
+          } else if (matchedSubs.length > 0) {
+            acc.push({ ...item, subItems: matchedSubs });
+          }
+        } else if (item.title.toLowerCase().includes(q)) {
+          acc.push(item);
+        }
+        return acc;
+      }, [])
+    : menuItems;
 
   const renderMenuItem = (item: MenuItem) => {
     const Icon = item.icon;
@@ -257,6 +275,8 @@ export default function AppSidebar() {
             <Input
               placeholder="Search..."
               className="pl-9 h-9 bg-background border-border"
+              value={sidebarSearch}
+              onChange={(e) => setSidebarSearch(e.target.value)}
             />
           </div>
         </div>
@@ -330,7 +350,7 @@ export default function AppSidebar() {
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                {menuItems.map((item) => renderMenuItem(item))}
+                {filteredMenuItems.map((item) => renderMenuItem(item))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
