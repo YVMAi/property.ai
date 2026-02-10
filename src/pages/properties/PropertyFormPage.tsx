@@ -14,9 +14,11 @@ import { useOwnersContext } from '@/contexts/OwnersContext';
 import { useToast } from '@/hooks/use-toast';
 import {
   PROPERTY_TYPE_LABELS,
+  UNIT_TYPE_LABELS,
   type PropertyType,
   type PropertyFormData,
   type PropertyUnit,
+  type UnitType,
 } from '@/types/property';
 import { AMENITIES_OPTIONS } from '@/data/propertiesMockData';
 
@@ -101,8 +103,11 @@ export default function PropertyFormPage() {
     set('amenities', form.amenities.includes(amenity) ? form.amenities.filter((a) => a !== amenity) : [...form.amenities, amenity]);
 
   const addUnit = () => {
-    const label = isStudentType(form.type) ? `Bed ${form.units.length + 1}` : `${100 + form.units.length + 1}`;
-    set('units', [...form.units, { unitNumber: label, size: 0, bedrooms: 1, bathrooms: 1, isShared: false }]);
+    if (isStudentType(form.type)) {
+      set('units', [...form.units, { unitNumber: `Unit ${form.units.length + 1}`, size: 0, bedrooms: 1, bathrooms: 1, isShared: false, independentWashroom: false, unitAmenities: [] }]);
+    } else {
+      set('units', [...form.units, { unitNumber: `${100 + form.units.length + 1}`, size: 0, bedrooms: 1, bathrooms: 1, unitType: 'studio' as const }]);
+    }
   };
 
   const removeUnit = (idx: number) => set('units', form.units.filter((_, i) => i !== idx));
@@ -268,30 +273,80 @@ export default function PropertyFormPage() {
               </div>
             )}
 
-            {/* Units for multi/student */}
-            {needsUnits(form.type) && (
+            {/* Units for multi-family */}
+            {needsUnits(form.type) && !isStudentType(form.type) && (
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label>{isStudentType(form.type) ? 'Beds' : 'Units'}</Label>
+                  <Label>Units</Label>
                   <Button size="sm" variant="outline" onClick={addUnit} className="gap-1">
-                    <Plus className="h-3 w-3" /> Add {isStudentType(form.type) ? 'Bed' : 'Unit'}
+                    <Plus className="h-3 w-3" /> Add Unit
                   </Button>
                 </div>
+                {form.units.length > 0 && (
+                  <div className="flex items-center gap-2 px-2 pb-1 text-xs font-medium text-muted-foreground">
+                    <span className="w-24">Unit Name</span>
+                    <span className="w-20">Sq Ft</span>
+                    <span className="w-28">Type</span>
+                    <span className="w-20">Bathrooms</span>
+                    <span className="w-7" />
+                  </div>
+                )}
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {form.units.map((u, i) => (
                     <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
-                      <Input className="w-20 h-8 text-sm" value={u.unitNumber} onChange={(e) => updateUnit(i, 'unitNumber', e.target.value)} placeholder="#" />
+                      <Input className="w-24 h-8 text-sm" value={u.unitNumber} onChange={(e) => updateUnit(i, 'unitNumber', e.target.value)} placeholder="Unit name" />
                       <Input className="w-20 h-8 text-sm" type="number" value={u.size || ''} onChange={(e) => updateUnit(i, 'size', Number(e.target.value))} placeholder="Sq ft" />
-                      <Input className="w-16 h-8 text-sm" type="number" value={u.bedrooms} onChange={(e) => updateUnit(i, 'bedrooms', Number(e.target.value))} placeholder="Beds" />
-                      <Input className="w-16 h-8 text-sm" type="number" value={u.bathrooms} onChange={(e) => updateUnit(i, 'bathrooms', Number(e.target.value))} placeholder="Baths" />
-                      {isStudentType(form.type) && (
-                        <label className="flex items-center gap-1 text-xs">
-                          <Checkbox checked={u.isShared || false} onCheckedChange={(v) => updateUnit(i, 'isShared', v)} />
-                          Shared
-                        </label>
-                      )}
+                      <Select value={u.unitType || 'studio'} onValueChange={(v) => updateUnit(i, 'unitType', v)}>
+                        <SelectTrigger className="w-28 h-8 text-sm"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(UNIT_TYPE_LABELS).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input className="w-20 h-8 text-sm" type="number" value={u.bathrooms} onChange={(e) => updateUnit(i, 'bathrooms', Number(e.target.value))} placeholder="Baths" />
                       <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeUnit(i)}>
-                        <Trash2 className="h-3.5 w-3.5 text-destructive-foreground" />
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Beds for student housing */}
+            {isStudentType(form.type) && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Units / Beds</Label>
+                  <Button size="sm" variant="outline" onClick={addUnit} className="gap-1">
+                    <Plus className="h-3 w-3" /> Add Unit
+                  </Button>
+                </div>
+                {form.units.length > 0 && (
+                  <div className="flex items-center gap-2 px-2 pb-1 text-xs font-medium text-muted-foreground">
+                    <span className="w-24">Unit Name</span>
+                    <span className="w-20"># of Beds</span>
+                    <span className="w-16">Shared</span>
+                    <span className="w-20">Ind. Washroom</span>
+                    <span className="w-28">Amenities</span>
+                    <span className="w-7" />
+                  </div>
+                )}
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {form.units.map((u, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
+                      <Input className="w-24 h-8 text-sm" value={u.unitNumber} onChange={(e) => updateUnit(i, 'unitNumber', e.target.value)} placeholder="Unit name" />
+                      <Input className="w-20 h-8 text-sm" type="number" value={u.bedrooms} onChange={(e) => updateUnit(i, 'bedrooms', Number(e.target.value))} placeholder="Beds" />
+                      <div className="w-16 flex justify-center">
+                        <Checkbox checked={u.isShared || false} onCheckedChange={(v) => updateUnit(i, 'isShared', v)} />
+                      </div>
+                      <div className="w-20 flex justify-center">
+                        <Checkbox checked={u.independentWashroom || false} onCheckedChange={(v) => updateUnit(i, 'independentWashroom', v)} />
+                      </div>
+                      <Input className="w-28 h-8 text-sm" value={(u.unitAmenities || []).join(', ')} onChange={(e) => updateUnit(i, 'unitAmenities', e.target.value.split(',').map(s => s.trim()).filter(Boolean))} placeholder="AC, WiFi..." />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => removeUnit(i)}>
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
                     </div>
                   ))}
