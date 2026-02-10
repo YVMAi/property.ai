@@ -21,6 +21,7 @@ import {
   type UnitType,
 } from '@/types/property';
 import { AMENITIES_OPTIONS } from '@/data/propertiesMockData';
+import { US_STATES, US_CITIES, DEFAULT_CITIES } from '@/data/usLocations';
 
 const STEPS = ['Details', 'Owner & Agreements', 'Leases & Documents'];
 
@@ -256,11 +257,31 @@ export default function PropertyFormPage() {
               </div>
               <div>
                 <Label>City</Label>
-                <Input value={form.address.city} onChange={(e) => setAddress('city', e.target.value)} />
+                <Select
+                  value={form.address.city}
+                  onValueChange={(v) => setAddress('city', v)}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+                  <SelectContent className="bg-popover z-50 max-h-60">
+                    {(form.address.state ? (US_CITIES[form.address.state] || DEFAULT_CITIES) : []).map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>State</Label>
-                <Input value={form.address.state} onChange={(e) => setAddress('state', e.target.value)} />
+                <Select
+                  value={form.address.state}
+                  onValueChange={(v) => { setAddress('state', v); setAddress('city', ''); }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                  <SelectContent className="bg-popover z-50 max-h-60">
+                    {US_STATES.map((st) => (
+                      <SelectItem key={st} value={st}>{st}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>ZIP</Label>
