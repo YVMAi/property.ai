@@ -87,7 +87,6 @@ export default function Login() {
   };
 
   const handleMfaChange = (value: string) => {
-    // Only allow digits and max 6 characters
     const cleaned = value.replace(/\D/g, '').slice(0, 6);
     setMfaCode(cleaned);
   };
@@ -103,25 +102,25 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-secondary-foreground tracking-tight">
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">
             Property<span className="text-primary">AI</span>
           </h1>
           <p className="text-muted-foreground mt-2">Property Management System</p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-card rounded-xl shadow-elevated p-8 border border-border/50">
+        <div className="rounded-3xl p-8 glass-heavy">
           {/* Step Indicator */}
           <div className="flex items-center justify-center gap-2 mb-8">
             {['email', 'password', 'mfa'].map((s, i) => (
               <div
                 key={s}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  step === s ? 'w-8 bg-primary' : 
+                  step === s ? 'w-8 bg-primary shadow-glow' : 
                   ['email', 'password', 'mfa'].indexOf(step) > i ? 'w-2 bg-primary' : 'w-2 bg-border'
                 }`}
               />
@@ -272,7 +271,7 @@ export default function Login() {
         </div>
 
         {/* Demo credentials */}
-        <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border/50">
+        <div className="mt-6 p-4 rounded-2xl glass border border-border">
           <p className="text-xs text-muted-foreground text-center mb-2">Demo Credentials</p>
           <p className="text-xs text-center text-foreground/80">
             Email: <span className="font-mono">admin@propertyai.com</span>

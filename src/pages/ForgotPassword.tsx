@@ -75,17 +75,17 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-secondary-foreground tracking-tight">
+          <h1 className="text-3xl font-bold text-foreground tracking-tight">
             Property<span className="text-primary">AI</span>
           </h1>
         </div>
 
         {/* Card */}
-        <div className="bg-card rounded-xl shadow-elevated p-8 border border-border/50">
+        <div className="rounded-3xl p-8 glass-heavy">
           {step === 'request' && (
             <div className="space-y-6 animate-slide-up">
               <div className="text-center">

@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -71,13 +71,15 @@ export default {
       },
       borderRadius: {
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) - 4px)",
+        sm: "calc(var(--radius) - 8px)",
       },
       boxShadow: {
-        'soft': '0 2px 8px -2px rgba(0, 0, 0, 0.05)',
-        'elevated': '0 4px 12px -4px rgba(0, 0, 0, 0.08)',
-        'card': '0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06)',
+        'soft': '0 2px 12px -4px rgba(0, 0, 0, 0.05)',
+        'elevated': '0 8px 32px -8px rgba(0, 0, 0, 0.08)',
+        'card': '0 4px 24px -6px rgba(0, 0, 0, 0.06)',
+        'glass': 'var(--glass-shadow)',
+        'glow': '0 4px 20px hsl(211 100% 50% / 0.25)',
       },
       keyframes: {
         "accordion-down": {
