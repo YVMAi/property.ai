@@ -193,6 +193,7 @@ export default function WorkOrdersDashboard() {
       priority: rfpForm.priority,
       attachments: [],
       notes: '',
+      history: [],
     });
     approveRequest(sr.id, false);
     setCreateRFPOpen(false);
@@ -322,8 +323,8 @@ export default function WorkOrdersDashboard() {
                   </TableRow></TableHeader>
                   <TableBody>
                     {filteredRequests.map(req => (
-                      <TableRow key={req.id} className="bg-card">
-                        <TableCell className="font-medium">{req.id}</TableCell>
+                      <TableRow key={req.id} className="bg-card cursor-pointer" onClick={() => navigate(`/work-orders/requests/${req.id}`)}>
+                        <TableCell className="font-medium text-primary">{req.id}</TableCell>
                         <TableCell>{req.propertyName}{req.unitNumber ? ` #${req.unitNumber}` : ''}</TableCell>
                         <TableCell className="text-muted-foreground">{req.tenantName}</TableCell>
                         <TableCell className="max-w-[200px] truncate text-muted-foreground">{req.description}</TableCell>
@@ -389,8 +390,8 @@ export default function WorkOrdersDashboard() {
                   </TableRow></TableHeader>
                   <TableBody>
                     {filteredRejected.map(req => (
-                      <TableRow key={req.id} className="bg-card">
-                        <TableCell className="font-medium">{req.id}</TableCell>
+                      <TableRow key={req.id} className="bg-card cursor-pointer" onClick={() => navigate(`/work-orders/requests/${req.id}`)}>
+                        <TableCell className="font-medium text-primary">{req.id}</TableCell>
                         <TableCell>{req.propertyName}</TableCell>
                         <TableCell className="max-w-[200px] truncate text-muted-foreground">{req.description}</TableCell>
                         <TableCell><PriorityBadge p={req.priority} /></TableCell>

@@ -42,6 +42,7 @@ import WorkOrdersDashboard from "./pages/WorkOrders";
 import WorkOrderViewPage from "./pages/workorders/WorkOrderViewPage";
 import RFPViewPage from "./pages/workorders/RFPViewPage";
 import VendorPortal from "./pages/workorders/VendorPortal";
+import ServiceRequestViewPage from "./pages/workorders/ServiceRequestViewPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -94,6 +95,7 @@ const App = () => (
               <Route path="/users/vendors/:id" element={<ProtectedPage><VendorViewPage /></ProtectedPage>} />
               <Route path="/users/vendors/:id/edit" element={<ProtectedPage><VendorFormPage /></ProtectedPage>} />
               <Route path="/work-orders" element={<ProtectedPage><WorkOrdersDashboard /></ProtectedPage>} />
+              <Route path="/work-orders/requests/:id" element={<ProtectedPage><ServiceRequestViewPage /></ProtectedPage>} />
               <Route path="/work-orders/rfp/:id" element={<ProtectedPage><RFPViewPage /></ProtectedPage>} />
               <Route path="/work-orders/:id" element={<ProtectedPage><WorkOrderViewPage /></ProtectedPage>} />
               <Route path="/vendor-portal" element={<VendorPortal />} />
