@@ -5,6 +5,7 @@ const generateId = () => Math.random().toString(36).substring(2, 11);
 export const MOCK_PROPERTIES: Property[] = [
   {
     id: 'p1',
+    name: 'Sunset Blvd Complex',
     type: 'multi_family',
     address: { street: '101 Sunset Blvd', city: 'Portland', state: 'OR', zip: '97201' },
     sqFt: 12000,
@@ -38,6 +39,7 @@ export const MOCK_PROPERTIES: Property[] = [
   },
   {
     id: 'p2',
+    name: 'Oak Drive Home',
     type: 'single_family',
     address: { street: '250 Oak Drive', city: 'Portland', state: 'OR', zip: '97205' },
     sqFt: 2200,
@@ -67,6 +69,7 @@ export const MOCK_PROPERTIES: Property[] = [
   },
   {
     id: 'p3',
+    name: 'PSU Student Living',
     type: 'student_housing',
     address: { street: '500 University Ave', city: 'Portland', state: 'OR', zip: '97210' },
     sqFt: 8000,
@@ -99,6 +102,7 @@ export const MOCK_PROPERTIES: Property[] = [
   },
   {
     id: 'p4',
+    name: 'Hilltop Luxury Apartments',
     type: 'multi_family',
     address: { street: '789 Hilltop Rd', city: 'Seattle', state: 'WA', zip: '98101' },
     sqFt: 6500,
@@ -130,6 +134,7 @@ export const MOCK_PROPERTIES: Property[] = [
   },
   {
     id: 'p5',
+    name: 'Garden Lane Affordable',
     type: 'affordable_multi',
     address: { street: '320 Garden Lane', city: 'Seattle', state: 'WA', zip: '98103' },
     sqFt: 10000,
@@ -160,6 +165,7 @@ export const MOCK_PROPERTIES: Property[] = [
   },
   {
     id: 'p6',
+    name: 'Metro Tower Office',
     type: 'commercial',
     address: { street: '1000 Metro Pkwy', city: 'San Francisco', state: 'CA', zip: '94102' },
     sqFt: 25000,
@@ -187,6 +193,7 @@ export const MOCK_PROPERTIES: Property[] = [
   },
   {
     id: 'p7',
+    name: 'Lakeside Retreat',
     type: 'single_family',
     address: { street: '15 Lakeside Court', city: 'Austin', state: 'TX', zip: '73301' },
     sqFt: 3500,
@@ -214,6 +221,7 @@ export const MOCK_PROPERTIES: Property[] = [
   },
   {
     id: 'p8',
+    name: 'Pine Ridge Cottage',
     type: 'affordable_single',
     address: { street: '88 Pine Ridge Rd', city: 'Portland', state: 'OR', zip: '97215' },
     sqFt: 1400,

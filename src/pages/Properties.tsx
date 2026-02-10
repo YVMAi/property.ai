@@ -477,8 +477,8 @@ export default function Properties() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{p.address.street}</p>
-                      <p className="text-xs text-muted-foreground">{p.address.city}, {p.address.state} {p.address.zip}</p>
+                      <p className="font-medium text-foreground truncate">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">{p.address.street}, {p.address.city}, {p.address.state}</p>
                     </div>
                     <Badge className={`${STATUS_COLORS[p.status]} text-xs shrink-0 ml-2`}>
                       {PROPERTY_STATUS_LABELS[p.status]}

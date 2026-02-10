@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Upload, X, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,7 @@ const needsBedBath = (t: PropertyType) => ['single_family', 'affordable_single',
 const isStudentType = (t: PropertyType) => t === 'student_housing';
 
 const emptyForm: PropertyFormData = {
+  name: '',
   type: 'single_family',
   address: { street: '', city: '', state: '', zip: '' },
   sqFt: '',
@@ -58,9 +59,15 @@ export default function PropertyFormPage() {
   const existing = id ? getPropertyById(id) : undefined;
 
   const [step, setStep] = useState(0);
+  const [photoFiles, setPhotoFiles] = useState<{ name: string; url: string }[]>([]);
+  const [docFiles, setDocFiles] = useState<{ name: string; size: number; type: string }[]>([]);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
+
   const [form, setForm] = useState<PropertyFormData>(() => {
     if (existing) {
       return {
+        name: existing.name,
         type: existing.type,
         address: existing.address,
         sqFt: existing.sqFt,
@@ -102,6 +109,33 @@ export default function PropertyFormPage() {
 
   const updateUnit = (idx: number, field: string, val: any) =>
     set('units', form.units.map((u, i) => (i === idx ? { ...u, [field]: val } : u)));
+
+  const handlePhotoUpload = (fileList: FileList | null) => {
+    if (!fileList) return;
+    Array.from(fileList).forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        const url = URL.createObjectURL(file);
+        setPhotoFiles((prev) => [...prev, { name: file.name, url }]);
+        set('photos', [...form.photos, file.name]);
+      }
+    });
+  };
+
+  const removePhoto = (idx: number) => {
+    setPhotoFiles((prev) => prev.filter((_, i) => i !== idx));
+    set('photos', form.photos.filter((_, i) => i !== idx));
+  };
+
+  const handleDocUpload = (fileList: FileList | null) => {
+    if (!fileList) return;
+    Array.from(fileList).forEach((file) => {
+      setDocFiles((prev) => [...prev, { name: file.name, size: file.size, type: file.type }]);
+    });
+  };
+
+  const removeDoc = (idx: number) => {
+    setDocFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   const selectedOwner = activeOwners.find((o) => o.id === form.ownerId);
 
@@ -152,16 +186,22 @@ export default function PropertyFormPage() {
         <Card>
           <CardHeader><CardTitle className="text-lg">Property Details</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label>Property Type *</Label>
-              <Select value={form.type} onValueChange={(v) => set('type', v as PropertyType)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(PROPERTY_TYPE_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label>Property Name *</Label>
+                <Input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Sunset Blvd Complex" />
+              </div>
+              <div>
+                <Label>Property Type *</Label>
+                <Select value={form.type} onValueChange={(v) => set('type', v as PropertyType)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(PROPERTY_TYPE_LABELS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -284,6 +324,43 @@ export default function PropertyFormPage() {
                 ))}
               </div>
             </div>
+
+            {/* Photo Upload */}
+            <div>
+              <Label className="mb-2 block">Property Photos</Label>
+              <div
+                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors border-border hover:border-primary/50"
+                onClick={() => photoInputRef.current?.click()}
+              >
+                <Image className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
+                <p className="text-sm text-muted-foreground">Click to upload photos</p>
+                <p className="text-xs text-muted-foreground/60 mt-0.5">JPG, PNG, WebP up to 10 MB each</p>
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handlePhotoUpload(e.target.files)}
+                />
+              </div>
+              {photoFiles.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-3">
+                  {photoFiles.map((p, i) => (
+                    <div key={i} className="relative group rounded-lg overflow-hidden aspect-video bg-muted">
+                      <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(i)}
+                        className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -376,9 +453,37 @@ export default function PropertyFormPage() {
               </div>
             )}
 
-            <div className="p-4 rounded-lg bg-muted/30 text-sm text-muted-foreground">
-              <Upload className="h-4 w-4 inline mr-2" />
-              Document uploads (Inspections, Insurance) will be available with Lovable Cloud storage.
+            {/* Document Upload */}
+            <div>
+              <Label className="mb-2 block">Upload Documents</Label>
+              <div
+                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors border-border hover:border-primary/50"
+                onClick={() => docInputRef.current?.click()}
+              >
+                <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
+                <p className="text-sm text-muted-foreground">Click to upload documents</p>
+                <p className="text-xs text-muted-foreground/60 mt-0.5">PDF, Images, Documents up to 50 MB</p>
+                <input
+                  ref={docInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => handleDocUpload(e.target.files)}
+                />
+              </div>
+              {docFiles.length > 0 && (
+                <div className="space-y-1.5 mt-3">
+                  {docFiles.map((f, i) => (
+                    <div key={i} className="flex items-center justify-between bg-muted/50 rounded px-3 py-1.5 text-sm">
+                      <span className="truncate mr-2">{f.name}</span>
+                      <span className="text-xs text-muted-foreground mr-2">{(f.size / 1024).toFixed(0)} KB</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeDoc(i)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
