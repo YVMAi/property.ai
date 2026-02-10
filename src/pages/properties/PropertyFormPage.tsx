@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Upload, X, Image } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Upload, X, Image, Wand2 } from 'lucide-react';
+import BulkUnitSetupDialog, { type BulkUnit } from '@/components/properties/BulkUnitSetupDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -205,6 +206,21 @@ export default function PropertyFormPage() {
   const selectedOwner = activeOwners.find((o) => o.id === form.ownerId);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [bulkOpen, setBulkOpen] = useState(false);
+
+  const handleBulkConfirm = (bulkUnits: BulkUnit[]) => {
+    const mapped = bulkUnits.map(u => ({
+      unitNumber: u.unitNumber,
+      size: u.size,
+      bedrooms: u.bedrooms,
+      bathrooms: u.bathrooms,
+      unitType: u.unitType as any,
+      isShared: u.isShared,
+      independentWashroom: u.independentWashroom,
+      unitAmenities: u.unitAmenities,
+    }));
+    set('units', [...form.units, ...mapped]);
+  };
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
@@ -428,9 +444,14 @@ export default function PropertyFormPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label>Units</Label>
-                  <Button size="sm" variant="outline" onClick={addUnit} className="gap-1">
-                    <Plus className="h-3 w-3" /> Add Unit
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)} className="gap-1 border-primary/30 text-primary hover:bg-primary/5">
+                      <Wand2 className="h-3 w-3" /> Smart Bulk Setup
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={addUnit} className="gap-1">
+                      <Plus className="h-3 w-3" /> Add Unit
+                    </Button>
+                  </div>
                 </div>
                 {form.units.length > 0 && (
                   <div className="flex items-center gap-2 px-2 pb-1 text-xs font-medium text-muted-foreground">
@@ -469,9 +490,14 @@ export default function PropertyFormPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label>Units / Beds</Label>
-                  <Button size="sm" variant="outline" onClick={addUnit} className="gap-1">
-                    <Plus className="h-3 w-3" /> Add Unit
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)} className="gap-1 border-primary/30 text-primary hover:bg-primary/5">
+                      <Wand2 className="h-3 w-3" /> Smart Bulk Setup
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={addUnit} className="gap-1">
+                      <Plus className="h-3 w-3" /> Add Unit
+                    </Button>
+                  </div>
                 </div>
                 {form.units.length > 0 && (
                   <div className="flex items-center gap-2 px-2 pb-1 text-xs font-medium text-muted-foreground">
@@ -734,6 +760,17 @@ export default function PropertyFormPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Bulk Unit Setup Dialog */}
+      {needsUnits(form.type) && (
+        <BulkUnitSetupDialog
+          open={bulkOpen}
+          onOpenChange={setBulkOpen}
+          isStudent={isStudentType(form.type)}
+          existingUnitNumbers={form.units.map(u => u.unitNumber)}
+          onConfirm={handleBulkConfirm}
+        />
       )}
 
       {/* Navigation */}
