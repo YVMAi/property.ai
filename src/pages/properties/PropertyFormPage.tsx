@@ -25,6 +25,24 @@ import { US_STATES, US_CITIES, DEFAULT_CITIES } from '@/data/usLocations';
 
 const STEPS = ['Details', 'Owner & Agreements', 'Leases & Documents'];
 
+// --- Formatting helpers ---
+const formatComma = (v: number | ''): string => {
+  if (v === '' || v === 0) return '';
+  return v.toLocaleString('en-US');
+};
+
+const parseComma = (s: string): number | '' => {
+  const cleaned = s.replace(/[^0-9]/g, '');
+  return cleaned ? Number(cleaned) : '';
+};
+
+const formatCurrency = (v: number | ''): string => {
+  if (v === '' || v === 0) return '';
+  return v.toLocaleString('en-US');
+};
+
+const CURRENT_YEAR = new Date().getFullYear();
+
 const needsUnits = (t: PropertyType) => ['multi_family', 'affordable_multi', 'student_housing'].includes(t);
 const needsBedBath = (t: PropertyType) => ['single_family', 'affordable_single', 'commercial'].includes(t);
 const isStudentType = (t: PropertyType) => t === 'student_housing';
@@ -185,9 +203,31 @@ export default function PropertyFormPage() {
 
   const selectedOwner = activeOwners.find((o) => o.id === form.ownerId);
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validate = (): boolean => {
+    const errs: Record<string, string> = {};
+    if (!form.name.trim()) errs.name = 'Property name is required';
+    if (!form.address.street.trim()) errs.street = 'Street is required';
+    if (!form.address.state) errs.state = 'State is required';
+    if (!form.address.city) errs.city = 'City is required';
+    if (form.address.zip && !/^\d{5}$/.test(form.address.zip)) errs.zip = 'ZIP must be 5 digits';
+    if (form.sqFt !== '' && (Number(form.sqFt) <= 0 || Number(form.sqFt) > 1000000)) errs.sqFt = 'Enter a valid Sq Ft';
+    if (form.yearBuilt !== '' && (Number(form.yearBuilt) < 1800 || Number(form.yearBuilt) > CURRENT_YEAR)) errs.yearBuilt = `Year: 1800–${CURRENT_YEAR}`;
+    if (form.purchasePrice !== '' && Number(form.purchasePrice) <= 0) errs.purchasePrice = 'Enter a valid price';
+    if (!form.ownerId) errs.ownerId = 'Owner is required';
+    if (needsBedBath(form.type)) {
+      if (form.bedrooms !== '' && (Number(form.bedrooms) < 0 || Number(form.bedrooms) > 50)) errs.bedrooms = '0–50';
+      if (form.bathrooms !== '' && (Number(form.bathrooms) < 0 || Number(form.bathrooms) > 50)) errs.bathrooms = '0–50';
+    }
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleSave = () => {
-    if (!form.address.street || !form.ownerId) {
-      toast({ title: 'Missing required fields', description: 'Address and Owner are required.', variant: 'destructive' });
+    if (!validate()) {
+      toast({ title: 'Please fix validation errors', description: 'Check highlighted fields.', variant: 'destructive' });
+      if (!form.ownerId && step !== 1) setStep(0);
       return;
     }
     if (isEdit && id) {
@@ -236,6 +276,7 @@ export default function PropertyFormPage() {
               <div>
                 <Label>Property Name *</Label>
                 <Input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Sunset Blvd Complex" />
+                {errors.name && <p className="text-xs text-destructive mt-1">{errors.name}</p>}
               </div>
               <div>
                 <Label>Property Type *</Label>
@@ -253,14 +294,12 @@ export default function PropertyFormPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Street *</Label>
-                <Input value={form.address.street} onChange={(e) => setAddress('street', e.target.value)} />
+                <Input value={form.address.street} onChange={(e) => setAddress('street', e.target.value)} placeholder="e.g. 123 Main St" />
+                {errors.street && <p className="text-xs text-destructive mt-1">{errors.street}</p>}
               </div>
               <div>
-                <Label>City</Label>
-                <Select
-                  value={form.address.city}
-                  onValueChange={(v) => setAddress('city', v)}
-                >
+                <Label>City *</Label>
+                <Select value={form.address.city} onValueChange={(v) => setAddress('city', v)}>
                   <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
                   <SelectContent className="bg-popover z-50 max-h-60">
                     {(form.address.state ? (US_CITIES[form.address.state] || DEFAULT_CITIES) : []).map((c) => (
@@ -268,13 +307,11 @@ export default function PropertyFormPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {errors.city && <p className="text-xs text-destructive mt-1">{errors.city}</p>}
               </div>
               <div>
-                <Label>State</Label>
-                <Select
-                  value={form.address.state}
-                  onValueChange={(v) => { setAddress('state', v); setAddress('city', ''); }}
-                >
+                <Label>State *</Label>
+                <Select value={form.address.state} onValueChange={(v) => { setAddress('state', v); setAddress('city', ''); }}>
                   <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
                   <SelectContent className="bg-popover z-50 max-h-60">
                     {US_STATES.map((st) => (
@@ -282,29 +319,56 @@ export default function PropertyFormPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
               </div>
               <div>
                 <Label>ZIP</Label>
-                <Input value={form.address.zip} onChange={(e) => setAddress('zip', e.target.value)} />
+                <Input
+                  value={form.address.zip}
+                  onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 5); setAddress('zip', v); }}
+                  placeholder="e.g. 60601"
+                  maxLength={5}
+                  inputMode="numeric"
+                />
+                {errors.zip && <p className="text-xs text-destructive mt-1">{errors.zip}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
                 <Label>Sq Ft</Label>
-                <Input type="number" value={form.sqFt} onChange={(e) => set('sqFt', e.target.value ? Number(e.target.value) : '')} />
+                <Input
+                  value={formatComma(form.sqFt)}
+                  onChange={(e) => set('sqFt', parseComma(e.target.value))}
+                  placeholder="e.g. 2,500"
+                  inputMode="numeric"
+                />
+                {errors.sqFt && <p className="text-xs text-destructive mt-1">{errors.sqFt}</p>}
               </div>
               <div>
                 <Label>Year Built</Label>
-                <Input type="number" value={form.yearBuilt} onChange={(e) => set('yearBuilt', e.target.value ? Number(e.target.value) : '')} />
+                <Input
+                  value={form.yearBuilt}
+                  onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 4); set('yearBuilt', v ? Number(v) : ''); }}
+                  placeholder={`e.g. ${CURRENT_YEAR - 20}`}
+                  maxLength={4}
+                  inputMode="numeric"
+                />
+                {errors.yearBuilt && <p className="text-xs text-destructive mt-1">{errors.yearBuilt}</p>}
               </div>
               <div>
                 <Label>Purchase Price ($)</Label>
-                <Input type="number" value={form.purchasePrice} onChange={(e) => set('purchasePrice', e.target.value ? Number(e.target.value) : '')} />
+                <Input
+                  value={formatCurrency(form.purchasePrice)}
+                  onChange={(e) => set('purchasePrice', parseComma(e.target.value))}
+                  placeholder="e.g. 350,000"
+                  inputMode="numeric"
+                />
+                {errors.purchasePrice && <p className="text-xs text-destructive mt-1">{errors.purchasePrice}</p>}
               </div>
               <div>
                 <Label>Purchase Date</Label>
-                <Input type="date" value={form.purchaseDate} onChange={(e) => set('purchaseDate', e.target.value)} />
+                <Input type="date" value={form.purchaseDate} onChange={(e) => set('purchaseDate', e.target.value)} max={new Date().toISOString().split('T')[0]} />
               </div>
             </div>
 
@@ -313,23 +377,52 @@ export default function PropertyFormPage() {
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div>
                   <Label>Bedrooms</Label>
-                  <Input type="number" value={form.bedrooms} onChange={(e) => set('bedrooms', e.target.value ? Number(e.target.value) : '')} />
+                  <Input
+                    value={form.bedrooms}
+                    onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 2); set('bedrooms', v ? Number(v) : ''); }}
+                    placeholder="e.g. 3"
+                    inputMode="numeric"
+                    maxLength={2}
+                  />
+                  {errors.bedrooms && <p className="text-xs text-destructive mt-1">{errors.bedrooms}</p>}
                 </div>
                 <div>
                   <Label>Bathrooms</Label>
-                  <Input type="number" value={form.bathrooms} onChange={(e) => set('bathrooms', e.target.value ? Number(e.target.value) : '')} />
+                  <Input
+                    value={form.bathrooms}
+                    onChange={(e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 2); set('bathrooms', v ? Number(v) : ''); }}
+                    placeholder="e.g. 2"
+                    inputMode="numeric"
+                    maxLength={2}
+                  />
+                  {errors.bathrooms && <p className="text-xs text-destructive mt-1">{errors.bathrooms}</p>}
                 </div>
                 <div>
                   <Label>HOA Fees ($)</Label>
-                  <Input type="number" value={form.hoaFees} onChange={(e) => set('hoaFees', e.target.value ? Number(e.target.value) : '')} />
+                  <Input
+                    value={formatCurrency(form.hoaFees)}
+                    onChange={(e) => set('hoaFees', parseComma(e.target.value))}
+                    placeholder="e.g. 500"
+                    inputMode="numeric"
+                  />
                 </div>
                 <div>
                   <Label>Taxes ($)</Label>
-                  <Input type="number" value={form.taxes} onChange={(e) => set('taxes', e.target.value ? Number(e.target.value) : '')} />
+                  <Input
+                    value={formatCurrency(form.taxes)}
+                    onChange={(e) => set('taxes', parseComma(e.target.value))}
+                    placeholder="e.g. 3,200"
+                    inputMode="numeric"
+                  />
                 </div>
                 <div>
                   <Label>Insurance ($)</Label>
-                  <Input type="number" value={form.insurance} onChange={(e) => set('insurance', e.target.value ? Number(e.target.value) : '')} />
+                  <Input
+                    value={formatCurrency(form.insurance)}
+                    onChange={(e) => set('insurance', parseComma(e.target.value))}
+                    placeholder="e.g. 1,500"
+                    inputMode="numeric"
+                  />
                 </div>
               </div>
             )}
