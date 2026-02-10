@@ -217,7 +217,7 @@ export default function WorkOrdersDashboard() {
 
   const createButtons = (
     <>
-      <Button size="sm" variant="outline" onClick={() => setCreateRFPOpen(true)}>
+      <Button size="sm" className="btn-primary" onClick={() => setCreateRFPOpen(true)}>
         <FileText className="h-4 w-4 mr-2" />
         Create RFP
       </Button>
