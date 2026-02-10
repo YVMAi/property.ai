@@ -11,6 +11,7 @@ import { VendorsProvider } from "@/contexts/VendorsContext";
 import { PropertiesProvider } from "@/contexts/PropertiesContext";
 import { PropertyGroupsProvider } from "@/contexts/PropertyGroupsContext";
 import { BankAccountsProvider } from "@/contexts/BankAccountsContext";
+import { WorkOrdersProvider } from "@/contexts/WorkOrdersContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 // Pages
@@ -37,6 +38,10 @@ import VendorViewPage from "./pages/users/VendorViewPage";
 import Communications from "./pages/Communications";
 import Files from "./pages/Files";
 import Settings from "./pages/Settings";
+import WorkOrdersDashboard from "./pages/WorkOrders";
+import WorkOrderViewPage from "./pages/workorders/WorkOrderViewPage";
+import RFPViewPage from "./pages/workorders/RFPViewPage";
+import VendorPortal from "./pages/workorders/VendorPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +61,7 @@ const App = () => (
           <BankAccountsProvider>
           <TenantsProvider>
           <VendorsProvider>
+          <WorkOrdersProvider>
           <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -87,6 +93,10 @@ const App = () => (
               <Route path="/users/vendors/new" element={<ProtectedPage><VendorFormPage /></ProtectedPage>} />
               <Route path="/users/vendors/:id" element={<ProtectedPage><VendorViewPage /></ProtectedPage>} />
               <Route path="/users/vendors/:id/edit" element={<ProtectedPage><VendorFormPage /></ProtectedPage>} />
+              <Route path="/work-orders" element={<ProtectedPage><WorkOrdersDashboard /></ProtectedPage>} />
+              <Route path="/work-orders/rfp/:id" element={<ProtectedPage><RFPViewPage /></ProtectedPage>} />
+              <Route path="/work-orders/:id" element={<ProtectedPage><WorkOrderViewPage /></ProtectedPage>} />
+              <Route path="/vendor-portal" element={<VendorPortal />} />
               <Route path="/communications" element={<ProtectedPage><Communications /></ProtectedPage>} />
               <Route path="/files" element={<ProtectedPage><Files /></ProtectedPage>} />
               <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
@@ -95,6 +105,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
           </TooltipProvider>
+          </WorkOrdersProvider>
           </VendorsProvider>
           </TenantsProvider>
           </BankAccountsProvider>

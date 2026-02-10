@@ -5,6 +5,7 @@ import {
   BarChart3,
   Calculator,
   ClipboardList,
+  Wrench,
   FileText,
   Building2,
   Users,
@@ -63,6 +64,7 @@ const menuItems: MenuItem[] = [
   { title: 'Reports', url: '/reports', icon: BarChart3 },
   { title: 'Accounting', url: '/accounting', icon: Calculator },
   { title: 'Tasks', url: '/tasks', icon: ClipboardList },
+  { title: 'Work Orders', url: '/work-orders', icon: Wrench },
   { title: 'Leases', url: '/leases', icon: FileText },
   { title: 'Properties', url: '/properties', icon: Building2 },
   {
