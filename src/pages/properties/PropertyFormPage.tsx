@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Upload, X, Image, Wand2, Tag } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Upload, X, Image, Wand2, Tag, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import BulkUnitSetupDialog, { type BulkUnit } from '@/components/properties/BulkUnitSetupDialog';
 import CreateGroupDialog from '@/components/properties/CreateGroupDialog';
 import { Button } from '@/components/ui/button';
@@ -269,26 +269,59 @@ export default function PropertyFormPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/properties')}>
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate('/properties')}
+          className="shrink-0"
+        >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-semibold text-foreground">
-          {isEdit ? 'Edit Property' : 'Add New Property'}
-        </h1>
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {isEdit ? 'Edit Property' : 'Add New Property'}
+          </h1>
+          <p className="text-muted-foreground mt-0.5">
+            Step {step + 1} of {STEPS.length}: {STEPS[step]}
+          </p>
+        </div>
       </div>
 
-      {/* Steps */}
-      <div className="flex gap-2">
+      {/* Step indicators */}
+      <div className="flex items-center gap-2">
         {STEPS.map((s, i) => (
           <button
             key={s}
-            onClick={() => setStep(i)}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-              i === step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-accent'
-            }`}
+            onClick={() => { if (i <= step) setStep(i); }}
+            className="flex items-center gap-2 flex-1 group"
+            disabled={i > step}
           >
-            {i + 1}. {s}
+            <div
+              className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium shrink-0 transition-colors ${
+                i < step
+                  ? 'bg-primary text-primary-foreground'
+                  : i === step
+                  ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {i < step ? <Check className="h-4 w-4" /> : i + 1}
+            </div>
+            <span
+              className={`hidden md:block text-sm truncate ${
+                i <= step ? 'text-foreground font-medium' : 'text-muted-foreground'
+              }`}
+            >
+              {s}
+            </span>
+            {i < STEPS.length - 1 && (
+              <div
+                className={`hidden md:block flex-1 h-0.5 rounded-full ml-2 ${
+                  i < step ? 'bg-primary' : 'bg-muted'
+                }`}
+              />
+            )}
           </button>
         ))}
       </div>
@@ -862,17 +895,25 @@ export default function PropertyFormPage() {
       )}
 
       {/* Navigation */}
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate('/properties')}>
-          {step === 0 ? 'Cancel' : 'Previous'}
+      <div className="flex items-center justify-between">
+        <Button
+          variant="outline"
+          onClick={step === 0 ? () => navigate('/properties') : () => setStep(step - 1)}
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          {step === 0 ? 'Cancel' : 'Back'}
         </Button>
-        <div className="flex gap-2">
-          {step < STEPS.length - 1 ? (
-            <Button onClick={() => setStep(step + 1)}>Next</Button>
-          ) : (
-            <Button onClick={handleSave}>{isEdit ? 'Save Changes' : 'Create Property'}</Button>
-          )}
-        </div>
+        {step < STEPS.length - 1 ? (
+          <Button className="btn-primary" onClick={() => setStep(step + 1)}>
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        ) : (
+          <Button className="btn-primary" onClick={handleSave}>
+            <Check className="h-4 w-4 mr-1" />
+            {isEdit ? 'Save Changes' : 'Create Property'}
+          </Button>
+        )}
       </div>
     </div>
   );
