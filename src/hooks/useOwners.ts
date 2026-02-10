@@ -24,7 +24,7 @@ const MOCK_OWNERS: Owner[] = [
     ],
     linkedPropertyIds: ['p1', 'p2', 'p3'],
     agreements: [
-      { id: 'ag1', name: 'Global Management Agreement 2026', fileName: 'Global_Agreement_2026.pdf', fileUrl: '#', startDate: '2026-01-01', endDate: '2026-12-31', managementFeeType: 'combination' as const, managementFeeFixed: 50, managementFeePercent: 8, managementFeePercentTotal: 5, leaseFeeType: 'fixed' as const, leaseFeeValue: 500, renewalFeeType: 'variable' as const, renewalFeeValue: 3, feePerUnit: 50, feePercentRent: 8, createdAt: '2026-01-01T00:00:00Z' },
+      { id: 'ag1', name: 'Global Management Agreement 2026', fileName: 'Global_Agreement_2026.pdf', fileUrl: '#', startDate: '2026-01-01', endDate: '2026-12-31', managementFeeType: 'combination' as const, managementFeeFixed: 50, managementFeePercent: 8, managementFeePercentTotal: 5, leaseFeeType: 'fixed' as const, leaseFeeValue: 500, renewalFeeType: 'variable' as const, renewalFeeValue: 3, feePerUnit: 50, feePercentRent: 8, managementFeeLowerCap: 100, managementFeeUpperCap: 500, chargeIfVacant: false, createdAt: '2026-01-01T00:00:00Z' },
     ],
     agreementMode: 'single',
     documents: [
@@ -71,8 +71,8 @@ const MOCK_OWNERS: Owner[] = [
     ],
     linkedPropertyIds: ['p4', 'p5'],
     agreements: [
-      { id: 'ag2', propertyId: 'p4', name: 'Hilltop Management Agreement', fileName: 'Hilltop_Agreement.pdf', fileUrl: '#', startDate: '2025-06-01', endDate: '2026-05-31', managementFeeType: 'fixed_per_unit' as const, managementFeeFixed: 75, managementFeePercent: '', managementFeePercentTotal: '', leaseFeeType: 'fixed' as const, leaseFeeValue: 400, renewalFeeType: 'fixed' as const, renewalFeeValue: 200, feePerUnit: 75, feePercentRent: 6, createdAt: '2025-06-01T00:00:00Z' },
-      { id: 'ag3', propertyId: 'p5', name: 'Garden Estates Agreement', fileName: 'Garden_Agreement.pdf', fileUrl: '#', startDate: '2025-06-01', endDate: '2026-05-31', managementFeeType: 'percent_rent' as const, managementFeeFixed: '', managementFeePercent: 7, managementFeePercentTotal: '', leaseFeeType: 'variable' as const, leaseFeeValue: 5, renewalFeeType: 'variable' as const, renewalFeeValue: 3, feePerUnit: 60, feePercentRent: 7, createdAt: '2025-06-01T00:00:00Z' },
+      { id: 'ag2', propertyId: 'p4', name: 'Hilltop Management Agreement', fileName: 'Hilltop_Agreement.pdf', fileUrl: '#', startDate: '2025-06-01', endDate: '2026-05-31', managementFeeType: 'fixed_per_unit' as const, managementFeeFixed: 75, managementFeePercent: '', managementFeePercentTotal: '', leaseFeeType: 'fixed' as const, leaseFeeValue: 400, renewalFeeType: 'fixed' as const, renewalFeeValue: 200, feePerUnit: 75, feePercentRent: 6, managementFeeLowerCap: '', managementFeeUpperCap: '', chargeIfVacant: true, createdAt: '2025-06-01T00:00:00Z' },
+      { id: 'ag3', propertyId: 'p5', name: 'Garden Estates Agreement', fileName: 'Garden_Agreement.pdf', fileUrl: '#', startDate: '2025-06-01', endDate: '2026-05-31', managementFeeType: 'percent_rent' as const, managementFeeFixed: '', managementFeePercent: 7, managementFeePercentTotal: '', leaseFeeType: 'variable' as const, leaseFeeValue: 5, renewalFeeType: 'variable' as const, renewalFeeValue: 3, feePerUnit: 60, feePercentRent: 7, managementFeeLowerCap: 50, managementFeeUpperCap: 300, chargeIfVacant: false, createdAt: '2025-06-01T00:00:00Z' },
     ],
     agreementMode: 'per_property',
     documents: [],

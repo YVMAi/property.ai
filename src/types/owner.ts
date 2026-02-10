@@ -58,6 +58,9 @@ export interface OwnerAgreement {
   renewalFeeValue: number | '';
   feePerUnit: number | '';
   feePercentRent: number | '';
+  managementFeeLowerCap: number | '';
+  managementFeeUpperCap: number | '';
+  chargeIfVacant: boolean;
   createdAt: string;
 }
 
@@ -125,6 +128,9 @@ export const emptyAgreement: Omit<OwnerAgreement, 'id'> = {
   renewalFeeValue: '',
   feePerUnit: '',
   feePercentRent: '',
+  managementFeeLowerCap: '',
+  managementFeeUpperCap: '',
+  chargeIfVacant: false,
   createdAt: new Date().toISOString(),
 };
 
