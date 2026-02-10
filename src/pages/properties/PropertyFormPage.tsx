@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Upload, X, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,24 @@ export default function PropertyFormPage() {
 
   const [step, setStep] = useState(0);
   const [photoFiles, setPhotoFiles] = useState<{ name: string; url: string; tags: string[]; tagInput: string }[]>([]);
+  const [activeTagDropdown, setActiveTagDropdown] = useState<number | null>(null);
+
+  // Master tag list – collects all tags ever used across photos
+  const MASTER_TAGS = ['Exterior', 'Interior', 'Kitchen', 'Bathroom', 'Bedroom', 'Living Room', 'Garage', 'Pool', 'Garden', 'Lobby', 'Entrance', 'Aerial', 'Before Renovation', 'After Renovation'];
+
+  const allUsedTags = useMemo(() => {
+    const set = new Set(MASTER_TAGS);
+    photoFiles.forEach((p) => p.tags.forEach((t) => set.add(t)));
+    return Array.from(set);
+  }, [photoFiles]);
+
+  const getSuggestions = (input: string, currentTags: string[]) => {
+    if (!input.trim()) return [];
+    const lower = input.toLowerCase();
+    return allUsedTags.filter(
+      (t) => t.toLowerCase().includes(lower) && !currentTags.includes(t)
+    ).slice(0, 6);
+  };
   const [docFiles, setDocFiles] = useState<{ name: string; size: number; type: string }[]>([]);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
@@ -126,13 +144,16 @@ export default function PropertyFormPage() {
     });
   };
 
-  const addPhotoTag = (idx: number) => {
+  const addPhotoTag = (idx: number, tagOverride?: string) => {
     setPhotoFiles((prev) =>
       prev.map((p, i) => {
-        if (i !== idx || !p.tagInput.trim()) return p;
-        return { ...p, tags: [...p.tags, p.tagInput.trim()], tagInput: '' };
+        const tag = tagOverride || p.tagInput.trim();
+        if (i !== idx || !tag) return p;
+        if (p.tags.includes(tag)) return { ...p, tagInput: '' };
+        return { ...p, tags: [...p.tags, tag], tagInput: '' };
       })
     );
+    setActiveTagDropdown(null);
   };
 
   const removePhotoTag = (photoIdx: number, tagIdx: number) => {
@@ -443,17 +464,33 @@ export default function PropertyFormPage() {
                             </Badge>
                           ))}
                         </div>
-                        <div className="flex gap-1">
+                        <div className="relative flex gap-1">
                           <Input
                             className="h-7 text-xs"
                             placeholder="Add tag..."
                             value={p.tagInput}
-                            onChange={(e) => updatePhotoTagInput(i, e.target.value)}
+                            onChange={(e) => { updatePhotoTagInput(i, e.target.value); setActiveTagDropdown(i); }}
+                            onFocus={() => setActiveTagDropdown(i)}
+                            onBlur={() => setTimeout(() => setActiveTagDropdown(null), 150)}
                             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addPhotoTag(i); } }}
                           />
-                          <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => addPhotoTag(i)}>
+                          <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-xs shrink-0" onClick={() => addPhotoTag(i)}>
                             <Plus className="h-3 w-3" />
                           </Button>
+                          {activeTagDropdown === i && getSuggestions(p.tagInput, p.tags).length > 0 && (
+                            <div className="absolute top-full left-0 mt-1 w-48 z-50 bg-popover border border-border rounded-md shadow-md py-1 max-h-40 overflow-y-auto">
+                              {getSuggestions(p.tagInput, p.tags).map((s) => (
+                                <button
+                                  key={s}
+                                  type="button"
+                                  className="w-full text-left px-3 py-1.5 text-xs hover:bg-accent text-popover-foreground transition-colors"
+                                  onMouseDown={(e) => { e.preventDefault(); addPhotoTag(i, s); }}
+                                >
+                                  {s}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
