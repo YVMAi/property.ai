@@ -7,13 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   Dialog,
   DialogContent,
@@ -103,29 +97,27 @@ export default function PaymentHistorySection({ payments, onAddPayment }: Paymen
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Method</Label>
-                  <Select value={newMethod} onValueChange={setNewMethod}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      <SelectItem value="ACH">ACH</SelectItem>
-                      <SelectItem value="Check">Check</SelectItem>
-                      <SelectItem value="Wire">Wire</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={[
+                      { value: 'ACH', label: 'ACH' },
+                      { value: 'Check', label: 'Check' },
+                      { value: 'Wire', label: 'Wire' },
+                      { value: 'Other', label: 'Other' },
+                    ]}
+                    value={newMethod}
+                    onValueChange={setNewMethod}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  <Select value={newStatus} onValueChange={(v) => setNewStatus(v as PaymentHistoryStatus)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={[
+                      { value: 'paid', label: 'Paid' },
+                      { value: 'pending', label: 'Pending' },
+                    ]}
+                    value={newStatus}
+                    onValueChange={(v) => setNewStatus(v as PaymentHistoryStatus)}
+                  />
                 </div>
               </div>
               <Button className="w-full btn-primary" onClick={handleRecordPayment}>

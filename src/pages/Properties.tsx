@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Input } from '@/components/ui/input';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
 import { useOwnersContext } from '@/contexts/OwnersContext';
@@ -164,27 +165,23 @@ export default function Properties() {
           <div className="flex flex-wrap gap-3 items-end">
             <div className="min-w-[160px]">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Type</label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {Object.entries(PROPERTY_TYPE_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[{ value: 'all', label: 'All Types' }, ...Object.entries(PROPERTY_TYPE_LABELS).map(([k, v]) => ({ value: k, label: v }))]}
+                value={typeFilter}
+                onValueChange={setTypeFilter}
+                placeholder="All Types"
+                triggerClassName="h-9"
+              />
             </div>
             <div className="min-w-[140px]">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {Object.entries(PROPERTY_STATUS_LABELS).filter(([k]) => k !== 'deleted').map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[{ value: 'all', label: 'All Statuses' }, ...Object.entries(PROPERTY_STATUS_LABELS).filter(([k]) => k !== 'deleted').map(([k, v]) => ({ value: k, label: v }))]}
+                value={statusFilter}
+                onValueChange={setStatusFilter}
+                placeholder="All Statuses"
+                triggerClassName="h-9"
+              />
             </div>
             <div className="min-w-[180px]">
               <label className="text-xs font-medium text-muted-foreground mb-1 block">Owner</label>

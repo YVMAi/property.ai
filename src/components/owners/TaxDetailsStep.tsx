@@ -1,12 +1,6 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import type { TaxClassification } from '@/types/owner';
 
 interface TaxDetailsStepProps {
@@ -45,21 +39,12 @@ export default function TaxDetailsStep({ data, onChange }: TaxDetailsStepProps) 
 
       <div className="space-y-2">
         <Label>Tax Classification</Label>
-        <Select
+        <SearchableSelect
+          options={TAX_CLASSIFICATIONS.map((tc) => ({ value: tc.value, label: tc.label }))}
           value={data.taxClassification}
           onValueChange={(val) => onChange({ taxClassification: val as TaxClassification })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select classification" />
-          </SelectTrigger>
-          <SelectContent className="bg-popover z-50">
-            {TAX_CLASSIFICATIONS.map((tc) => (
-              <SelectItem key={tc.value} value={tc.value}>
-                {tc.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          placeholder="Select classification"
+        />
       </div>
 
       <div className="space-y-2">

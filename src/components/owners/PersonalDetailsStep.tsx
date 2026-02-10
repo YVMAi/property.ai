@@ -1,17 +1,11 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Building2, User } from 'lucide-react';
 import type { OwnerAddress, OwnerType } from '@/types/owner';
 
-import { US_STATES, US_CITIES, DEFAULT_CITIES } from '@/data/usLocations';
+import { US_STATE_OPTIONS, getCityOptions } from '@/data/usLocations';
 
 interface PersonalDetailsStepProps {
   data: {
@@ -30,9 +24,6 @@ interface PersonalDetailsStepProps {
 }
 
 export default function PersonalDetailsStep({ data, onChange, errors }: PersonalDetailsStepProps) {
-  const citiesForState = data.address.state
-    ? US_CITIES[data.address.state] || DEFAULT_CITIES
-    : [];
 
   const handleStateChange = (state: string) => {
     // Reset city when state changes
@@ -200,43 +191,23 @@ export default function PersonalDetailsStep({ data, onChange, errors }: Personal
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* State Dropdown */}
           <div className="space-y-1">
-            <Select
+            <SearchableSelect
+              options={US_STATE_OPTIONS}
               value={data.address.state}
               onValueChange={handleStateChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="State" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50 max-h-60">
-                {US_STATES.map((st) => (
-                  <SelectItem key={st} value={st}>
-                    {st}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="State"
+            />
           </div>
 
           {/* City Dropdown */}
           <div className="space-y-1">
-            <Select
+            <SearchableSelect
+              options={getCityOptions(data.address.state)}
               value={data.address.city}
-              onValueChange={(city) =>
-                onChange({ address: { ...data.address, city } })
-              }
+              onValueChange={(city) => onChange({ address: { ...data.address, city } })}
+              placeholder={data.address.state ? 'City' : 'Select state first'}
               disabled={!data.address.state}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={data.address.state ? 'City' : 'Select state first'} />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50 max-h-60">
-                {citiesForState.map((city) => (
-                  <SelectItem key={city} value={city}>
-                    {city}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           {/* ZIP */}

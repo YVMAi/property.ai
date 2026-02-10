@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { HelpCircle, MessageSquare, Mail, Phone, ExternalLink, Send, Paperclip, Ticket, Eye } from 'lucide-react';
@@ -256,18 +257,19 @@ export default function HelpSupportSection() {
             </CardTitle>
             <CardDescription>Track all your submitted support tickets</CardDescription>
           </div>
-          <Select value={ticketFilter} onValueChange={(v) => setTicketFilter(v as typeof ticketFilter)}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Filter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="open">Open</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="resolved">Resolved</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'open', label: 'Open' },
+              { value: 'in_progress', label: 'In Progress' },
+              { value: 'resolved', label: 'Resolved' },
+              { value: 'closed', label: 'Closed' },
+            ]}
+            value={ticketFilter}
+            onValueChange={(v) => setTicketFilter(v as typeof ticketFilter)}
+            placeholder="Filter"
+            triggerClassName="w-36"
+          />
         </CardHeader>
         <CardContent>
           {filteredTickets.length === 0 ? (

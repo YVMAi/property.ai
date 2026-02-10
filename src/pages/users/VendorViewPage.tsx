@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -138,17 +139,13 @@ function VendorDashboard({ vendor, allVendors }: { vendor: NonNullable<ReturnTyp
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <Select value={vendor.id} onValueChange={(val) => navigate(`/users/vendors/${val}`)}>
-            <SelectTrigger className="w-[200px]">
-              <ChevronsUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
-              <SelectValue placeholder="Switch Vendor" />
-            </SelectTrigger>
-            <SelectContent>
-              {allVendors.map((v) => (
-                <SelectItem key={v.id} value={v.id}>{getVendorDisplayName(v)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={allVendors.map((v) => ({ value: v.id, label: getVendorDisplayName(v) }))}
+            value={vendor.id}
+            onValueChange={(val) => navigate(`/users/vendors/${val}`)}
+            placeholder="Switch Vendor"
+            triggerClassName="w-[200px]"
+          />
           <Button onClick={() => navigate(`/users/vendors/${vendor.id}/edit`)} className="btn-primary">
             <Pencil className="h-4 w-4 mr-2" /> Edit Vendor
           </Button>
