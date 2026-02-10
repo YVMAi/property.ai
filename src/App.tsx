@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OwnersProvider } from "@/contexts/OwnersContext";
 import { TenantsProvider } from "@/contexts/TenantsContext";
+import { VendorsProvider } from "@/contexts/VendorsContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 // Pages
@@ -26,6 +27,8 @@ import Tenants from "./pages/users/Tenants";
 import TenantFormPage from "./pages/users/TenantFormPage";
 import TenantViewPage from "./pages/users/TenantViewPage";
 import Vendors from "./pages/users/Vendors";
+import VendorFormPage from "./pages/users/VendorFormPage";
+import VendorViewPage from "./pages/users/VendorViewPage";
 import Communications from "./pages/Communications";
 import Files from "./pages/Files";
 import Settings from "./pages/Settings";
@@ -44,6 +47,7 @@ const App = () => (
       <AuthProvider>
         <OwnersProvider>
           <TenantsProvider>
+          <VendorsProvider>
           <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -69,6 +73,9 @@ const App = () => (
               <Route path="/users/tenants/:id" element={<ProtectedPage><TenantViewPage /></ProtectedPage>} />
               <Route path="/users/tenants/:id/edit" element={<ProtectedPage><TenantFormPage /></ProtectedPage>} />
               <Route path="/users/vendors" element={<ProtectedPage><Vendors /></ProtectedPage>} />
+              <Route path="/users/vendors/new" element={<ProtectedPage><VendorFormPage /></ProtectedPage>} />
+              <Route path="/users/vendors/:id" element={<ProtectedPage><VendorViewPage /></ProtectedPage>} />
+              <Route path="/users/vendors/:id/edit" element={<ProtectedPage><VendorFormPage /></ProtectedPage>} />
               <Route path="/communications" element={<ProtectedPage><Communications /></ProtectedPage>} />
               <Route path="/files" element={<ProtectedPage><Files /></ProtectedPage>} />
               <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
@@ -77,6 +84,7 @@ const App = () => (
             </Routes>
           </BrowserRouter>
           </TooltipProvider>
+          </VendorsProvider>
           </TenantsProvider>
         </OwnersProvider>
       </AuthProvider>
