@@ -3,6 +3,7 @@ export interface PropertyGroup {
   name: string;
   description: string;
   color: string;
+  tags: string[];
   createdAt: string;
 }
 

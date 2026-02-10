@@ -4,9 +4,9 @@ import type { PropertyGroup } from '@/types/propertyGroup';
 const generateId = () => Math.random().toString(36).substring(2, 11);
 
 const MOCK_GROUPS: PropertyGroup[] = [
-  { id: 'g1', name: 'Portland Portfolio', description: 'All Portland, OR properties', color: 'hsl(210,60%,82%)', createdAt: '2025-01-10' },
-  { id: 'g2', name: 'Student Housing Cluster', description: 'University-area housing', color: 'hsl(280,40%,82%)', createdAt: '2025-03-01' },
-  { id: 'g3', name: 'High-Yield Investments', description: 'Properties with >8% cap rate', color: 'hsl(120,30%,77%)', createdAt: '2025-06-15' },
+  { id: 'g1', name: 'Portland Portfolio', description: 'All Portland, OR properties', color: 'hsl(210,60%,82%)', tags: ['Portfolio', 'Urban'], createdAt: '2025-01-10' },
+  { id: 'g2', name: 'Student Housing Cluster', description: 'University-area housing', color: 'hsl(280,40%,82%)', tags: ['Student', 'Residential'], createdAt: '2025-03-01' },
+  { id: 'g3', name: 'High-Yield Investments', description: 'Properties with >8% cap rate', color: 'hsl(120,30%,77%)', tags: ['High-Yield'], createdAt: '2025-06-15' },
 ];
 
 // Many-to-many links: propertyId -> groupId[]
@@ -19,7 +19,7 @@ const MOCK_LINKS: Record<string, string[]> = {
 
 interface PropertyGroupsContextType {
   groups: PropertyGroup[];
-  addGroup: (name: string, description: string, color: string) => PropertyGroup;
+  addGroup: (name: string, description: string, color: string, tags?: string[]) => PropertyGroup;
   updateGroup: (id: string, data: Partial<Omit<PropertyGroup, 'id' | 'createdAt'>>) => void;
   deleteGroup: (id: string) => boolean;
   getGroupById: (id: string) => PropertyGroup | undefined;
@@ -37,12 +37,13 @@ export function PropertyGroupsProvider({ children }: { children: ReactNode }) {
   const [groups, setGroups] = useState<PropertyGroup[]>(MOCK_GROUPS);
   const [links, setLinks] = useState<Record<string, string[]>>(MOCK_LINKS);
 
-  const addGroup = useCallback((name: string, description: string, color: string) => {
+  const addGroup = useCallback((name: string, description: string, color: string, tags: string[] = []) => {
     const newGroup: PropertyGroup = {
       id: generateId(),
       name,
       description,
       color,
+      tags,
       createdAt: new Date().toISOString(),
     };
     setGroups(prev => [...prev, newGroup]);
