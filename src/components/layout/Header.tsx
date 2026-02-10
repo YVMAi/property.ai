@@ -24,7 +24,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="h-16 glass-heavy border-b border-border px-4 flex items-center justify-between gap-4 sticky top-0 z-40">
+    <header className="h-16 bg-card border-b border-border/50 shadow-soft px-4 flex items-center justify-between gap-4 sticky top-0 z-40">
       <div className="flex items-center gap-4">
         {isMobile && (
           <Button
@@ -47,7 +47,7 @@ export default function Header() {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 flex-1 justify-end">
+      <div className="flex items-center gap-4 flex-1 justify-end">
         <div className="w-full max-w-md">
           <GlobalSearch />
         </div>
@@ -63,12 +63,12 @@ export default function Header() {
               </Badge>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 glass-heavy rounded-2xl">
+          <DropdownMenuContent align="end" className="w-80">
             <div className="px-3 py-2 border-b border-border">
               <h4 className="font-semibold text-sm">Notifications</h4>
             </div>
             {notifications.map((notification) => (
-              <DropdownMenuItem key={notification.id} className="cursor-pointer flex flex-col items-start py-3 rounded-xl">
+              <DropdownMenuItem key={notification.id} className="cursor-pointer flex flex-col items-start py-3">
                 <span className="text-sm font-medium">{notification.title}</span>
                 <span className="text-xs text-muted-foreground">{notification.time}</span>
               </DropdownMenuItem>

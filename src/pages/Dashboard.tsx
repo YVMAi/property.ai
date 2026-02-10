@@ -24,17 +24,15 @@ export default function Dashboard() {
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.title} className="border-l-4 border-l-primary hover:scale-[1.02] transition-all duration-200">
+            <Card key={stat.title} className="border-l-4 border-l-primary border-border/50 shadow-soft hover:shadow-elevated transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <div className="p-2 rounded-xl bg-primary/10">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
+                <Icon className="h-5 w-5 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">{stat.value}</div>
+                <div className="text-3xl font-semibold text-foreground">{stat.value}</div>
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                   <TrendingUp className="h-3 w-3 text-success" />
                   {stat.change}
@@ -54,11 +52,11 @@ export default function Dashboard() {
             return (
               <Card
                 key={action.title}
-                className="hover:scale-[1.02] hover:shadow-glow/20 transition-all cursor-pointer group"
+                className="border-border/50 shadow-soft hover:shadow-elevated hover:border-primary/30 transition-all cursor-pointer group"
               >
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-2xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
                       <Icon className="h-6 w-6 text-primary" />
                     </div>
                     <div>
@@ -75,7 +73,7 @@ export default function Dashboard() {
 
       {/* Revenue Overview */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+        <Card className="border-border/50 shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-primary" />
@@ -90,17 +88,17 @@ export default function Dashboard() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Outstanding</span>
-                <span className="text-xl font-semibold text-destructive">$3,200</span>
+                <span className="text-xl font-semibold text-destructive-foreground">$3,200</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Collection Rate</span>
-                <span className="text-xl font-semibold text-success">93.4%</span>
+                <span className="text-xl font-semibold text-success-foreground">93.4%</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/50 shadow-soft">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ClipboardList className="h-5 w-5 text-primary" />
@@ -114,7 +112,7 @@ export default function Dashboard() {
                 { text: 'Maintenance completed at 123 Oak St', time: '5 hours ago' },
                 { text: 'New tenant application received', time: '1 day ago' },
               ].map((activity, i) => (
-                <div key={i} className="flex justify-between items-start pb-3 border-b border-border last:border-0 last:pb-0">
+                <div key={i} className="flex justify-between items-start pb-3 border-b border-border/50 last:border-0 last:pb-0">
                   <span className="text-sm text-foreground">{activity.text}</span>
                   <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">{activity.time}</span>
                 </div>
