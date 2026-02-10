@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Plus, Download, MapPin, TrendingUp, Home, DollarSign, FileText, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Building2, Plus, Download, MapPin, TrendingUp, Home, DollarSign, FileText, AlertTriangle, BarChart3, Tag, Settings2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Input } from '@/components/ui/input';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
 import { useOwnersContext } from '@/contexts/OwnersContext';
+import { usePropertyGroupsContext } from '@/contexts/PropertyGroupsContext';
+import ManageGroupsDialog from '@/components/properties/ManageGroupsDialog';
 import type { PropertyType } from '@/types/property';
 
 import multiFamilyImg from '@/assets/properties/multi-family.jpg';
@@ -56,20 +58,25 @@ export default function Properties() {
   const navigate = useNavigate();
   const { activeProperties, archivedProperties } = usePropertiesContext();
   const { activeOwners } = useOwnersContext();
+  const { groups, getGroupsForProperty, getPropertyIdsForGroups } = usePropertyGroupsContext();
 
   // Filters
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [ownerSearch, setOwnerSearch] = useState('');
+  const [groupFilter, setGroupFilter] = useState<string[]>([]);
   const [showMap, setShowMap] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
+  const [manageGroupsOpen, setManageGroupsOpen] = useState(false);
 
   const displayProperties = showArchived ? archivedProperties : activeProperties;
 
   const filteredProperties = useMemo(() => {
+    const groupPropertyIds = groupFilter.length > 0 ? new Set(getPropertyIdsForGroups(groupFilter)) : null;
     return displayProperties.filter((p) => {
       if (typeFilter !== 'all' && p.type !== typeFilter) return false;
       if (statusFilter !== 'all' && p.status !== statusFilter) return false;
+      if (groupPropertyIds && !groupPropertyIds.has(p.id)) return false;
       if (ownerSearch.trim()) {
         const owner = activeOwners.find((o) => o.id === p.ownerId);
         const ownerName = owner
@@ -81,7 +88,7 @@ export default function Properties() {
       }
       return true;
     });
-  }, [displayProperties, typeFilter, statusFilter, ownerSearch, activeOwners]);
+  }, [displayProperties, typeFilter, statusFilter, ownerSearch, groupFilter, getPropertyIdsForGroups, activeOwners]);
 
   // Metrics
   const totalProperties = activeProperties.length;
@@ -192,13 +199,54 @@ export default function Properties() {
                 onChange={(e) => setOwnerSearch(e.target.value)}
               />
             </div>
-            <Button
-              variant={showArchived ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setShowArchived(!showArchived)}
-            >
-              {showArchived ? 'Show Active' : 'Show Archived'}
-            </Button>
+            {groups.length > 0 && (
+              <div className="min-w-[180px]">
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Group</label>
+                <SearchableSelect
+                  options={groups.map(g => ({ value: g.id, label: g.name }))}
+                  value={groupFilter.length > 0 ? groupFilter[groupFilter.length - 1] : ''}
+                  onValueChange={(v) => {
+                    setGroupFilter(prev =>
+                      prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]
+                    );
+                  }}
+                  placeholder="All Groups"
+                  triggerClassName="h-9"
+                />
+                {groupFilter.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {groupFilter.map(gid => {
+                      const g = groups.find(x => x.id === gid);
+                      if (!g) return null;
+                      return (
+                        <Badge
+                          key={gid}
+                          className="text-xs gap-1 pr-1 cursor-pointer"
+                          style={{ backgroundColor: g.color, color: 'hsl(0,0%,20%)' }}
+                          onClick={() => setGroupFilter(prev => prev.filter(x => x !== gid))}
+                        >
+                          {g.name} ×
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="flex gap-2 items-end">
+              <Button
+                variant={showArchived ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setShowArchived(!showArchived)}
+              >
+                {showArchived ? 'Show Active' : 'Show Archived'}
+              </Button>
+              {groups.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={() => setManageGroupsOpen(true)} className="gap-1 text-xs">
+                  <Settings2 className="h-3.5 w-3.5" /> Groups
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -484,6 +532,18 @@ export default function Properties() {
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     <Badge variant="outline" className="text-xs">{PROPERTY_TYPE_LABELS[p.type]}</Badge>
                     {p.units.length > 0 && <Badge variant="outline" className="text-xs">{p.units.length} units</Badge>}
+                    {getGroupsForProperty(p.id).slice(0, 2).map(g => (
+                      <Badge
+                        key={g.id}
+                        className="text-xs"
+                        style={{ backgroundColor: g.color, color: 'hsl(0,0%,20%)' }}
+                      >
+                        {g.name}
+                      </Badge>
+                    ))}
+                    {getGroupsForProperty(p.id).length > 2 && (
+                      <Badge variant="outline" className="text-xs">+{getGroupsForProperty(p.id).length - 2}</Badge>
+                    )}
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>Owner: {getOwnerName(p.ownerId)}</span>
@@ -495,6 +555,7 @@ export default function Properties() {
           })}
         </div>
       </div>
+      <ManageGroupsDialog open={manageGroupsOpen} onOpenChange={setManageGroupsOpen} />
     </div>
   );
 }

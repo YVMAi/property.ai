@@ -1,7 +1,8 @@
 import { useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Upload, X, Image, Wand2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Upload, X, Image, Wand2, Tag } from 'lucide-react';
 import BulkUnitSetupDialog, { type BulkUnit } from '@/components/properties/BulkUnitSetupDialog';
+import CreateGroupDialog from '@/components/properties/CreateGroupDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
 import { useOwnersContext } from '@/contexts/OwnersContext';
+import { usePropertyGroupsContext } from '@/contexts/PropertyGroupsContext';
 import { useToast } from '@/hooks/use-toast';
 import {
   PROPERTY_TYPE_LABELS,
@@ -25,7 +27,7 @@ import {
 import { AMENITIES_OPTIONS } from '@/data/propertiesMockData';
 import { US_STATE_OPTIONS, US_CITIES, DEFAULT_CITIES, getCityOptions } from '@/data/usLocations';
 
-const STEPS = ['Details', 'Owner & Agreements', 'Leases & Documents'];
+const STEPS = ['Details', 'Owner & Groups', 'Leases & Documents'];
 
 // --- Formatting helpers ---
 const formatComma = (v: number | ''): string => {
@@ -77,11 +79,16 @@ export default function PropertyFormPage() {
   const { toast } = useToast();
   const { addProperty, updateProperty, getPropertyById } = usePropertiesContext();
   const { activeOwners } = useOwnersContext();
+  const { groups, getGroupsForProperty, setPropertyGroups, getGroupPropertyCount } = usePropertyGroupsContext();
   const isEdit = Boolean(id);
 
   const existing = id ? getPropertyById(id) : undefined;
 
   const [step, setStep] = useState(0);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(() =>
+    existing ? getGroupsForProperty(existing.id).map(g => g.id) : []
+  );
+  const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [photoFiles, setPhotoFiles] = useState<{ name: string; url: string; tags: string[]; tagInput: string }[]>([]);
   const [activeTagDropdown, setActiveTagDropdown] = useState<number | null>(null);
 
@@ -249,9 +256,11 @@ export default function PropertyFormPage() {
     }
     if (isEdit && id) {
       updateProperty(id, form);
+      setPropertyGroups(id, selectedGroupIds);
       toast({ title: 'Property updated' });
     } else {
-      addProperty(form);
+      const newProp = addProperty(form);
+      setPropertyGroups(newProp.id, selectedGroupIds);
       toast({ title: 'Property created' });
     }
     navigate('/properties');
@@ -638,10 +647,10 @@ export default function PropertyFormPage() {
         </Card>
       )}
 
-      {/* Step 2: Owner & Agreements */}
+      {/* Step 2: Owner, Groups & Agreements */}
       {step === 1 && (
         <Card>
-          <CardHeader><CardTitle className="text-lg">Owner & Agreements</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">Owner, Groups & Agreements</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div>
               <Label>Link Owner *</Label>
@@ -655,6 +664,64 @@ export default function PropertyFormPage() {
                 placeholder="Select an owner"
               />
               {errors.ownerId && <p className="text-xs text-destructive mt-1">{errors.ownerId}</p>}
+            </div>
+
+            {/* Property Groups */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <Label className="flex items-center gap-1.5">
+                  <Tag className="h-3.5 w-3.5" /> Property Groups
+                </Label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setCreateGroupOpen(true)}
+                  className="gap-1 h-7 text-xs"
+                >
+                  <Plus className="h-3 w-3" /> Create New Group
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mb-2">
+                Group properties for easier filtering, reporting, or portfolio management.
+              </p>
+              <SearchableSelect
+                options={groups.map(g => ({
+                  value: g.id,
+                  label: `${g.name} (${getGroupPropertyCount(g.id)} properties)`,
+                }))}
+                value={selectedGroupIds.length > 0 ? selectedGroupIds[selectedGroupIds.length - 1] : ''}
+                onValueChange={(v) => {
+                  if (!selectedGroupIds.includes(v)) {
+                    setSelectedGroupIds(prev => [...prev, v]);
+                  }
+                }}
+                placeholder="Search and select groups..."
+              />
+              {selectedGroupIds.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {selectedGroupIds.map(gid => {
+                    const g = groups.find(x => x.id === gid);
+                    if (!g) return null;
+                    return (
+                      <Badge
+                        key={gid}
+                        className="gap-1 pr-1 text-xs font-medium"
+                        style={{ backgroundColor: g.color, color: 'hsl(0,0%,20%)' }}
+                      >
+                        {g.name}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedGroupIds(prev => prev.filter(x => x !== gid))}
+                          className="ml-0.5 hover:opacity-70"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {selectedOwner && selectedOwner.agreements.length > 0 && (
@@ -691,6 +758,12 @@ export default function PropertyFormPage() {
           </CardContent>
         </Card>
       )}
+
+      <CreateGroupDialog
+        open={createGroupOpen}
+        onOpenChange={setCreateGroupOpen}
+        onCreated={(gid) => setSelectedGroupIds(prev => [...prev, gid])}
+      />
 
       {/* Step 3: Leases & Documents */}
       {step === 2 && (
