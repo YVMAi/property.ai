@@ -324,12 +324,12 @@ export default function WorkOrdersDashboard() {
                   <TableBody>
                     {filteredRequests.map(req => (
                       <TableRow key={req.id} className="bg-card cursor-pointer" onClick={() => navigate(`/work-orders/requests/${req.id}`)}>
-                        <TableCell className="font-medium text-primary">{req.id}</TableCell>
+                        <TableCell className="font-medium">{req.id}</TableCell>
                         <TableCell>{req.propertyName}{req.unitNumber ? ` #${req.unitNumber}` : ''}</TableCell>
-                        <TableCell className="text-muted-foreground">{req.tenantName}</TableCell>
-                        <TableCell className="max-w-[200px] truncate text-muted-foreground">{req.description}</TableCell>
+                        <TableCell>{req.tenantName}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{req.description}</TableCell>
                         <TableCell><PriorityBadge p={req.priority} /></TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{new Date(req.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-sm">{new Date(req.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleApprove(req.id, false)}>→ RFP</Button>
@@ -391,12 +391,12 @@ export default function WorkOrdersDashboard() {
                   <TableBody>
                     {filteredRejected.map(req => (
                       <TableRow key={req.id} className="bg-card cursor-pointer" onClick={() => navigate(`/work-orders/requests/${req.id}`)}>
-                        <TableCell className="font-medium text-primary">{req.id}</TableCell>
+                        <TableCell className="font-medium">{req.id}</TableCell>
                         <TableCell>{req.propertyName}</TableCell>
-                        <TableCell className="max-w-[200px] truncate text-muted-foreground">{req.description}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{req.description}</TableCell>
                         <TableCell><PriorityBadge p={req.priority} /></TableCell>
                         <TableCell><Badge className="bg-destructive text-destructive-foreground border-0">{req.rejectionReason}</Badge></TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{req.rejectionNotes || '—'}</TableCell>
+                        <TableCell className="text-sm">{req.rejectionNotes || '—'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
