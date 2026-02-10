@@ -445,8 +445,8 @@ export default function PropertyFormPage() {
                 <div className="flex items-center justify-between mb-2">
                   <Label>Units</Label>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)} className="gap-1 border-primary/30 text-primary hover:bg-primary/5">
-                      <Wand2 className="h-3 w-3" /> Smart Bulk Setup
+                    <Button size="sm" onClick={() => setBulkOpen(true)} className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
+                      <Wand2 className="h-3.5 w-3.5" /> Smart Bulk Setup
                     </Button>
                     <Button size="sm" variant="outline" onClick={addUnit} className="gap-1">
                       <Plus className="h-3 w-3" /> Add Unit
@@ -491,8 +491,8 @@ export default function PropertyFormPage() {
                 <div className="flex items-center justify-between mb-2">
                   <Label>Units / Beds</Label>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)} className="gap-1 border-primary/30 text-primary hover:bg-primary/5">
-                      <Wand2 className="h-3 w-3" /> Smart Bulk Setup
+                    <Button size="sm" onClick={() => setBulkOpen(true)} className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm">
+                      <Wand2 className="h-3.5 w-3.5" /> Smart Bulk Setup
                     </Button>
                     <Button size="sm" variant="outline" onClick={addUnit} className="gap-1">
                       <Plus className="h-3 w-3" /> Add Unit
