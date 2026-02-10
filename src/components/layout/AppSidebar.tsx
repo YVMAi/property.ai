@@ -256,7 +256,7 @@ export default function AppSidebar() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search..."
-              className="pl-9 h-9 bg-sidebar-accent/50"
+              className="pl-9 h-9 bg-background border-border"
             />
           </div>
         </div>
