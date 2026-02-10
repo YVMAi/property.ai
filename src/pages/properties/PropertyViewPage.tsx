@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
 import { useOwnersContext } from '@/contexts/OwnersContext';
@@ -79,16 +80,13 @@ export default function PropertyViewPage() {
             {PROPERTY_STATUS_LABELS[property.status]}
           </Badge>
           <Badge variant="outline">{PROPERTY_TYPE_LABELS[property.type]}</Badge>
-          <Select value={property.status} onValueChange={(v) => id && changeStatus(id, v as PropertyStatus)}>
-            <SelectTrigger className="w-[160px] h-9">
-              <SelectValue placeholder="Change Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(PROPERTY_STATUS_LABELS).filter(([k]) => k !== 'deleted').map(([k, v]) => (
-                <SelectItem key={k} value={k}>{v}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={Object.entries(PROPERTY_STATUS_LABELS).filter(([k]) => k !== 'deleted').map(([k, v]) => ({ value: k, label: v }))}
+            value={property.status}
+            onValueChange={(v) => id && changeStatus(id, v as PropertyStatus)}
+            placeholder="Change Status"
+            triggerClassName="w-[160px] h-9"
+          />
           <Button size="sm" variant="outline" onClick={() => navigate(`/properties/${id}/edit`)} className="gap-1.5">
             <Edit className="h-4 w-4" /> Edit
           </Button>

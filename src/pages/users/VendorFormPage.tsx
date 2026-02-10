@@ -6,9 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Check, ChevronLeft, ChevronRight, ArrowLeft, AlertCircle, X, Plus, Upload, FileText, Trash2 } from 'lucide-react';
 import type { VendorFormData, VendorType, PaymentTerms, PaymentMethod, BGVSchedule, VendorFormDocument } from '@/types/vendor';
 import { emptyVendorForm, PREDEFINED_CATEGORIES, PREDEFINED_REGIONS, VENDOR_TAGS } from '@/types/vendor';
@@ -217,13 +215,12 @@ export default function VendorFormPage() {
             <div className="space-y-4">
               <div>
                 <Label>Vendor Type</Label>
-                <Select value={form.vendorType} onValueChange={(v) => update({ vendorType: v as VendorType })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="individual">Individual</SelectItem>
-                    <SelectItem value="company">Company</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={[{ value: 'individual', label: 'Individual' }, { value: 'company', label: 'Company' }]}
+                  value={form.vendorType}
+                  onValueChange={(v) => update({ vendorType: v as VendorType })}
+                  placeholder="Select type"
+                />
               </div>
 
               {form.vendorType === 'individual' ? (
@@ -403,28 +400,30 @@ export default function VendorFormPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Payment Terms</Label>
-                  <Select value={form.paymentTerms} onValueChange={(v) => update({ paymentTerms: v as PaymentTerms })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="immediate">Immediate</SelectItem>
-                      <SelectItem value="net_15">Net 15</SelectItem>
-                      <SelectItem value="net_30">Net 30</SelectItem>
-                      <SelectItem value="net_60">Net 60</SelectItem>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="bi_weekly">Bi-Weekly</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={[
+                      { value: 'immediate', label: 'Immediate' },
+                      { value: 'net_15', label: 'Net 15' },
+                      { value: 'net_30', label: 'Net 30' },
+                      { value: 'net_60', label: 'Net 60' },
+                      { value: 'weekly', label: 'Weekly' },
+                      { value: 'bi_weekly', label: 'Bi-Weekly' },
+                    ]}
+                    value={form.paymentTerms}
+                    onValueChange={(v) => update({ paymentTerms: v as PaymentTerms })}
+                  />
                 </div>
                 <div>
                   <Label>Default Payment Method</Label>
-                  <Select value={form.defaultPaymentMethod} onValueChange={(v) => update({ defaultPaymentMethod: v as PaymentMethod })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ach">ACH</SelectItem>
-                      <SelectItem value="check">Check</SelectItem>
-                      <SelectItem value="wire">Wire</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={[
+                      { value: 'ach', label: 'ACH' },
+                      { value: 'check', label: 'Check' },
+                      { value: 'wire', label: 'Wire' },
+                    ]}
+                    value={form.defaultPaymentMethod}
+                    onValueChange={(v) => update({ defaultPaymentMethod: v as PaymentMethod })}
+                  />
                 </div>
               </div>
 
@@ -561,15 +560,16 @@ export default function VendorFormPage() {
                 <>
                   <div>
                     <Label>Schedule</Label>
-                    <Select value={form.bgvSchedule} onValueChange={(v) => update({ bgvSchedule: v as BGVSchedule })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="one-time">One-time</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="quarterly">Quarterly</SelectItem>
-                        <SelectItem value="annually">Annually</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={[
+                        { value: 'one-time', label: 'One-time' },
+                        { value: 'monthly', label: 'Monthly' },
+                        { value: 'quarterly', label: 'Quarterly' },
+                        { value: 'annually', label: 'Annually' },
+                      ]}
+                      value={form.bgvSchedule}
+                      onValueChange={(v) => update({ bgvSchedule: v as BGVSchedule })}
+                    />
                   </div>
                   <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
                     <p>A background verification will be initiated after saving. Reports will appear in the vendor's dashboard.</p>

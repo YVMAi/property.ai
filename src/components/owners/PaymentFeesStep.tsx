@@ -3,13 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Landmark, Calculator, ShieldCheck, Info, Zap, ClipboardList } from 'lucide-react';
 import { MOCK_PROPERTIES } from '@/hooks/useOwners';
 import type {
@@ -146,20 +140,17 @@ export default function PaymentFeesStep({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Method *</Label>
-            <Select
+            <SearchableSelect
+              options={[
+                { value: 'ach', label: 'ACH / Bank Transfer' },
+                { value: 'check', label: 'Check' },
+                { value: 'wire', label: 'Wire Transfer' },
+                { value: 'other', label: 'Other' },
+              ]}
               value={data.payoutMethod}
               onValueChange={(v) => onChange({ payoutMethod: v as PayoutMethod })}
-            >
-              <SelectTrigger className={errors.payoutMethod ? 'border-destructive' : ''}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                <SelectItem value="ach">ACH / Bank Transfer</SelectItem>
-                <SelectItem value="check">Check</SelectItem>
-                <SelectItem value="wire">Wire Transfer</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+              triggerClassName={errors.payoutMethod ? 'border-destructive' : ''}
+            />
           </div>
 
           {data.payoutMethod === 'other' && (
@@ -229,18 +220,14 @@ export default function PaymentFeesStep({
 
             <div className="space-y-2 max-w-xs">
               <Label>Account Type</Label>
-              <Select
+              <SearchableSelect
+                options={[
+                  { value: 'checking', label: 'Checking' },
+                  { value: 'savings', label: 'Savings' },
+                ]}
                 value={data.accountType}
                 onValueChange={(v) => onChange({ accountType: v as PayoutAccountType })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  <SelectItem value="checking">Checking</SelectItem>
-                  <SelectItem value="savings">Savings</SelectItem>
-                </SelectContent>
-              </Select>
+              />
             </div>
           </div>
         )}
@@ -253,38 +240,27 @@ export default function PaymentFeesStep({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Frequency</Label>
-            <Select
+            <SearchableSelect
+              options={[
+                { value: 'monthly', label: 'Monthly' },
+                { value: 'bi-weekly', label: 'Bi-weekly' },
+                { value: 'quarterly', label: 'Quarterly' },
+                { value: 'on-demand', label: 'On-Demand / Manual' },
+              ]}
               value={data.payoutFrequency}
               onValueChange={(v) => onChange({ payoutFrequency: v as PayoutFrequency })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
-                <SelectItem value="quarterly">Quarterly</SelectItem>
-                <SelectItem value="on-demand">On-Demand / Manual</SelectItem>
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           {(data.payoutFrequency === 'monthly' || data.payoutFrequency === 'quarterly') && (
             <div className="space-y-2">
               <Label>Preferred Day</Label>
-              <Select
+              <SearchableSelect
+                options={PAYOUT_DAYS.map((d) => ({ value: d, label: d }))}
                 value={data.payoutDay}
                 onValueChange={(v) => onChange({ payoutDay: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select day" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  {PAYOUT_DAYS.map((d) => (
-                    <SelectItem key={d} value={d}>{d}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Select day"
+              />
             </div>
           )}
         </div>
@@ -319,19 +295,15 @@ export default function PaymentFeesStep({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Fee Structure *</Label>
-                <Select
+                <SearchableSelect
+                  options={[
+                    { value: 'percentage', label: 'Percentage of Gross Income' },
+                    { value: 'flat_monthly', label: 'Flat Fee per Month' },
+                    { value: 'flat_per_property', label: 'Flat Fee per Property' },
+                  ]}
                   value={data.managementFeeType}
                   onValueChange={(v) => onChange({ managementFeeType: v as ManagementFeeType })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    <SelectItem value="percentage">Percentage of Gross Income</SelectItem>
-                    <SelectItem value="flat_monthly">Flat Fee per Month</SelectItem>
-                    <SelectItem value="flat_per_property">Flat Fee per Property</SelectItem>
-                  </SelectContent>
-                </Select>
+                />
               </div>
 
               <div className="space-y-2">
@@ -375,18 +347,15 @@ export default function PaymentFeesStep({
 
             <div className="space-y-3">
               <Label>Apply To</Label>
-              <Select
+              <SearchableSelect
+                options={[
+                  { value: 'all', label: 'All Linked Properties' },
+                  { value: 'specific', label: 'Specific Properties' },
+                ]}
                 value={data.managementFeeApplyTo}
                 onValueChange={(v) => onChange({ managementFeeApplyTo: v as ManagementFeeApplyTo })}
-              >
-                <SelectTrigger className="max-w-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  <SelectItem value="all">All Linked Properties</SelectItem>
-                  <SelectItem value="specific">Specific Properties</SelectItem>
-                </SelectContent>
-              </Select>
+                triggerClassName="max-w-xs"
+              />
 
               {data.managementFeeApplyTo === 'specific' && (
                 <div className="space-y-2">

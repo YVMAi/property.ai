@@ -9,7 +9,7 @@ import TagManagerDialog from '@/components/files/TagManagerDialog';
 import EditTagsDialog from '@/components/files/EditTagsDialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
@@ -126,30 +126,27 @@ export default function Files() {
                 />
               </div>
 
-              <Select value={fm.filterTag} onValueChange={fm.setFilterTag}>
-                <SelectTrigger className="w-28 h-9">
-                  <SelectValue placeholder="Tag" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Tags</SelectItem>
-                  {fm.tags.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[{ value: 'all', label: 'All Tags' }, ...fm.tags.map((t) => ({ value: t.id, label: t.name }))]}
+                value={fm.filterTag}
+                onValueChange={fm.setFilterTag}
+                placeholder="Tag"
+                triggerClassName="w-28 h-9"
+              />
 
-              <Select value={fm.filterType} onValueChange={fm.setFilterType}>
-                <SelectTrigger className="w-28 h-9">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="pdf">PDF</SelectItem>
-                  <SelectItem value="image">Image</SelectItem>
-                  <SelectItem value="document">Document</SelectItem>
-                  <SelectItem value="spreadsheet">Spreadsheet</SelectItem>
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[
+                  { value: 'all', label: 'All Types' },
+                  { value: 'pdf', label: 'PDF' },
+                  { value: 'image', label: 'Image' },
+                  { value: 'document', label: 'Document' },
+                  { value: 'spreadsheet', label: 'Spreadsheet' },
+                ]}
+                value={fm.filterType}
+                onValueChange={fm.setFilterType}
+                placeholder="Type"
+                triggerClassName="w-28 h-9"
+              />
 
               <div className="flex gap-1">
                 <Button

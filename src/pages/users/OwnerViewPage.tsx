@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { useOwnersContext } from '@/contexts/OwnersContext';
 import { useToast } from '@/hooks/use-toast';
 import { MOCK_PROPERTIES } from '@/hooks/useOwners';
@@ -95,19 +96,13 @@ export default function OwnerViewPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Select value={owner.id} onValueChange={(val) => navigate(`/users/owners/${val}`)}>
-            <SelectTrigger className="w-[200px]">
-              <ChevronsUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
-              <SelectValue placeholder="Switch Owner" />
-            </SelectTrigger>
-            <SelectContent>
-              {allOwners.map((o) => (
-                <SelectItem key={o.id} value={o.id}>
-                  {getOwnerDisplayName(o)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={allOwners.map((o) => ({ value: o.id, label: getOwnerDisplayName(o) }))}
+            value={owner.id}
+            onValueChange={(val) => navigate(`/users/owners/${val}`)}
+            placeholder="Switch Owner"
+            triggerClassName="w-[200px]"
+          />
           <Button onClick={() => navigate(`/users/owners/${owner.id}/edit`)} className="btn-primary">
             <Pencil className="h-4 w-4 mr-2" /> Edit Owner
           </Button>

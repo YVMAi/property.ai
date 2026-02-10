@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Users, Building2, Wrench, Search, ChevronDown } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,28 +48,16 @@ export default function UserSelector({
         {/* User Type */}
         <div className="flex-1 min-w-[160px]">
           <label className="text-xs font-medium text-muted-foreground mb-1.5 block">User Type</label>
-          <Select
-            value={selectedUserType || undefined}
+          <SearchableSelect
+            options={(Object.keys(userTypeConfig) as UserType[]).map((type) => ({
+              value: type,
+              label: userTypeConfig[type].label,
+            }))}
+            value={selectedUserType || ''}
             onValueChange={(val) => onSelectUserType(val as UserType)}
-          >
-            <SelectTrigger className="bg-background border-input h-9">
-              <SelectValue placeholder="Select type…" />
-            </SelectTrigger>
-            <SelectContent>
-              {(Object.keys(userTypeConfig) as UserType[]).map((type) => {
-                const cfg = userTypeConfig[type];
-                const Icon = cfg.icon;
-                return (
-                  <SelectItem key={type} value={type}>
-                    <span className="flex items-center gap-2">
-                      <Icon className="h-4 w-4 text-primary" />
-                      {cfg.label}
-                    </span>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+            placeholder="Select type…"
+            triggerClassName="bg-background border-input h-9"
+          />
         </div>
 
         {/* User Selector Popover */}

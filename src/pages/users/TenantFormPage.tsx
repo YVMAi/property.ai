@@ -5,9 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Check, ChevronLeft, ChevronRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import type { TenantFormData, TenantEntityType, BGVSchedule } from '@/types/tenant';
 import { emptyTenantForm } from '@/types/tenant';
@@ -156,13 +154,11 @@ export default function TenantFormPage() {
             <div className="space-y-4">
               <div>
                 <Label>Tenant Type</Label>
-                <Select value={form.entityType} onValueChange={(v) => update({ entityType: v as TenantEntityType })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="individual">Individual</SelectItem>
-                    <SelectItem value="company">Company</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={[{ value: 'individual', label: 'Individual' }, { value: 'company', label: 'Company' }]}
+                  value={form.entityType}
+                  onValueChange={(v) => update({ entityType: v as TenantEntityType })}
+                />
               </div>
 
               {form.entityType === 'individual' ? (
@@ -265,15 +261,16 @@ export default function TenantFormPage() {
                 <>
                   <div>
                     <Label>Schedule</Label>
-                    <Select value={form.bgvSchedule} onValueChange={(v) => update({ bgvSchedule: v as BGVSchedule })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="one-time">One-time</SelectItem>
-                        <SelectItem value="monthly">Monthly</SelectItem>
-                        <SelectItem value="quarterly">Quarterly</SelectItem>
-                        <SelectItem value="annually">Annually</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={[
+                        { value: 'one-time', label: 'One-time' },
+                        { value: 'monthly', label: 'Monthly' },
+                        { value: 'quarterly', label: 'Quarterly' },
+                        { value: 'annually', label: 'Annually' },
+                      ]}
+                      value={form.bgvSchedule}
+                      onValueChange={(v) => update({ bgvSchedule: v as BGVSchedule })}
+                    />
                   </div>
                   <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
                     <p>A background verification will be initiated after saving. Reports will appear in the tenant's dashboard.</p>

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Calendar } from '@/components/ui/calendar';
@@ -272,15 +273,14 @@ export default function PeopleSection() {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Role</Label>
-                    <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as 'admin' | 'user')}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="user">User</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={[
+                        { value: 'admin', label: 'Admin' },
+                        { value: 'user', label: 'User' },
+                      ]}
+                      value={inviteRole}
+                      onValueChange={(v) => setInviteRole(v as 'admin' | 'user')}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="invMsg">Message (optional)</Label>
@@ -416,28 +416,20 @@ export default function PeopleSection() {
                 onChange={(e) => setLogSearchQuery(e.target.value)}
               />
             </div>
-            <Select value={logActionFilter} onValueChange={(v) => setLogActionFilter(v as AuditAction | 'all')}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by action" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Actions</SelectItem>
-                {Object.entries(ACTION_TYPE_LABELS).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={logUserFilter} onValueChange={setLogUserFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Filter by user" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Users</SelectItem>
-                {uniqueLogUsers.map((name) => (
-                  <SelectItem key={name} value={name}>{name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={[{ value: 'all', label: 'All Actions' }, ...Object.entries(ACTION_TYPE_LABELS).map(([key, label]) => ({ value: key, label }))]}
+              value={logActionFilter}
+              onValueChange={(v) => setLogActionFilter(v as AuditAction | 'all')}
+              placeholder="Filter by action"
+              triggerClassName="w-full sm:w-48"
+            />
+            <SearchableSelect
+              options={[{ value: 'all', label: 'All Users' }, ...uniqueLogUsers.map((name) => ({ value: name, label: name }))]}
+              value={logUserFilter}
+              onValueChange={setLogUserFilter}
+              placeholder="Filter by user"
+              triggerClassName="w-full sm:w-48"
+            />
           </div>
 
           {/* Audit Filters Row 2: Date Range + Actions */}

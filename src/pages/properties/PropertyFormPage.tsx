@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
@@ -21,7 +22,7 @@ import {
   type UnitType,
 } from '@/types/property';
 import { AMENITIES_OPTIONS } from '@/data/propertiesMockData';
-import { US_STATES, US_CITIES, DEFAULT_CITIES } from '@/data/usLocations';
+import { US_STATE_OPTIONS, US_CITIES, DEFAULT_CITIES, getCityOptions } from '@/data/usLocations';
 
 const STEPS = ['Details', 'Owner & Agreements', 'Leases & Documents'];
 
@@ -280,14 +281,12 @@ export default function PropertyFormPage() {
               </div>
               <div>
                 <Label>Property Type *</Label>
-                <Select value={form.type} onValueChange={(v) => set('type', v as PropertyType)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(PROPERTY_TYPE_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={Object.entries(PROPERTY_TYPE_LABELS).map(([k, v]) => ({ value: k, label: v }))}
+                  value={form.type}
+                  onValueChange={(v) => set('type', v as PropertyType)}
+                  placeholder="Select type"
+                />
               </div>
             </div>
 
@@ -298,28 +297,25 @@ export default function PropertyFormPage() {
                 {errors.street && <p className="text-xs text-destructive mt-1">{errors.street}</p>}
               </div>
               <div>
-                <Label>City *</Label>
-                <Select value={form.address.city} onValueChange={(v) => setAddress('city', v)}>
-                  <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
-                  <SelectContent className="bg-popover z-50 max-h-60">
-                    {(form.address.state ? (US_CITIES[form.address.state] || DEFAULT_CITIES) : []).map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.city && <p className="text-xs text-destructive mt-1">{errors.city}</p>}
+                <Label>State *</Label>
+                <SearchableSelect
+                  options={US_STATE_OPTIONS}
+                  value={form.address.state}
+                  onValueChange={(v) => { setAddress('state', v); setAddress('city', ''); }}
+                  placeholder="Select state"
+                />
+                {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
               </div>
               <div>
-                <Label>State *</Label>
-                <Select value={form.address.state} onValueChange={(v) => { setAddress('state', v); setAddress('city', ''); }}>
-                  <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
-                  <SelectContent className="bg-popover z-50 max-h-60">
-                    {US_STATES.map((st) => (
-                      <SelectItem key={st} value={st}>{st}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.state && <p className="text-xs text-destructive mt-1">{errors.state}</p>}
+                <Label>City *</Label>
+                <SearchableSelect
+                  options={getCityOptions(form.address.state)}
+                  value={form.address.city}
+                  onValueChange={(v) => setAddress('city', v)}
+                  placeholder={form.address.state ? 'Select city' : 'Select state first'}
+                  disabled={!form.address.state}
+                />
+                {errors.city && <p className="text-xs text-destructive mt-1">{errors.city}</p>}
               </div>
               <div>
                 <Label>ZIP</Label>
@@ -623,16 +619,16 @@ export default function PropertyFormPage() {
           <CardContent className="space-y-4">
             <div>
               <Label>Link Owner *</Label>
-              <Select value={form.ownerId} onValueChange={(v) => set('ownerId', v)}>
-                <SelectTrigger><SelectValue placeholder="Select an owner" /></SelectTrigger>
-                <SelectContent>
-                  {activeOwners.filter((o) => o.status === 'active').map((o) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.ownerType === 'company' ? o.companyName : `${o.firstName} ${o.lastName}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={activeOwners.filter((o) => o.status === 'active').map((o) => ({
+                  value: o.id,
+                  label: o.ownerType === 'company' ? o.companyName : `${o.firstName} ${o.lastName}`,
+                }))}
+                value={form.ownerId}
+                onValueChange={(v) => set('ownerId', v)}
+                placeholder="Select an owner"
+              />
+              {errors.ownerId && <p className="text-xs text-destructive mt-1">{errors.ownerId}</p>}
             </div>
 
             {selectedOwner && selectedOwner.agreements.length > 0 && (
