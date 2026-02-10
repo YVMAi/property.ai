@@ -19,6 +19,7 @@ import {
 import { Upload, X, FileText, Search, ChevronDown, Building2, FileCheck } from 'lucide-react';
 import { MOCK_PROPERTIES } from '@/hooks/useOwners';
 import type { OwnerDocument, OwnerAgreement, AgreementMode } from '@/types/owner';
+import { emptyAgreement } from '@/types/owner';
 
 type DocEntry = Omit<OwnerDocument, 'id'> & { id?: string };
 type AgreementEntry = Omit<OwnerAgreement, 'id'> & { id?: string };
@@ -60,23 +61,23 @@ export default function PropertiesDocumentsStep({
     onAgreementModeChange(mode);
     if (mode === 'single') {
       const globalAgreement: AgreementEntry = {
+        ...emptyAgreement,
         fileName: agreements[0]?.fileName || '',
         fileUrl: agreements[0]?.fileUrl || '#',
         feePerUnit: agreements[0]?.feePerUnit || '',
         feePercentRent: agreements[0]?.feePercentRent || '',
-        createdAt: new Date().toISOString(),
       };
       onAgreementsChange([globalAgreement]);
     } else {
       const perPropertyAgreements: AgreementEntry[] = linkedPropertyIds.map((pid) => {
         const existing = agreements.find((a) => a.propertyId === pid);
         return {
+          ...emptyAgreement,
           propertyId: pid,
           fileName: existing?.fileName || '',
           fileUrl: existing?.fileUrl || '#',
           feePerUnit: existing?.feePerUnit || '',
           feePercentRent: existing?.feePercentRent || '',
-          createdAt: new Date().toISOString(),
         };
       });
       onAgreementsChange(perPropertyAgreements);
@@ -97,12 +98,8 @@ export default function PropertiesDocumentsStep({
       let newAgreements = [...agreements];
       if (!linkedPropertyIds.includes(id)) {
         newAgreements.push({
+          ...emptyAgreement,
           propertyId: id,
-          fileName: '',
-          fileUrl: '#',
-          feePerUnit: '',
-          feePercentRent: '',
-          createdAt: new Date().toISOString(),
         });
       } else {
         newAgreements = newAgreements.filter((a) => a.propertyId !== id);

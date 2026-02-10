@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MapPin, Edit, Building2, DollarSign, FileText, Users, ChevronDown, Wand2, Plus, Landmark, Check, Shield, X } from 'lucide-react';
+import { ArrowLeft, MapPin, Edit, Building2, DollarSign, FileText, Users, ChevronDown, Wand2, Plus, Landmark, Check, Shield, X, Calendar, Download, FileCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -138,17 +138,73 @@ export default function PropertyViewPage() {
         </div>
       )}
 
-      {/* Owner link */}
+      {/* Owner & Agreements */}
       <Card>
-        <CardContent className="p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">Owner: <strong>{ownerName}</strong></span>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">Owner: <strong>{ownerName}</strong></span>
+            </div>
+            {owner && (
+              <Button variant="link" size="sm" onClick={() => navigate(`/users/owners/${owner.id}`)}>
+                View Owner
+              </Button>
+            )}
           </div>
-          {owner && (
-            <Button variant="link" size="sm" onClick={() => navigate(`/users/owners/${owner.id}`)}>
-              View Owner
-            </Button>
+
+          {/* Linked Agreements */}
+          {owner && property.agreementIds.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-border/50">
+              <div className="flex items-center gap-2">
+                <FileCheck className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Linked Agreements ({property.agreementIds.length})</span>
+              </div>
+              {property.agreementIds.map((agId) => {
+                const ag = owner.agreements.find(a => a.id === agId);
+                if (!ag) return null;
+                const mgmtSummary = ag.managementFeeType === 'combination'
+                  ? `$${ag.managementFeeFixed}/unit + ${ag.managementFeePercent}%`
+                  : ag.managementFeeType === 'fixed_per_unit'
+                  ? `$${ag.managementFeeFixed || ag.feePerUnit}/unit`
+                  : `${ag.managementFeePercent || ag.feePercentRent}% rent`;
+                return (
+                  <div key={ag.id} className="p-3 rounded-lg border border-border bg-background space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{ag.name || ag.fileName}</span>
+                      {ag.fileUrl && ag.fileUrl !== '#' && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                          <a href={ag.fileUrl} target="_blank" rel="noopener noreferrer">
+                            <Download className="h-3.5 w-3.5" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {ag.startDate && ag.endDate && (
+                        <Badge variant="outline" className="text-xs gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {ag.startDate} → {ag.endDate}
+                        </Badge>
+                      )}
+                      <Badge className="text-xs bg-[hsl(210,50%,85%)] text-[hsl(210,50%,25%)] border-0">
+                        Mgmt: {mgmtSummary}
+                      </Badge>
+                      {ag.leaseFeeValue && (
+                        <Badge className="text-xs bg-[hsl(120,30%,85%)] text-[hsl(120,30%,25%)] border-0">
+                          Lease: {ag.leaseFeeType === 'fixed' ? `$${ag.leaseFeeValue}` : `${ag.leaseFeeValue}%`}
+                        </Badge>
+                      )}
+                      {ag.renewalFeeValue && (
+                        <Badge className="text-xs bg-[hsl(45,60%,85%)] text-[hsl(45,60%,25%)] border-0">
+                          Renewal: {ag.renewalFeeType === 'fixed' ? `$${ag.renewalFeeValue}` : `${ag.renewalFeeValue}%`}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </CardContent>
       </Card>

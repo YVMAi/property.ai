@@ -9,6 +9,8 @@ export type PayoutAccountType = 'checking' | 'savings';
 export type ManagementFeeType = 'percentage' | 'flat_monthly' | 'flat_per_property';
 export type ManagementFeeApplyTo = 'all' | 'specific';
 export type AgreementMode = 'single' | 'per_property';
+export type AgreementManagementFeeType = 'fixed_per_unit' | 'percent_rent' | 'percent_total_income' | 'combination';
+export type AgreementFeeType = 'fixed' | 'variable';
 export type PaymentHistoryStatus = 'paid' | 'pending';
 
 export interface OwnerEmail {
@@ -41,8 +43,18 @@ export interface OwnerAddress {
 export interface OwnerAgreement {
   id: string;
   propertyId?: string;
+  name: string;
   fileName: string;
   fileUrl: string;
+  startDate: string;
+  endDate: string;
+  managementFeeType: AgreementManagementFeeType;
+  managementFeeFixed: number | '';
+  managementFeePercent: number | '';
+  leaseFeeType: AgreementFeeType;
+  leaseFeeValue: number | '';
+  renewalFeeType: AgreementFeeType;
+  renewalFeeValue: number | '';
   feePerUnit: number | '';
   feePercentRent: number | '';
   createdAt: string;
@@ -97,8 +109,18 @@ export const emptyPaymentSetup: PaymentSetup = {
 };
 
 export const emptyAgreement: Omit<OwnerAgreement, 'id'> = {
+  name: '',
   fileName: '',
   fileUrl: '#',
+  startDate: '',
+  endDate: '',
+  managementFeeType: 'fixed_per_unit',
+  managementFeeFixed: '',
+  managementFeePercent: '',
+  leaseFeeType: 'fixed',
+  leaseFeeValue: '',
+  renewalFeeType: 'fixed',
+  renewalFeeValue: '',
   feePerUnit: '',
   feePercentRent: '',
   createdAt: new Date().toISOString(),
