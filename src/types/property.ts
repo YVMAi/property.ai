@@ -40,13 +40,26 @@ export interface PropertyAddress {
   zip: string;
 }
 
+export type UnitType = 'studio' | '1bhk' | '2bhk' | '3bhk' | '4bhk';
+
+export const UNIT_TYPE_LABELS: Record<UnitType, string> = {
+  studio: 'Studio',
+  '1bhk': '1 BHK',
+  '2bhk': '2 BHK',
+  '3bhk': '3 BHK',
+  '4bhk': '4 BHK',
+};
+
 export interface PropertyUnit {
   id: string;
   unitNumber: string;
   size: number;
   bedrooms: number;
   bathrooms: number;
-  isShared?: boolean; // for student housing beds
+  unitType?: UnitType; // for multi-family
+  isShared?: boolean; // for student housing
+  independentWashroom?: boolean; // for student housing
+  unitAmenities?: string[]; // for student housing
 }
 
 export interface PropertyDocument {
