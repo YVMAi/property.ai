@@ -9,9 +9,17 @@ const now = new Date().toISOString();
 const d = (daysAgo: number) => new Date(Date.now() - daysAgo * 86400000).toISOString();
 
 const initialRequests: ServiceRequest[] = [
-  { id: 'SR-001', propertyId: 'p1', propertyName: 'Sunrise Apartments', unitId: 'u1', unitNumber: '101', tenantId: 't1', tenantName: 'John Smith', description: 'Leaking faucet in kitchen', priority: 'medium', status: 'pending', attachments: [], notes: '', createdAt: d(2) },
-  { id: 'SR-002', propertyId: 'p2', propertyName: 'Oak View Homes', tenantId: 't2', tenantName: 'Sarah Johnson', description: 'Broken window latch – urgent security concern', priority: 'urgent', status: 'pending', attachments: ['photo1.jpg'], notes: '', createdAt: d(1) },
-  { id: 'SR-003', propertyId: 'p1', propertyName: 'Sunrise Apartments', unitId: 'u3', unitNumber: '205', tenantId: 't3', tenantName: 'Mike Davis', description: 'AC not cooling', priority: 'high', status: 'rejected', rejectionReason: 'Duplicate', rejectionNotes: 'Already submitted as SR-001', attachments: [], notes: '', createdAt: d(5) },
+  { id: 'SR-001', propertyId: 'p1', propertyName: 'Sunrise Apartments', unitId: 'u1', unitNumber: '101', tenantId: 't1', tenantName: 'John Smith', tenantEmail: 'john.smith@email.com', tenantPhone: '(555) 123-4567', description: 'Leaking faucet in kitchen sink. Water drips constantly even when handle is fully turned off. Started about 3 days ago and is getting worse. The cabinet below is starting to get damp.', category: 'Plumbing', priority: 'medium', status: 'pending', attachments: ['kitchen_leak_1.jpg', 'kitchen_leak_2.jpg'], notes: '', history: [
+    { id: 'rh1', requestId: 'SR-001', timestamp: d(2), userId: 't1', userName: 'John Smith', userRole: 'tenant', action: 'submitted', details: 'Service request submitted via tenant portal' },
+  ], createdAt: d(2) },
+  { id: 'SR-002', propertyId: 'p2', propertyName: 'Oak View Homes', tenantId: 't2', tenantName: 'Sarah Johnson', tenantEmail: 'sarah.j@email.com', tenantPhone: '(555) 987-6543', description: 'Broken window latch on bedroom window – urgent security concern. The latch snapped off and the window can be pushed open from outside. Ground floor unit.', category: 'Locks & Keys', priority: 'urgent', status: 'pending', attachments: ['window_latch.jpg'], notes: '', history: [
+    { id: 'rh2', requestId: 'SR-002', timestamp: d(1), userId: 't2', userName: 'Sarah Johnson', userRole: 'tenant', action: 'submitted', details: 'Service request submitted via tenant portal' },
+    { id: 'rh3', requestId: 'SR-002', timestamp: d(0.5), userId: 'admin', userName: 'Admin', userRole: 'pm', action: 'note_added', details: 'Tenant confirmed window is currently secured with tape as temporary fix' },
+  ], createdAt: d(1) },
+  { id: 'SR-003', propertyId: 'p1', propertyName: 'Sunrise Apartments', unitId: 'u3', unitNumber: '205', tenantId: 't3', tenantName: 'Mike Davis', tenantEmail: 'mike.d@email.com', tenantPhone: '(555) 456-7890', description: 'AC not cooling properly. Temperature stays at 78°F even when set to 68°F. Filter was replaced last month.', category: 'HVAC', priority: 'high', status: 'rejected', rejectionReason: 'Duplicate', rejectionNotes: 'Already submitted as SR-001', attachments: [], notes: '', history: [
+    { id: 'rh4', requestId: 'SR-003', timestamp: d(5), userId: 't3', userName: 'Mike Davis', userRole: 'tenant', action: 'submitted', details: 'Service request submitted via tenant portal' },
+    { id: 'rh5', requestId: 'SR-003', timestamp: d(4), userId: 'admin', userName: 'Admin', userRole: 'pm', action: 'status_changed', details: 'Status changed to Rejected', reason: 'Duplicate' },
+  ], createdAt: d(5) },
 ];
 
 const initialRFPs: RFP[] = [
@@ -78,7 +86,19 @@ export function useWorkOrders() {
   }, [serviceRequests]);
 
   const rejectRequest = useCallback((id: string, reason: string, notes: string) => {
-    setServiceRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'rejected' as ServiceRequestStatus, rejectionReason: reason, rejectionNotes: notes } : r));
+    setServiceRequests(prev => prev.map(r => {
+      if (r.id !== id) return r;
+      const entry: import('@/types/workOrder').RequestHistoryEntry = { id: crypto.randomUUID(), requestId: id, timestamp: new Date().toISOString(), userId: 'admin', userName: 'Admin', userRole: 'pm', action: 'status_changed', details: `Status changed to Rejected`, reason };
+      return { ...r, status: 'rejected' as ServiceRequestStatus, rejectionReason: reason, rejectionNotes: notes, history: [...r.history, entry] };
+    }));
+  }, []);
+
+  const addRequestNote = useCallback((id: string, note: string) => {
+    setServiceRequests(prev => prev.map(r => {
+      if (r.id !== id) return r;
+      const entry: import('@/types/workOrder').RequestHistoryEntry = { id: crypto.randomUUID(), requestId: id, timestamp: new Date().toISOString(), userId: 'admin', userName: 'Admin', userRole: 'pm', action: 'note_added', details: note };
+      return { ...r, notes: r.notes ? `${r.notes}\n${note}` : note, history: [...r.history, entry] };
+    }));
   }, []);
 
   // -- RFPs --
@@ -154,7 +174,7 @@ export function useWorkOrders() {
   const getRFPById = useCallback((id: string) => rfps.find(r => r.id === id), [rfps]);
 
   return {
-    serviceRequests, pendingRequests, rejectedRequests, createRequest, approveRequest, rejectRequest, getServiceRequestById,
+    serviceRequests, pendingRequests, rejectedRequests, createRequest, approveRequest, rejectRequest, addRequestNote, getServiceRequestById,
     rfps, openRFPs, sendRFPToVendors, selectRFPVendor, getRFPById,
     workOrders, createWorkOrder, updateWOStatus, acceptVendorWO, completeWO, approveOwnerWO, getWorkOrderById,
   };

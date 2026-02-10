@@ -47,6 +47,33 @@ export const WO_STATUS_COLORS: Record<WorkOrderStatus, string> = {
   cancelled: 'bg-muted text-muted-foreground',
 };
 
+export type RequestHistoryAction = 'submitted' | 'note_added' | 'status_changed' | 'communication_sent' | 'attachment_added';
+
+export interface RequestHistoryEntry {
+  id: string;
+  requestId: string;
+  timestamp: string;
+  userId: string;
+  userName: string;
+  userRole: 'pm' | 'tenant' | 'admin';
+  action: RequestHistoryAction;
+  details: string;
+  reason?: string;
+}
+
+export const RESOLUTION_TARGET_HOURS: Record<WOPriority, number> = {
+  emergency: 4,
+  urgent: 24,
+  high: 48,
+  medium: 72,
+  low: 168,
+};
+
+export const SR_CATEGORIES = [
+  'Plumbing', 'Electrical', 'HVAC', 'Appliance', 'Structural',
+  'Pest Control', 'Locks & Keys', 'Painting', 'Flooring', 'Other',
+];
+
 export interface ServiceRequest {
   id: string;
   propertyId: string;
@@ -55,13 +82,19 @@ export interface ServiceRequest {
   unitNumber?: string;
   tenantId: string;
   tenantName: string;
+  tenantEmail?: string;
+  tenantPhone?: string;
   description: string;
+  category?: string;
   priority: WOPriority;
   status: ServiceRequestStatus;
   attachments: string[];
   rejectionReason?: string;
   rejectionNotes?: string;
   notes: string;
+  history: RequestHistoryEntry[];
+  linkedRFPId?: string;
+  linkedWOId?: string;
   createdAt: string;
 }
 
