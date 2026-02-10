@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, type ReactNode } from 'react';
 import { useOwners } from '@/hooks/useOwners';
 import type { Owner, OwnerFormData, OwnerPayment } from '@/types/owner';
 
