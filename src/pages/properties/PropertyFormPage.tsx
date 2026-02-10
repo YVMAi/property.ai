@@ -1,9 +1,10 @@
 import { useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Upload, X, Image, Wand2, Tag, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Upload, X, Image, Wand2, Tag, Check, ChevronLeft, ChevronRight, FileCheck, Download, Calendar } from 'lucide-react';
 import BulkUnitSetupDialog, { type BulkUnit } from '@/components/properties/BulkUnitSetupDialog';
 import CreateGroupDialog from '@/components/properties/CreateGroupDialog';
 import BankAccountsSection from '@/components/properties/BankAccountsSection';
+import AddAgreementDialog from '@/components/properties/AddAgreementDialog';
 import { useBankAccountsContext } from '@/contexts/BankAccountsContext';
 import type { PropertyBankLink } from '@/types/bankAccount';
 import { Button } from '@/components/ui/button';
@@ -81,7 +82,7 @@ export default function PropertyFormPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { addProperty, updateProperty, getPropertyById } = usePropertiesContext();
-  const { activeOwners } = useOwnersContext();
+  const { activeOwners, updateOwner: updateOwnerCtx } = useOwnersContext();
   const { groups, getGroupsForProperty, setPropertyGroups, getGroupPropertyCount } = usePropertyGroupsContext();
   const { getLinksForProperty, setPropertyBankLinks } = useBankAccountsContext();
   const isEdit = Boolean(id);
@@ -96,6 +97,7 @@ export default function PropertyFormPage() {
     existing ? getLinksForProperty(existing.id) : []
   );
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
+  const [addAgreementOpen, setAddAgreementOpen] = useState(false);
   const [photoFiles, setPhotoFiles] = useState<{ name: string; url: string; tags: string[]; tagInput: string }[]>([]);
   const [activeTagDropdown, setActiveTagDropdown] = useState<number | null>(null);
 
@@ -766,6 +768,7 @@ export default function PropertyFormPage() {
 
       {/* Step 2: Owner & Agreements */}
       {step === 1 && (
+        <>
         <Card>
           <CardHeader><CardTitle className="text-lg">Owner & Agreements</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -777,38 +780,120 @@ export default function PropertyFormPage() {
                   label: o.ownerType === 'company' ? o.companyName : `${o.firstName} ${o.lastName}`,
                 }))}
                 value={form.ownerId}
-                onValueChange={(v) => set('ownerId', v)}
+                onValueChange={(v) => {
+                  set('ownerId', v);
+                  set('agreementIds', []);
+                }}
                 placeholder="Select an owner"
               />
               {errors.ownerId && <p className="text-xs text-destructive mt-1">{errors.ownerId}</p>}
             </div>
 
-
-            {selectedOwner && selectedOwner.agreements.length > 0 && (
-              <div>
-                <Label className="mb-2 block">Owner's Agreements</Label>
-                <div className="space-y-2">
-                  {selectedOwner.agreements.map((ag) => (
-                    <label key={ag.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 cursor-pointer">
-                      <Checkbox
-                        checked={form.agreementIds.includes(ag.id)}
-                        onCheckedChange={(checked) => {
-                          set(
-                            'agreementIds',
-                            checked
-                              ? [...form.agreementIds, ag.id]
-                              : form.agreementIds.filter((x) => x !== ag.id)
-                          );
-                        }}
-                      />
-                      <span className="text-sm">{ag.fileName}</span>
-                      <Badge variant="outline" className="text-xs ml-auto">
-                        {ag.feePerUnit ? `$${ag.feePerUnit}/unit` : ''} {ag.feePercentRent ? `${ag.feePercentRent}%` : ''}
-                      </Badge>
-                    </label>
-                  ))}
+            {selectedOwner && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2">
+                    <FileCheck className="h-4 w-4 text-primary" />
+                    Agreements
+                  </Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAddAgreementOpen(true)}
+                    className="gap-1 h-8 text-xs"
+                  >
+                    <Plus className="h-3 w-3" /> Add New Agreement
+                  </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Select or add an agreement defining management fees, lease/renewal charges, and terms for this property's owner.
+                </p>
+
+                {selectedOwner.agreements.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedOwner.agreements.map((ag) => {
+                      const isSelected = form.agreementIds.includes(ag.id);
+                      const mgmtSummary = ag.managementFeeType === 'combination'
+                        ? `$${ag.managementFeeFixed}/unit + ${ag.managementFeePercent}%`
+                        : ag.managementFeeType === 'fixed_per_unit'
+                        ? `$${ag.managementFeeFixed || ag.feePerUnit}/unit`
+                        : `${ag.managementFeePercent || ag.feePercentRent}% rent`;
+                      return (
+                        <div
+                          key={ag.id}
+                          className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                            isSelected
+                              ? 'border-primary bg-primary/5 shadow-sm'
+                              : 'border-border bg-background hover:border-primary/30'
+                          }`}
+                          onClick={() => {
+                            set(
+                              'agreementIds',
+                              isSelected
+                                ? form.agreementIds.filter((x) => x !== ag.id)
+                                : [...form.agreementIds, ag.id]
+                            );
+                          }}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={(checked) => {
+                                  set(
+                                    'agreementIds',
+                                    checked
+                                      ? [...form.agreementIds, ag.id]
+                                      : form.agreementIds.filter((x) => x !== ag.id)
+                                  );
+                                }}
+                              />
+                              <span className="text-sm font-medium">{ag.name || ag.fileName}</span>
+                            </div>
+                            {ag.fileUrl && ag.fileUrl !== '#' && (
+                              <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                                <a href={ag.fileUrl} target="_blank" rel="noopener noreferrer">
+                                  <Download className="h-3.5 w-3.5" />
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 ml-6">
+                            {ag.startDate && ag.endDate && (
+                              <Badge variant="outline" className="text-xs gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {ag.startDate} → {ag.endDate}
+                              </Badge>
+                            )}
+                            <Badge className="text-xs bg-[hsl(210,50%,85%)] text-[hsl(210,50%,25%)] border-0">
+                              Mgmt: {mgmtSummary}
+                            </Badge>
+                            {ag.leaseFeeValue && (
+                              <Badge className="text-xs bg-[hsl(120,30%,85%)] text-[hsl(120,30%,25%)] border-0">
+                                Lease: {ag.leaseFeeType === 'fixed' ? `$${ag.leaseFeeValue}` : `${ag.leaseFeeValue}%`}
+                              </Badge>
+                            )}
+                            {ag.renewalFeeValue && (
+                              <Badge className="text-xs bg-[hsl(45,60%,85%)] text-[hsl(45,60%,25%)] border-0">
+                                Renewal: {ag.renewalFeeType === 'fixed' ? `$${ag.renewalFeeValue}` : `${ag.renewalFeeValue}%`}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-lg bg-muted/30 text-center text-sm text-muted-foreground">
+                    No agreements found for this owner. Click "+ Add New Agreement" to create one.
+                  </div>
+                )}
               </div>
+            )}
+
+            {!selectedOwner && (
+              <p className="text-sm text-muted-foreground">Select an owner to view and link agreements.</p>
             )}
 
             <div className="p-4 rounded-lg bg-muted/30 text-sm text-muted-foreground">
@@ -817,6 +902,22 @@ export default function PropertyFormPage() {
             </div>
           </CardContent>
         </Card>
+
+        <AddAgreementDialog
+          open={addAgreementOpen}
+          onOpenChange={setAddAgreementOpen}
+          onSave={(agreement) => {
+            if (selectedOwner) {
+              const newId = Math.random().toString(36).substring(2, 11);
+              const newAg = { ...agreement, id: newId };
+              updateOwnerCtx(selectedOwner.id, {
+                agreements: [...selectedOwner.agreements.map(a => ({ ...a })), newAg as any],
+              });
+              set('agreementIds', [...form.agreementIds, newId]);
+            }
+          }}
+        />
+        </>
       )}
 
       <CreateGroupDialog
