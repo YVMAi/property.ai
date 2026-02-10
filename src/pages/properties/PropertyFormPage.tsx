@@ -61,7 +61,7 @@ export default function PropertyFormPage() {
   const existing = id ? getPropertyById(id) : undefined;
 
   const [step, setStep] = useState(0);
-  const [photoFiles, setPhotoFiles] = useState<{ name: string; url: string }[]>([]);
+  const [photoFiles, setPhotoFiles] = useState<{ name: string; url: string; tags: string[]; tagInput: string }[]>([]);
   const [docFiles, setDocFiles] = useState<{ name: string; size: number; type: string }[]>([]);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const docInputRef = useRef<HTMLInputElement>(null);
@@ -120,10 +120,29 @@ export default function PropertyFormPage() {
     Array.from(fileList).forEach((file) => {
       if (file.type.startsWith('image/')) {
         const url = URL.createObjectURL(file);
-        setPhotoFiles((prev) => [...prev, { name: file.name, url }]);
+        setPhotoFiles((prev) => [...prev, { name: file.name, url, tags: [], tagInput: '' }]);
         set('photos', [...form.photos, file.name]);
       }
     });
+  };
+
+  const addPhotoTag = (idx: number) => {
+    setPhotoFiles((prev) =>
+      prev.map((p, i) => {
+        if (i !== idx || !p.tagInput.trim()) return p;
+        return { ...p, tags: [...p.tags, p.tagInput.trim()], tagInput: '' };
+      })
+    );
+  };
+
+  const removePhotoTag = (photoIdx: number, tagIdx: number) => {
+    setPhotoFiles((prev) =>
+      prev.map((p, i) => (i === photoIdx ? { ...p, tags: p.tags.filter((_, ti) => ti !== tagIdx) } : p))
+    );
+  };
+
+  const updatePhotoTagInput = (idx: number, val: string) => {
+    setPhotoFiles((prev) => prev.map((p, i) => (i === idx ? { ...p, tagInput: val } : p)));
   };
 
   const removePhoto = (idx: number) => {
@@ -400,17 +419,43 @@ export default function PropertyFormPage() {
                 />
               </div>
               {photoFiles.length > 0 && (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
                   {photoFiles.map((p, i) => (
-                    <div key={i} className="relative group rounded-lg overflow-hidden aspect-video bg-muted">
-                      <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removePhoto(i)}
-                        className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+                    <div key={i} className="relative group rounded-lg overflow-hidden bg-muted border border-border">
+                      <div className="aspect-video relative">
+                        <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(i)}
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <div className="p-2 space-y-1.5">
+                        <div className="flex flex-wrap gap-1">
+                          {p.tags.map((tag, ti) => (
+                            <Badge key={ti} variant="secondary" className="text-xs gap-0.5 pr-1">
+                              {tag}
+                              <button type="button" onClick={() => removePhotoTag(i, ti)} className="ml-0.5 hover:text-destructive">
+                                <X className="h-2.5 w-2.5" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                        <div className="flex gap-1">
+                          <Input
+                            className="h-7 text-xs"
+                            placeholder="Add tag..."
+                            value={p.tagInput}
+                            onChange={(e) => updatePhotoTagInput(i, e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addPhotoTag(i); } }}
+                          />
+                          <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => addPhotoTag(i)}>
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
