@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, RefreshCw, Key, FileText, Bell } from 'lucide-react';
+import { ArrowLeft, Save, RefreshCw, Key, FileText, Bell, Building2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,10 +12,23 @@ import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from '@/hooks/use-toast';
 import { DEFAULT_LEASE_SETTINGS, type LeaseSettings } from '@/types/leaseSettings';
+import { usePropertiesContext } from '@/contexts/PropertiesContext';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 
 export default function LeasingSettings() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState<LeaseSettings>({ ...DEFAULT_LEASE_SETTINGS });
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>('global');
+  const { activeProperties } = usePropertiesContext();
+
+  const propertyOptions = [
+    { value: 'global', label: 'Global Defaults (All Properties)' },
+    ...activeProperties.map((p) => ({ value: p.id, label: `${p.name} — ${p.address.city}, ${p.address.state}` })),
+  ];
+
+  const selectedProperty = selectedPropertyId !== 'global'
+    ? activeProperties.find((p) => p.id === selectedPropertyId)
+    : null;
 
   const set = <K extends keyof LeaseSettings>(key: K, val: LeaseSettings[K]) =>
     setSettings((prev) => ({ ...prev, [key]: val }));
@@ -39,15 +52,36 @@ export default function LeasingSettings() {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-foreground">Leasing Settings</h1>
-          <p className="text-sm text-muted-foreground">Global defaults · Override per property</p>
+          <p className="text-sm text-muted-foreground">
+            {selectedProperty
+              ? `Settings for ${selectedProperty.name}`
+              : 'Global defaults · Override per property'}
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleApplyAll}>
-            <RefreshCw className="h-4 w-4" /> Apply to All Properties
-          </Button>
+          {selectedPropertyId === 'global' && (
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={handleApplyAll}>
+              <RefreshCw className="h-4 w-4" /> Apply to All Properties
+            </Button>
+          )}
           <Button size="sm" className="gap-1.5" onClick={handleSave}>
             <Save className="h-4 w-4" /> Save Settings
           </Button>
+        </div>
+      </div>
+
+      {/* Property Filter */}
+      <div className="max-w-3xl">
+        <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card">
+          <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Label className="text-sm font-medium shrink-0">Scope</Label>
+          <SearchableSelect
+            options={propertyOptions}
+            value={selectedPropertyId}
+            onValueChange={setSelectedPropertyId}
+            placeholder="Select property..."
+            triggerClassName="h-9"
+          />
         </div>
       </div>
 
