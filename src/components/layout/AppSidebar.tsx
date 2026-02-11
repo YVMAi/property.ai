@@ -251,7 +251,7 @@ export default function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
+    <Sidebar className="border-r-0 bg-sidebar" collapsible="icon" variant="floating">
       <SidebarHeader className="p-4 border-b border-sidebar-border">
         <div className="flex items-center justify-between">
           <div className={cn("flex items-center gap-3", collapsed && "justify-center w-full")}>
