@@ -34,9 +34,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className="min-h-screen flex w-full bg-muted/30 p-2 gap-2">
         <AppSidebar />
-        <SidebarInset className="flex-1 flex flex-col">
+        <SidebarInset className="flex-1 flex flex-col rounded-xl border border-border/50 bg-background shadow-soft overflow-hidden">
           <Header />
           <main className="flex-1 p-6 overflow-auto">
             {children}
