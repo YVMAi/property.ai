@@ -158,7 +158,7 @@ export default function VacantUnits() {
                     <TableCell className="text-right text-sm">${u.projectedRent.toLocaleString()}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate('/leases/create')}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate(`/leases/create?propertyId=${u.propertyId}&unitId=${u.unitId}`)}>
                           <Plus className="h-3 w-3" /> Lease
                         </Button>
                         <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate('/leases/listings')}>

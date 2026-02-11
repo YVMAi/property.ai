@@ -64,7 +64,7 @@ export default function LeasableItemsList({
     });
   }, [units, unitSearch, statusFilter, leases]);
 
-  const openLeaseModal = (label: string, unitId?: string) => {
+  const openLeaseModal = (label: string, unitId?: string, propertyId?: string) => {
     setSelectedUnit({ label, unitId });
     setLeaseModalOpen(true);
   };

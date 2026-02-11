@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
 import { PROPERTY_TYPE_LABELS } from '@/types/property';
 import LeaseCreationModal from '@/components/properties/LeaseCreationModal';
@@ -8,9 +8,20 @@ import type { LeaseFormData } from '@/types/lease';
 
 export default function CreateLease() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { activeProperties } = usePropertiesContext();
-  const [selectedPropertyId, setSelectedPropertyId] = useState('');
-  const [selectedUnitId, setSelectedUnitId] = useState('');
+
+  const initialPropertyId = searchParams.get('propertyId') || '';
+  const initialUnitIdParam = searchParams.get('unitId') || '';
+
+  // If unitId equals propertyId, it means "Entire Property"
+  const initialProperty = activeProperties.find((p) => p.id === initialPropertyId);
+  const initialUnitId = initialProperty && initialUnitIdParam === initialPropertyId && initialProperty.units.length === 0
+    ? '__entire__'
+    : initialUnitIdParam;
+
+  const [selectedPropertyId, setSelectedPropertyId] = useState(initialPropertyId);
+  const [selectedUnitId, setSelectedUnitId] = useState(initialUnitId);
 
   const propertyOptions = useMemo(
     () => activeProperties.map((p) => ({
