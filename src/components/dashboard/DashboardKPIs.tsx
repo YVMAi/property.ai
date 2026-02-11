@@ -6,7 +6,7 @@ import {
   Calendar, Home, BarChart3, PieChart as PieChartIcon, Activity,
   Plus, Pencil, Trash2, Copy, Settings2, RotateCcw,
 } from 'lucide-react';
-import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useDashboardKPIs } from '@/hooks/useDashboardKPIs';
 import KPIBuilderModal from './KPIBuilderModal';
 import { DashboardWidget } from '@/types/dashboard';
@@ -61,10 +61,13 @@ export default function DashboardKPIs() {
     toast({ title: 'Widget duplicated', description: `Copy of "${widget.title}" created.` });
   };
 
-  const handleAdd = () => {
+  const handleAdd = (defaultType?: 'chart' | 'kpi') => {
     setEditingWidget(null);
     setBuilderOpen(true);
+    setBuilderDefaultType(defaultType || null);
   };
+
+  const [builderDefaultType, setBuilderDefaultType] = useState<'chart' | 'kpi' | null>(null);
 
   const WidgetHoverMenu = ({ widget }: { widget: DashboardWidget }) => {
     if (!editMode) return null;
@@ -127,34 +130,37 @@ export default function DashboardKPIs() {
         </CardHeader>
         <CardContent className="pt-0">
           {widget.type === 'line' && (
-            <ResponsiveContainer width="100%" height={160}>
+            <ResponsiveContainer width="100%" height={180}>
               <LineChart data={widget.chartData}>
-                <XAxis dataKey="month" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                <XAxis dataKey="month" tick={{ fontSize: 10 }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} label={{ value: 'Month', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis tick={{ fontSize: 10 }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} label={{ value: 'Revenue ($)', angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip formatter={(v: number) => [`$${v.toLocaleString()}`, 'Revenue']} />
-                <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Line type="monotone" dataKey="revenue" name="Revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           )}
           {widget.type === 'pie' && (
-            <ResponsiveContainer width="100%" height={160}>
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
-                <Pie data={widget.chartData} cx="50%" cy="50%" innerRadius={45} outerRadius={65} paddingAngle={4} dataKey="value">
+                <Pie data={widget.chartData} cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={4} dataKey="value">
                   {widget.chartData?.map((entry: any, i: number) => (
                     <Cell key={i} fill={entry.fill} />
                   ))}
                 </Pie>
                 <Tooltip />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
           )}
           {widget.type === 'bar' && (
-            <ResponsiveContainer width="100%" height={160}>
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={widget.chartData}>
-                <XAxis dataKey="property" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <XAxis dataKey="property" tick={{ fontSize: 10 }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} label={{ value: 'Property', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis tick={{ fontSize: 10 }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} allowDecimals={false} label={{ value: 'Vacancies', angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip />
-                <Bar dataKey="vacant" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Bar dataKey="vacant" name="Vacant Units" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -195,7 +201,7 @@ export default function DashboardKPIs() {
               <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => { resetToDefaults(); toast({ title: 'Reset', description: 'Dashboard reset to defaults.' }); }}>
                 <RotateCcw className="h-3 w-3 mr-1" />Reset
               </Button>
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleAdd}>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => handleAdd()}>
                 <Plus className="h-3 w-3 mr-1" />Add Widget
               </Button>
             </>
@@ -218,7 +224,7 @@ export default function DashboardKPIs() {
         {editMode && (
           <Card
             className="border-dashed border-2 border-primary/20 shadow-none cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center justify-center min-h-[90px]"
-            onClick={handleAdd}
+            onClick={() => handleAdd('kpi')}
           >
             <CardContent className="p-3 flex flex-col items-center gap-1">
               <Plus className="h-5 w-5 text-primary/50" />
@@ -234,7 +240,7 @@ export default function DashboardKPIs() {
         {editMode && (
           <Card
             className="border-dashed border-2 border-primary/20 shadow-none cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all flex items-center justify-center min-h-[200px]"
-            onClick={handleAdd}
+            onClick={() => handleAdd('chart')}
           >
             <CardContent className="p-4 flex flex-col items-center gap-2">
               <Plus className="h-6 w-6 text-primary/50" />
@@ -250,6 +256,7 @@ export default function DashboardKPIs() {
         onOpenChange={setBuilderOpen}
         onSave={handleSave}
         editWidget={editingWidget}
+        defaultType={builderDefaultType}
       />
     </div>
   );

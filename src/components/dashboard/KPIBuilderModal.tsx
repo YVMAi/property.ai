@@ -38,9 +38,10 @@ interface KPIBuilderModalProps {
   onOpenChange: (open: boolean) => void;
   onSave: (widget: Omit<DashboardWidget, 'id' | 'order'>) => void;
   editWidget?: DashboardWidget | null;
+  defaultType?: 'chart' | 'kpi' | null;
 }
 
-export default function KPIBuilderModal({ open, onOpenChange, onSave, editWidget }: KPIBuilderModalProps) {
+export default function KPIBuilderModal({ open, onOpenChange, onSave, editWidget, defaultType }: KPIBuilderModalProps) {
   const [chartType, setChartType] = useState<ChartType>('number');
   const [metricId, setMetricId] = useState<MetricId>('total_properties');
   const [title, setTitle] = useState('');
@@ -66,7 +67,8 @@ export default function KPIBuilderModal({ open, onOpenChange, onSave, editWidget
       setPeriod(editWidget.period);
       setRefresh(editWidget.refresh);
     } else {
-      setChartType('number');
+      const initialType = defaultType === 'chart' ? 'line' : 'number';
+      setChartType(initialType as ChartType);
       setMetricId('total_properties');
       setTitle('');
       setIcon('Building2');
@@ -77,7 +79,7 @@ export default function KPIBuilderModal({ open, onOpenChange, onSave, editWidget
       setRefresh('realtime');
       setActiveTab('config');
     }
-  }, [editWidget, open]);
+  }, [editWidget, open, defaultType]);
 
   // Auto-fill title from metric
   useEffect(() => {
