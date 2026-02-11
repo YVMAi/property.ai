@@ -514,7 +514,7 @@ export default function WorkOrdersDashboard() {
 
       {/* ── SR → RFP Modal ── */}
       <Dialog open={srRfpOpen} onOpenChange={setSrRfpOpen}>
-        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create RFP from {srRfpId}</DialogTitle>
           </DialogHeader>
@@ -570,7 +570,7 @@ export default function WorkOrdersDashboard() {
 
       {/* ── SR → Direct WO Modal ── */}
       <Dialog open={srWoOpen} onOpenChange={setSrWoOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Direct Work Order from {srWoId}</DialogTitle>
           </DialogHeader>
