@@ -364,6 +364,7 @@ export default function PropertyViewPage() {
         </CardHeader>
         <CardContent>
           <LeasableItemsList
+            propertyId={property.id}
             propertyType={property.type}
             units={property.units}
             leases={property.leases}

@@ -162,7 +162,7 @@ export default function VacantUnits() {
                         <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate(`/leases/create?propertyId=${u.propertyId}&unitId=${u.unitId}`)}>
                           <Plus className="h-3 w-3" /> Lease
                         </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate('/leases/listings')}>
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => navigate(`/leases/post-listing?propertyId=${u.propertyId}&unitId=${u.unitId}`)}>
                           <ExternalLink className="h-3 w-3" /> List
                         </Button>
                       </div>

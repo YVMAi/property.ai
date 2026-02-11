@@ -9,9 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 
 type ListingStatus = 'active' | 'draft' | 'expired';
@@ -72,7 +70,7 @@ export default function Listings() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
+  // showCreate removed - now navigates to /leases/post-listing
 
   const filtered = useMemo(() => {
     let list = listings;
@@ -97,7 +95,7 @@ export default function Listings() {
           <div className="h-1 w-16 bg-secondary rounded-full mt-2" />
           <p className="text-sm text-muted-foreground mt-1">{listings.length} listings · {totalInquiries} inquiries</p>
         </div>
-        <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)}>
+        <Button size="sm" className="gap-1.5" onClick={() => navigate('/leases/post-listing')}>
           <Plus className="h-4 w-4" /> Post Listing
         </Button>
       </div>
@@ -220,36 +218,6 @@ export default function Listings() {
         </DialogContent>
       </Dialog>
 
-      {/* Create Listing Placeholder */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Post Listing to Zillow</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Zillow Rentals Feed integration will auto-fill property details, photos, and rent from your property data.
-            </p>
-            <div>
-              <Label>Select Unit</Label>
-              <Select><SelectTrigger><SelectValue placeholder="Choose a vacant unit..." /></SelectTrigger>
-                <SelectContent><SelectItem value="placeholder">Configure in Leasing Settings</SelectItem></SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Listing Description</Label>
-              <Textarea placeholder="Auto-generated from property details..." className="min-h-[80px]" />
-            </div>
-            <p className="text-xs text-muted-foreground">Configure Zillow API credentials in Leasing Settings → Integrations</p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
-            <Button onClick={() => { toast({ title: 'Listing created as draft' }); setShowCreate(false); }}>
-              Save as Draft
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

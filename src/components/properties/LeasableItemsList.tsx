@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, Search, Home, BedDouble, Building2 } from 'lucide-react';
+import { Plus, FileText, Search, Home, BedDouble, Building2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import type { LeaseFormData, ExtendedLease } from '@/types/lease';
 import { LEASE_STATUS_LABELS, LEASE_STATUS_COLORS } from '@/types/lease';
 
 interface LeasableItemsListProps {
+  propertyId?: string;
   propertyType: PropertyType;
   units: PropertyUnit[];
   leases: PropertyLease[];
@@ -39,6 +40,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function LeasableItemsList({
+  propertyId,
   propertyType,
   units,
   leases,
@@ -46,6 +48,7 @@ export default function LeasableItemsList({
   onCreateLease,
   showExistingLeases = false,
 }: LeasableItemsListProps) {
+  const navigate = useNavigate();
   const [leaseModalOpen, setLeaseModalOpen] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState<{ label: string; unitId?: string } | null>(null);
   const [unitSearch, setUnitSearch] = useState('');
@@ -242,17 +245,29 @@ export default function LeasableItemsList({
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1 h-7 text-xs"
-                        onClick={() => openLeaseModal(
-                          isStudent ? `Bed ${u.unitNumber}` : `Unit ${u.unitNumber}`,
-                          u.id
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 h-7 text-xs"
+                          onClick={() => openLeaseModal(
+                            isStudent ? `Bed ${u.unitNumber}` : `Unit ${u.unitNumber}`,
+                            u.id
+                          )}
+                        >
+                          <Plus className="h-3 w-3" /> Lease
+                        </Button>
+                        {status === 'vacant' && propertyId && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 h-7 text-xs"
+                            onClick={() => navigate(`/leases/post-listing?propertyId=${propertyId}&unitId=${u.id}`)}
+                          >
+                            <ExternalLink className="h-3 w-3" /> List
+                          </Button>
                         )}
-                      >
-                        <Plus className="h-3 w-3" /> Lease
-                      </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
