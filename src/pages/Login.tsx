@@ -128,7 +128,7 @@ export default function Login() {
           {/* Headline */}
           <div className="max-w-md">
             <h1 className="text-4xl font-bold leading-tight mb-4">
-              The future of <span className="text-[hsl(120,30%,77%)]">intelligent property</span> management.
+              The future of intelligent<span className="text-[hsl(120,30%,77%)]"> property management.</span>
             </h1>
             <p className="text-[hsl(220,10%,65%)] text-base leading-relaxed mb-10">
               Automate your portfolio with AI-driven insights, tenant matching, and predictive maintenance.
