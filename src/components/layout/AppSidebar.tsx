@@ -63,7 +63,6 @@ const menuItems: MenuItem[] = [
   { title: 'Dashboard', url: '/dashboard', icon: Home },
   { title: 'Reports', url: '/reports', icon: BarChart3 },
   { title: 'Accounting', url: '/accounting', icon: Calculator },
-  { title: 'Tasks', url: '/tasks', icon: ClipboardList },
   { title: 'Work Orders', url: '/work-orders', icon: Wrench },
   {
     title: 'Leases',
