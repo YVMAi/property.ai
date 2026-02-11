@@ -22,7 +22,9 @@ import {
   CreditCard,
   Plug,
   HelpCircle,
+  Plus,
 } from 'lucide-react';
+import CreateActionsModal from './CreateActionsModal';
 import {
   Sidebar,
   SidebarContent,
@@ -118,6 +120,7 @@ export default function AppSidebar() {
   const { user, logout } = useAuth();
   const isOnSettings = location.pathname === '/settings';
   const [searchParams, setSearchParams] = useSearchParams();
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const activeSettingsTab = (searchParams.get('tab') as SettingsTab) || 'profile';
   const setActiveSettingsTab = (tab: SettingsTab) => {
     setSearchParams({ tab }, { replace: true });
@@ -373,6 +376,23 @@ export default function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {filteredMenuItems.map((item) => renderMenuItem(item))}
+
+                {/* Create Button */}
+                {!isOnSettings && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      className={cn(
+                        'w-full mt-2 bg-[hsl(210,60%,85%)] text-[hsl(210,50%,25%)] font-medium hover:bg-[hsl(210,60%,78%)] hover:scale-[1.02] transition-all duration-200',
+                        collapsed && 'justify-center px-2'
+                      )}
+                      onClick={() => setCreateModalOpen(true)}
+                      tooltip={collapsed ? 'Create' : undefined}
+                    >
+                      <Plus className="h-5 w-5 shrink-0" />
+                      {!collapsed && <span>Create</span>}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -431,6 +451,8 @@ export default function AppSidebar() {
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarFooter>
+
+      <CreateActionsModal open={createModalOpen} onOpenChange={setCreateModalOpen} />
     </Sidebar>
   );
 }
