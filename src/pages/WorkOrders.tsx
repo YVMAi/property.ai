@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Download, Eye, FileText } from 'lucide-react';
+import { Plus, Search, Download, Eye, FileText, X, UserPlus } from 'lucide-react';
 import { useWorkOrdersContext } from '@/contexts/WorkOrdersContext';
+import { useVendorsContext } from '@/contexts/VendorsContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -11,6 +12,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import {
   WO_PRIORITY_LABELS,
@@ -111,7 +113,9 @@ export default function WorkOrdersDashboard() {
     serviceRequests, pendingRequests, rejectedRequests,
     rfps, workOrders,
     approveRequest, rejectRequest, createWorkOrder, createRequest,
+    approveRequestToRFP, approveRequestToWO,
   } = useWorkOrdersContext();
+  const { activeVendors } = useVendorsContext();
 
   const [search, setSearch] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('all');
@@ -123,10 +127,25 @@ export default function WorkOrdersDashboard() {
   const [rejectReason, setRejectReason] = useState('');
   const [rejectNotes, setRejectNotes] = useState('');
 
-  // Create WO dialog
+  // Create WO dialog (top-level)
   const [createWOOpen, setCreateWOOpen] = useState(false);
-  // Create RFP dialog
+  // Create RFP dialog (top-level)
   const [createRFPOpen, setCreateRFPOpen] = useState(false);
+
+  // SR → RFP modal
+  const [srRfpOpen, setSrRfpOpen] = useState(false);
+  const [srRfpId, setSrRfpId] = useState('');
+  const [srRfpVendors, setSrRfpVendors] = useState<string[]>([]);
+  const [srRfpDeadline, setSrRfpDeadline] = useState('');
+  const [srRfpMessage, setSrRfpMessage] = useState('');
+  const [srRfpVendorSearch, setSrRfpVendorSearch] = useState('');
+
+  // SR → Direct WO modal
+  const [srWoOpen, setSrWoOpen] = useState(false);
+  const [srWoId, setSrWoId] = useState('');
+  const [srWoVendor, setSrWoVendor] = useState('');
+  const [srWoCost, setSrWoCost] = useState('');
+  const [srWoDueDate, setSrWoDueDate] = useState('');
 
   const [woForm, setWoForm] = useState<WorkOrderFormData>({
     propertyId: '', description: '', priority: 'medium', estimatedCost: '', dueDate: '', attachments: [],
@@ -159,6 +178,9 @@ export default function WorkOrdersDashboard() {
     return true;
   }), [rejectedRequests, search, priorityFilter]);
 
+  const srForRfp = serviceRequests.find(r => r.id === srRfpId);
+  const srForWo = serviceRequests.find(r => r.id === srWoId);
+
   /* ── Handlers ── */
   const handleReject = () => {
     if (!rejectReason) return;
@@ -169,9 +191,43 @@ export default function WorkOrdersDashboard() {
     toast({ title: 'Request Rejected' });
   };
 
-  const handleApprove = (id: string, direct: boolean) => {
-    approveRequest(id, direct);
-    toast({ title: direct ? 'Work Order Created' : 'RFP Created' });
+  const handleOpenSrRfp = (id: string) => {
+    setSrRfpId(id);
+    setSrRfpVendors([]);
+    setSrRfpDeadline('');
+    setSrRfpMessage('');
+    setSrRfpVendorSearch('');
+    setSrRfpOpen(true);
+  };
+
+  const handleOpenSrWo = (id: string) => {
+    setSrWoId(id);
+    setSrWoVendor('');
+    setSrWoCost('');
+    setSrWoDueDate('');
+    setSrWoOpen(true);
+  };
+
+  const handleSendRfp = () => {
+    if (srRfpVendors.length === 0) {
+      toast({ title: 'No vendors selected', description: 'Select at least one vendor to send the RFP.', variant: 'destructive' });
+      return;
+    }
+    const vendors = srRfpVendors.map(vid => {
+      const v = activeVendors.find(av => av.id === vid);
+      return { vendorId: vid, vendorName: v ? (v.companyName || `${v.firstName} ${v.lastName}`) : vid };
+    });
+    approveRequestToRFP(srRfpId, vendors, srRfpDeadline, srRfpMessage);
+    setSrRfpOpen(false);
+    toast({ title: 'RFP Created & Sent', description: `RFP sent to ${vendors.length} vendor(s).` });
+  };
+
+  const handleCreateDirectWO = () => {
+    const vendor = activeVendors.find(v => v.id === srWoVendor);
+    const vendorName = vendor ? (vendor.companyName || `${vendor.firstName} ${vendor.lastName}`) : undefined;
+    approveRequestToWO(srWoId, srWoVendor || undefined, vendorName, srWoCost ? Number(srWoCost) : undefined, srWoDueDate || undefined);
+    setSrWoOpen(false);
+    toast({ title: 'Work Order Created', description: srWoVendor ? 'WO sent to vendor for acceptance.' : 'Work order created (unassigned).' });
   };
 
   const handleCreateWO = () => {
@@ -215,6 +271,15 @@ export default function WorkOrdersDashboard() {
     a.href = url; a.download = 'work_orders.csv'; a.click();
     URL.revokeObjectURL(url);
   };
+
+  const toggleVendor = (vid: string) => {
+    setSrRfpVendors(prev => prev.includes(vid) ? prev.filter(v => v !== vid) : [...prev, vid]);
+  };
+
+  const filteredVendorList = activeVendors.filter(v => {
+    const name = v.companyName || `${v.firstName} ${v.lastName}`;
+    return name.toLowerCase().includes(srRfpVendorSearch.toLowerCase());
+  });
 
   const createButtons = (
     <>
@@ -260,12 +325,12 @@ export default function WorkOrdersDashboard() {
                       <TableRow key={wo.id} className="bg-card">
                         <TableCell className="font-medium">{wo.id}</TableCell>
                         <TableCell>{wo.propertyName}{wo.unitNumber ? ` #${wo.unitNumber}` : ''}</TableCell>
-                        <TableCell className="max-w-[200px] truncate text-muted-foreground">{wo.description}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{wo.description}</TableCell>
                         <TableCell><PriorityBadge p={wo.priority} /></TableCell>
                         <TableCell><StatusBadge s={wo.status} /></TableCell>
-                        <TableCell className="text-muted-foreground">{wo.vendorName || '—'}</TableCell>
+                        <TableCell>{wo.vendorName || '—'}</TableCell>
                         <TableCell className="text-right">${wo.estimatedCost.toLocaleString()}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{wo.dueDate ? new Date(wo.dueDate).toLocaleDateString() : '—'}</TableCell>
+                        <TableCell className="text-sm">{wo.dueDate ? new Date(wo.dueDate).toLocaleDateString() : '—'}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" className="h-8 w-8" title="View" onClick={() => navigate(`/work-orders/${wo.id}`)}><Eye className="h-4 w-4 text-muted-foreground" /></Button>
                         </TableCell>
@@ -293,12 +358,12 @@ export default function WorkOrdersDashboard() {
                       <TableRow key={wo.id} className="bg-card">
                         <TableCell className="font-medium">{wo.id}</TableCell>
                         <TableCell>{wo.propertyName}{wo.unitNumber ? ` #${wo.unitNumber}` : ''}</TableCell>
-                        <TableCell className="max-w-[200px] truncate text-muted-foreground">{wo.description}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{wo.description}</TableCell>
                         <TableCell><PriorityBadge p={wo.priority} /></TableCell>
                         <TableCell><StatusBadge s={wo.status} /></TableCell>
-                        <TableCell className="text-muted-foreground">{wo.vendorName || '—'}</TableCell>
+                        <TableCell>{wo.vendorName || '—'}</TableCell>
                         <TableCell className="text-right">${wo.estimatedCost.toLocaleString()}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{wo.dueDate ? new Date(wo.dueDate).toLocaleDateString() : '—'}</TableCell>
+                        <TableCell className="text-sm">{wo.dueDate ? new Date(wo.dueDate).toLocaleDateString() : '—'}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" className="h-8 w-8" title="View" onClick={() => navigate(`/work-orders/${wo.id}`)}><Eye className="h-4 w-4 text-muted-foreground" /></Button>
                         </TableCell>
@@ -330,11 +395,29 @@ export default function WorkOrdersDashboard() {
                         <TableCell className="max-w-[200px] truncate">{req.description}</TableCell>
                         <TableCell><PriorityBadge p={req.priority} /></TableCell>
                         <TableCell className="text-sm">{new Date(req.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleApprove(req.id, false)}>→ RFP</Button>
-                            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => handleApprove(req.id, true)}>→ WO</Button>
-                            <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive-foreground" onClick={() => { setRejectingId(req.id); setRejectDialogOpen(true); }}>Reject</Button>
+                        <TableCell className="text-right" onClick={e => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button
+                              size="sm"
+                              className="h-7 px-2.5 text-xs rounded-lg bg-secondary text-secondary-foreground hover:opacity-90 hover:scale-[1.05] transition-all"
+                              onClick={() => handleOpenSrRfp(req.id)}
+                            >
+                              → RFP
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-7 px-2.5 text-xs rounded-lg bg-primary text-primary-foreground hover:opacity-90 hover:scale-[1.05] transition-all"
+                              onClick={() => handleOpenSrWo(req.id)}
+                            >
+                              → WO
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-7 px-2.5 text-xs rounded-lg bg-destructive text-destructive-foreground hover:opacity-90 hover:scale-[1.05] transition-all"
+                              onClick={() => { setRejectingId(req.id); setRejectDialogOpen(true); }}
+                            >
+                              Reject
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -358,15 +441,15 @@ export default function WorkOrdersDashboard() {
                   </TableRow></TableHeader>
                   <TableBody>
                     {filteredRFPs.map(rfp => (
-                      <TableRow key={rfp.id} className="bg-card">
+                      <TableRow key={rfp.id} className="bg-card cursor-pointer" onClick={() => navigate(`/work-orders/rfp/${rfp.id}`)}>
                         <TableCell className="font-medium">{rfp.id}</TableCell>
                         <TableCell>{rfp.propertyName}{rfp.unitNumber ? ` #${rfp.unitNumber}` : ''}</TableCell>
-                        <TableCell className="max-w-[200px] truncate text-muted-foreground">{rfp.description}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{rfp.description}</TableCell>
                         <TableCell><PriorityBadge p={rfp.priority} /></TableCell>
                         <TableCell><Badge className="bg-secondary text-secondary-foreground border-0">{RFP_STATUS_LABELS[rfp.status]}</Badge></TableCell>
                         <TableCell className="text-center"><Badge variant="outline" className="bg-background">{rfp.vendorQuotes.length}</Badge></TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{new Date(rfp.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-sm">{new Date(rfp.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right" onClick={e => e.stopPropagation()}>
                           <Button variant="ghost" size="icon" className="h-8 w-8" title="View" onClick={() => navigate(`/work-orders/rfp/${rfp.id}`)}><Eye className="h-4 w-4 text-muted-foreground" /></Button>
                         </TableCell>
                       </TableRow>
@@ -407,7 +490,7 @@ export default function WorkOrdersDashboard() {
         </TabsContent>
       </Tabs>
 
-      {/* Reject Dialog */}
+      {/* ── Reject Dialog ── */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Reject Service Request</DialogTitle></DialogHeader>
@@ -417,10 +500,11 @@ export default function WorkOrdersDashboard() {
               <Select value={rejectReason} onValueChange={setRejectReason}>
                 <SelectTrigger><SelectValue placeholder="Select reason" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Not Maintenance Issue">Not Maintenance Issue</SelectItem>
                   <SelectItem value="Duplicate">Duplicate</SelectItem>
+                  <SelectItem value="Tenant Responsibility">Tenant Responsibility</SelectItem>
                   <SelectItem value="Not covered">Not Covered Under Lease</SelectItem>
                   <SelectItem value="Insufficient info">Insufficient Information</SelectItem>
-                  <SelectItem value="Tenant responsibility">Tenant Responsibility</SelectItem>
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
@@ -437,7 +521,162 @@ export default function WorkOrdersDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Create WO Dialog */}
+      {/* ── SR → RFP Modal ── */}
+      <Dialog open={srRfpOpen} onOpenChange={setSrRfpOpen}>
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create RFP from {srRfpId}</DialogTitle>
+          </DialogHeader>
+          {srForRfp && (
+            <div className="space-y-4">
+              {/* Pre-filled info */}
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1 text-sm">
+                <p><span className="text-muted-foreground">Property:</span> <span className="font-medium">{srForRfp.propertyName}{srForRfp.unitNumber ? ` #${srForRfp.unitNumber}` : ''}</span></p>
+                <p><span className="text-muted-foreground">Priority:</span> <Badge className={PRIORITY_BADGE[srForRfp.priority] + ' ml-1'}>{WO_PRIORITY_LABELS[srForRfp.priority]}</Badge></p>
+                <p><span className="text-muted-foreground">Description:</span> {srForRfp.description.slice(0, 120)}{srForRfp.description.length > 120 ? '…' : ''}</p>
+                {srForRfp.attachments.length > 0 && (
+                  <p><span className="text-muted-foreground">Attachments:</span> {srForRfp.attachments.length} file(s) will be linked</p>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Vendor Selection */}
+              <div>
+                <Label className="mb-2 block">Select Vendors</Label>
+                <div className="relative mb-2">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search vendors…"
+                    value={srRfpVendorSearch}
+                    onChange={e => setSrRfpVendorSearch(e.target.value)}
+                    className="pl-8 h-9 text-sm"
+                  />
+                </div>
+                {/* Selected badges */}
+                {srRfpVendors.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {srRfpVendors.map(vid => {
+                      const v = activeVendors.find(av => av.id === vid);
+                      const name = v ? (v.companyName || `${v.firstName} ${v.lastName}`) : vid;
+                      return (
+                        <Badge key={vid} variant="outline" className="bg-secondary/30 text-secondary-foreground gap-1 pr-1">
+                          {name}
+                          <button onClick={() => toggleVendor(vid)} className="ml-1 hover:bg-secondary/50 rounded-full p-0.5"><X className="h-3 w-3" /></button>
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* Vendor list */}
+                <div className="border rounded-lg max-h-40 overflow-y-auto">
+                  {filteredVendorList.length === 0 ? (
+                    <p className="text-sm text-muted-foreground p-3 text-center">No vendors found</p>
+                  ) : (
+                    filteredVendorList.map(v => {
+                      const name = v.companyName || `${v.firstName} ${v.lastName}`;
+                      const selected = srRfpVendors.includes(v.id);
+                      return (
+                        <div
+                          key={v.id}
+                          className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer hover:bg-muted/50 transition-colors ${selected ? 'bg-secondary/20' : ''}`}
+                          onClick={() => toggleVendor(v.id)}
+                        >
+                          <div>
+                            <p className="font-medium">{name}</p>
+                            <p className="text-xs text-muted-foreground">{v.categories.join(', ')}</p>
+                          </div>
+                          {selected && <Badge className="bg-secondary text-secondary-foreground border-0 text-xs">Selected</Badge>}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                <Button variant="outline" size="sm" className="mt-2 text-xs" onClick={() => navigate('/users/vendors/new')}>
+                  <UserPlus className="h-3.5 w-3.5 mr-1" /> Add New Vendor
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Deadline</Label>
+                  <Input type="date" value={srRfpDeadline} onChange={e => setSrRfpDeadline(e.target.value)} />
+                </div>
+              </div>
+
+              <div>
+                <Label>Message to Vendors (optional)</Label>
+                <Textarea value={srRfpMessage} onChange={e => setSrRfpMessage(e.target.value)} placeholder="Add a custom note for vendors…" rows={2} />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSrRfpOpen(false)}>Cancel</Button>
+            <Button className="bg-secondary text-secondary-foreground hover:opacity-90" onClick={handleSendRfp} disabled={srRfpVendors.length === 0}>
+              Send RFQ ({srRfpVendors.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── SR → Direct WO Modal ── */}
+      <Dialog open={srWoOpen} onOpenChange={setSrWoOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Create Direct Work Order from {srWoId}</DialogTitle>
+          </DialogHeader>
+          {srForWo && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-muted/50 space-y-1 text-sm">
+                <p><span className="text-muted-foreground">Property:</span> <span className="font-medium">{srForWo.propertyName}{srForWo.unitNumber ? ` #${srForWo.unitNumber}` : ''}</span></p>
+                <p><span className="text-muted-foreground">Priority:</span> <Badge className={PRIORITY_BADGE[srForWo.priority] + ' ml-1'}>{WO_PRIORITY_LABELS[srForWo.priority]}</Badge></p>
+                <p><span className="text-muted-foreground">Description:</span> {srForWo.description.slice(0, 120)}{srForWo.description.length > 120 ? '…' : ''}</p>
+                {srForWo.attachments.length > 0 && (
+                  <p><span className="text-muted-foreground">Attachments:</span> {srForWo.attachments.length} file(s) will be linked</p>
+                )}
+              </div>
+
+              <Separator />
+
+              <div>
+                <Label>Assign Vendor</Label>
+                <Select value={srWoVendor} onValueChange={setSrWoVendor}>
+                  <SelectTrigger><SelectValue placeholder="Select vendor (optional)" /></SelectTrigger>
+                  <SelectContent>
+                    {activeVendors.map(v => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.companyName || `${v.firstName} ${v.lastName}`} — {v.categories.join(', ')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" className="mt-2 text-xs" onClick={() => navigate('/users/vendors/new')}>
+                  <UserPlus className="h-3.5 w-3.5 mr-1" /> Add New Vendor
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Estimated Cost ($)</Label>
+                  <Input type="number" value={srWoCost} onChange={e => setSrWoCost(e.target.value)} placeholder="0" />
+                </div>
+                <div>
+                  <Label>Due Date</Label>
+                  <Input type="date" value={srWoDueDate} onChange={e => setSrWoDueDate(e.target.value)} />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSrWoOpen(false)}>Cancel</Button>
+            <Button className="bg-primary text-primary-foreground hover:opacity-90" onClick={handleCreateDirectWO}>
+              Create & Send WO
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Create WO Dialog (top-level) ── */}
       <Dialog open={createWOOpen} onOpenChange={setCreateWOOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Create Work Order</DialogTitle></DialogHeader>
@@ -477,7 +716,7 @@ export default function WorkOrdersDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Create RFP Dialog */}
+      {/* ── Create RFP Dialog (top-level) ── */}
       <Dialog open={createRFPOpen} onOpenChange={setCreateRFPOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Create RFP</DialogTitle></DialogHeader>
