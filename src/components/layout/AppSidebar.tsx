@@ -294,7 +294,7 @@ export default function AppSidebar() {
       </SidebarHeader>
 
       {!collapsed && (
-        <div className="px-4 py-3">
+        <div className="px-4 py-3 space-y-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -304,11 +304,20 @@ export default function AppSidebar() {
               onChange={(e) => setSidebarSearch(e.target.value)}
             />
           </div>
+          {!isOnSettings && (
+            <Button
+              className="w-full bg-[hsl(210,60%,85%)] text-[hsl(210,50%,25%)] font-medium hover:bg-[hsl(210,60%,78%)] hover:scale-[1.02] transition-all duration-200 h-9"
+              onClick={() => setCreateModalOpen(true)}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Create
+            </Button>
+          )}
         </div>
       )}
 
       {collapsed && (
-        <div className="flex justify-center py-3">
+        <div className="flex flex-col items-center gap-2 py-3">
           <Button
             variant="ghost"
             size="icon"
@@ -317,6 +326,16 @@ export default function AppSidebar() {
           >
             <Search className="h-5 w-5" />
           </Button>
+          {!isOnSettings && (
+            <Button
+              size="icon"
+              className="h-9 w-9 bg-[hsl(210,60%,85%)] text-[hsl(210,50%,25%)] hover:bg-[hsl(210,60%,78%)]"
+              onClick={() => setCreateModalOpen(true)}
+              aria-label="Create"
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+          )}
         </div>
       )}
 
@@ -376,23 +395,6 @@ export default function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {filteredMenuItems.map((item) => renderMenuItem(item))}
-
-                {/* Create Button */}
-                {!isOnSettings && (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      className={cn(
-                        'w-full mt-2 bg-[hsl(210,60%,85%)] text-[hsl(210,50%,25%)] font-medium hover:bg-[hsl(210,60%,78%)] hover:scale-[1.02] transition-all duration-200',
-                        collapsed && 'justify-center px-2'
-                      )}
-                      onClick={() => setCreateModalOpen(true)}
-                      tooltip={collapsed ? 'Create' : undefined}
-                    >
-                      <Plus className="h-5 w-5 shrink-0" />
-                      {!collapsed && <span>Create</span>}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
