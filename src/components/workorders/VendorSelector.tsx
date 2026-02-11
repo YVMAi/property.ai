@@ -278,11 +278,11 @@ export function VendorSelector({
 
       {/* AI Suggestions */}
       {suggestions.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2 p-3 rounded-lg bg-warning/15 border border-warning/30">
           <div className="flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-secondary-foreground" />
-            <span className="text-sm font-medium text-secondary-foreground">Best Matches</span>
-            <div className="flex-1 h-px bg-secondary/50" />
+            <Sparkles className="h-4 w-4 text-warning-foreground" />
+            <span className="text-sm font-semibold text-warning-foreground">Best Matches</span>
+            <div className="flex-1 h-px bg-warning/40" />
           </div>
           <div className={`flex gap-2 ${isMobile ? 'overflow-x-auto pb-1' : 'flex-wrap'}`}>
             {suggestions.map(({ vendor: v, reasons }) => {
@@ -294,22 +294,22 @@ export function VendorSelector({
                   onClick={() => toggleSelection(v.id)}
                   className={`flex-shrink-0 p-2.5 rounded-lg border text-left transition-all hover:scale-[1.02] ${
                     isSelected
-                      ? 'border-secondary bg-secondary/20 ring-1 ring-secondary'
-                      : 'border-border bg-card hover:bg-muted/50'
+                      ? 'border-warning bg-warning/30 ring-1 ring-warning'
+                      : 'border-warning/20 bg-background hover:bg-warning/10'
                   }`}
                   style={{ minWidth: isMobile ? '180px' : 'auto', maxWidth: '220px' }}
                 >
                   <p className="text-sm font-medium truncate">{getVendorName(v)}</p>
                   <div className="flex flex-wrap gap-1 mt-1.5">
                     {v.categories.slice(0, 2).map(c => (
-                      <span key={c} className="px-1.5 py-0.5 text-[10px] rounded-full bg-primary/20 text-primary-foreground">
+                      <span key={c} className="px-1.5 py-0.5 text-[10px] rounded-full bg-secondary/40 text-secondary-foreground">
                         {c}
                       </span>
                     ))}
                   </div>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {reasons.map((r, i) => (
-                      <span key={i} className="px-1.5 py-0.5 text-[10px] rounded-full bg-muted text-muted-foreground">
+                      <span key={i} className="px-1.5 py-0.5 text-[10px] rounded-full bg-warning/25 text-warning-foreground">
                         {r}
                       </span>
                     ))}
