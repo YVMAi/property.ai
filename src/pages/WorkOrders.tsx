@@ -19,7 +19,7 @@ import {
   WO_PRIORITY_LABELS,
   WO_STATUS_LABELS,
   RFP_STATUS_LABELS,
-  type WOPriority, type WorkOrderFormData,
+  type WOPriority,
 } from '@/types/workOrder';
 
 /* ───── helpers ───── */
@@ -113,7 +113,7 @@ export default function WorkOrdersDashboard() {
   const {
     serviceRequests, pendingRequests, rejectedRequests,
     rfps, workOrders,
-    approveRequest, rejectRequest, createWorkOrder, createRequest,
+    rejectRequest,
     approveRequestToRFP, approveRequestToWO,
   } = useWorkOrdersContext();
   const { activeVendors } = useVendorsContext();
@@ -128,11 +128,6 @@ export default function WorkOrdersDashboard() {
   const [rejectReason, setRejectReason] = useState('');
   const [rejectNotes, setRejectNotes] = useState('');
 
-  // Create WO dialog (top-level)
-  const [createWOOpen, setCreateWOOpen] = useState(false);
-  // Create RFP dialog (top-level)
-  const [createRFPOpen, setCreateRFPOpen] = useState(false);
-
   // SR → RFP modal
   const [srRfpOpen, setSrRfpOpen] = useState(false);
   const [srRfpId, setSrRfpId] = useState('');
@@ -146,12 +141,6 @@ export default function WorkOrdersDashboard() {
   const [srWoVendorSelection, setSrWoVendorSelection] = useState<string[]>([]);
   const [srWoCost, setSrWoCost] = useState('');
   const [srWoDueDate, setSrWoDueDate] = useState('');
-
-  const [woForm, setWoForm] = useState<WorkOrderFormData>({
-    propertyId: '', description: '', priority: 'medium', estimatedCost: '', dueDate: '', attachments: [],
-  });
-  const [rfpForm, setRfpForm] = useState({ propertyId: '', description: '', priority: 'medium' as WOPriority });
-
   /* ── Filtered data ── */
   const filteredWOs = useMemo(() => workOrders.filter(wo => {
     if (search && !wo.description.toLowerCase().includes(search.toLowerCase()) && !wo.id.toLowerCase().includes(search.toLowerCase())) return false;
@@ -230,32 +219,6 @@ export default function WorkOrdersDashboard() {
     toast({ title: 'Work Order Created', description: vendorId ? 'WO sent to vendor for acceptance.' : 'Work order created (unassigned).' });
   };
 
-  const handleCreateWO = () => {
-    if (!woForm.description) return;
-    createWorkOrder(woForm, woForm.propertyId || 'General', undefined, undefined);
-    setCreateWOOpen(false);
-    setWoForm({ propertyId: '', description: '', priority: 'medium', estimatedCost: '', dueDate: '', attachments: [] });
-    toast({ title: 'Work Order Created' });
-  };
-
-  const handleCreateRFP = () => {
-    if (!rfpForm.description) return;
-    const sr = createRequest({
-      propertyId: rfpForm.propertyId || 'general',
-      propertyName: rfpForm.propertyId || 'General',
-      tenantId: 'admin',
-      tenantName: 'Admin',
-      description: rfpForm.description,
-      priority: rfpForm.priority,
-      attachments: [],
-      notes: '',
-      history: [],
-    });
-    approveRequest(sr.id, false);
-    setCreateRFPOpen(false);
-    setRfpForm({ propertyId: '', description: '', priority: 'medium' });
-    toast({ title: 'RFP Created' });
-  };
 
   const exportCsv = () => {
     const headers = ['ID', 'Property', 'Description', 'Priority', 'Status', 'Vendor', 'Est. Cost', 'Due Date'];
@@ -274,11 +237,11 @@ export default function WorkOrdersDashboard() {
 
   const createButtons = (
     <>
-      <Button size="sm" className="btn-primary" onClick={() => setCreateRFPOpen(true)}>
+      <Button size="sm" className="btn-primary" onClick={() => navigate('/work-orders/create-rfp')}>
         <FileText className="h-4 w-4 mr-2" />
         Create RFP
       </Button>
-      <Button size="sm" className="btn-primary" onClick={() => setCreateWOOpen(true)}>
+      <Button size="sm" className="btn-primary" onClick={() => navigate('/work-orders/create-wo')}>
         <Plus className="h-4 w-4 mr-2" />
         Create WO
       </Button>
@@ -621,75 +584,6 @@ export default function WorkOrdersDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Create WO Dialog (top-level) ── */}
-      <Dialog open={createWOOpen} onOpenChange={setCreateWOOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Create Work Order</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Property / Unit</Label>
-              <Input value={woForm.propertyId} onChange={e => setWoForm({ ...woForm, propertyId: e.target.value })} placeholder="Property name or ID" />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea value={woForm.description} onChange={e => setWoForm({ ...woForm, description: e.target.value })} placeholder="Describe the work…" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Priority</Label>
-                <Select value={woForm.priority} onValueChange={v => setWoForm({ ...woForm, priority: v as WOPriority })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(WO_PRIORITY_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Estimated Cost ($)</Label>
-                <Input type="number" value={woForm.estimatedCost} onChange={e => setWoForm({ ...woForm, estimatedCost: e.target.value ? Number(e.target.value) : '' })} placeholder="0" />
-              </div>
-            </div>
-            <div>
-              <Label>Due Date</Label>
-              <Input type="date" value={woForm.dueDate} onChange={e => setWoForm({ ...woForm, dueDate: e.target.value })} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateWOOpen(false)}>Cancel</Button>
-            <Button className="btn-primary" onClick={handleCreateWO} disabled={!woForm.description}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Create RFP Dialog (top-level) ── */}
-      <Dialog open={createRFPOpen} onOpenChange={setCreateRFPOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Create RFP</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <Label>Property / Unit</Label>
-              <Input value={rfpForm.propertyId} onChange={e => setRfpForm({ ...rfpForm, propertyId: e.target.value })} placeholder="Property name or ID" />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea value={rfpForm.description} onChange={e => setRfpForm({ ...rfpForm, description: e.target.value })} placeholder="Describe the scope of work…" />
-            </div>
-            <div>
-              <Label>Priority</Label>
-              <Select value={rfpForm.priority} onValueChange={v => setRfpForm({ ...rfpForm, priority: v as WOPriority })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(WO_PRIORITY_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateRFPOpen(false)}>Cancel</Button>
-            <Button className="btn-primary" onClick={handleCreateRFP} disabled={!rfpForm.description}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
