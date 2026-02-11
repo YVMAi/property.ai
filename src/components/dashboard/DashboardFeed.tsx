@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +59,7 @@ interface Props {
 }
 
 export default function DashboardFeed({ tasks, onToggleTask, onCreateTask }: Props) {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
 
@@ -128,8 +130,10 @@ export default function DashboardFeed({ tasks, onToggleTask, onCreateTask }: Pro
                 key={event.id}
                 className={cn(
                   'flex items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-accent/50 transition-colors group',
-                  isOverdue && 'bg-destructive/5'
+                  isOverdue && 'bg-destructive/5',
+                  event.link && 'cursor-pointer'
                 )}
+                onClick={() => event.link && navigate(event.link)}
               >
                 {isTask && taskObj ? (
                   <Checkbox
