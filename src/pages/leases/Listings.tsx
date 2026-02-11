@@ -93,8 +93,9 @@ export default function Listings() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">Listings</h1>
-          <p className="text-sm text-muted-foreground">{listings.length} listings · {totalInquiries} inquiries</p>
+          <h1 className="text-2xl font-semibold text-foreground">Listings</h1>
+          <div className="h-1 w-16 bg-secondary rounded-full mt-2" />
+          <p className="text-sm text-muted-foreground mt-1">{listings.length} listings · {totalInquiries} inquiries</p>
         </div>
         <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4" /> Post Listing

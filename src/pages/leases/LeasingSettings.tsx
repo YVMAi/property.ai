@@ -51,8 +51,9 @@ export default function LeasingSettings() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">Leasing Settings</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-semibold text-foreground">Leasing Settings</h1>
+          <div className="h-1 w-16 bg-secondary rounded-full mt-2" />
+          <p className="text-sm text-muted-foreground mt-1">
             {selectedProperty
               ? `Settings for ${selectedProperty.name}`
               : 'Global defaults · Override per property'}

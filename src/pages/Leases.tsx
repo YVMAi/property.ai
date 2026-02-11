@@ -93,8 +93,8 @@ export default function LeasesDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Leasing Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Overview of all leasing operations</p>
+          <h1 className="text-2xl font-semibold text-foreground">Leasing Dashboard</h1>
+          <div className="h-1 w-16 bg-secondary rounded-full mt-2" />
         </div>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={() => navigate('/leases/create')} className="gap-1.5">
