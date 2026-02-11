@@ -211,7 +211,7 @@ export default function CreateActionsModal({ open, onOpenChange }: CreateActions
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col p-0 gap-0">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5 pb-3">
           <DialogTitle className="text-lg font-semibold text-foreground">
             Create New
@@ -233,7 +233,7 @@ export default function CreateActionsModal({ open, onOpenChange }: CreateActions
         </div>
 
         {/* Actions list */}
-        <ScrollArea className="flex-1 min-h-0 max-h-[55vh]">
+        <ScrollArea className="flex-1 min-h-0 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 120px)' }}>
           <div className="px-3 pb-4 space-y-1">
             {filteredActions.length === 0 ? (
               <div className="text-center py-10 text-muted-foreground text-sm">
