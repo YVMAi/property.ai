@@ -1,19 +1,19 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, Shield, BarChart3, Users, Zap, Building2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, Shield, BarChart3, Users, Zap, Building2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-type LoginStep = 'email' | 'password' | 'mfa';
+type LoginStep = "email" | "password" | "mfa";
 
 export default function Login() {
-  const [step, setStep] = useState<LoginStep>('email');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [mfaCode, setMfaCode] = useState('');
+  const [step, setStep] = useState<LoginStep>("email");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,12 +30,12 @@ export default function Login() {
     setIsLoading(false);
 
     if (exists) {
-      setStep('password');
+      setStep("password");
     } else {
       toast({
-        title: 'Email not found',
-        description: 'This email is not registered in our system.',
-        variant: 'destructive',
+        title: "Email not found",
+        description: "This email is not registered in our system.",
+        variant: "destructive",
       });
     }
   };
@@ -49,16 +49,16 @@ export default function Login() {
     setIsLoading(false);
 
     if (result.success && result.requiresMfa) {
-      setStep('mfa');
+      setStep("mfa");
       toast({
-        title: 'MFA Code Sent',
-        description: 'A 6-digit code has been sent to your email.',
+        title: "MFA Code Sent",
+        description: "A 6-digit code has been sent to your email.",
       });
     } else if (result.error) {
       toast({
-        title: 'Login Failed',
+        title: "Login Failed",
         description: result.error,
-        variant: 'destructive',
+        variant: "destructive",
       });
     }
   };
@@ -73,38 +73,38 @@ export default function Login() {
 
     if (result.success) {
       toast({
-        title: 'Welcome!',
-        description: 'You have successfully logged in.',
+        title: "Welcome!",
+        description: "You have successfully logged in.",
       });
-      navigate('/dashboard');
+      navigate("/dashboard");
     } else if (result.error) {
       toast({
-        title: 'Verification Failed',
+        title: "Verification Failed",
         description: result.error,
-        variant: 'destructive',
+        variant: "destructive",
       });
     }
   };
 
   const handleMfaChange = (value: string) => {
-    const cleaned = value.replace(/\D/g, '').slice(0, 6);
+    const cleaned = value.replace(/\D/g, "").slice(0, 6);
     setMfaCode(cleaned);
   };
 
   const goBack = () => {
-    if (step === 'mfa') {
-      setStep('password');
-      setMfaCode('');
-    } else if (step === 'password') {
-      setStep('email');
-      setPassword('');
+    if (step === "mfa") {
+      setStep("password");
+      setMfaCode("");
+    } else if (step === "password") {
+      setStep("email");
+      setPassword("");
     }
   };
 
   const features = [
-    { icon: BarChart3, label: 'Real-time ROI Analytics' },
-    { icon: Users, label: 'Automated Tenant Vetting' },
-    { icon: Zap, label: 'Predictive Maintenance AI' },
+    { icon: BarChart3, label: "Real-time ROI Analytics" },
+    { icon: Users, label: "Automated Tenant Vetting" },
+    { icon: Zap, label: "Predictive Maintenance AI" },
   ];
 
   return (
@@ -128,9 +128,7 @@ export default function Login() {
           {/* Headline */}
           <div className="max-w-md">
             <h1 className="text-4xl font-bold leading-tight mb-4">
-              The future of{' '}
-              <span className="text-[hsl(120,30%,77%)]">intelligent</span>{' '}
-              management.
+              The future of <span className="text-[hsl(120,30%,77%)]">intelligent property</span> management.
             </h1>
             <p className="text-[hsl(220,10%,65%)] text-base leading-relaxed mb-10">
               Automate your portfolio with AI-driven insights, tenant matching, and predictive maintenance.
@@ -152,9 +150,7 @@ export default function Login() {
           </div>
         </div>
 
-        <p className="relative z-10 text-xs text-[hsl(220,10%,50%)]">
-          Trusted by 2,000+ Property Managers worldwide.
-        </p>
+        <p className="relative z-10 text-xs text-[hsl(220,10%,50%)]">Trusted by 2,000+ Property Managers worldwide.</p>
       </div>
 
       {/* Right Panel — Login form */}
@@ -178,22 +174,22 @@ export default function Login() {
 
           {/* Step Indicator */}
           <div className="flex items-center gap-2 mb-8">
-            {['email', 'password', 'mfa'].map((s, i) => (
+            {["email", "password", "mfa"].map((s, i) => (
               <div
                 key={s}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   step === s
-                    ? 'w-8 bg-primary'
-                    : ['email', 'password', 'mfa'].indexOf(step) > i
-                    ? 'w-2 bg-primary'
-                    : 'w-2 bg-border'
+                    ? "w-8 bg-primary"
+                    : ["email", "password", "mfa"].indexOf(step) > i
+                      ? "w-2 bg-primary"
+                      : "w-2 bg-border"
                 }`}
               />
             ))}
           </div>
 
           {/* Email Step */}
-          {step === 'email' && (
+          {step === "email" && (
             <form onSubmit={handleEmailSubmit} className="space-y-6 animate-slide-up">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -232,29 +228,28 @@ export default function Login() {
           )}
 
           {/* Password Step */}
-          {step === 'password' && (
+          {step === "password" && (
             <form onSubmit={handlePasswordSubmit} className="space-y-6 animate-slide-up">
               <div className="text-center mb-2">
                 <p className="text-sm text-muted-foreground">Logging in as</p>
                 <p className="font-medium text-foreground">{email}</p>
-                <button
-                  type="button"
-                  onClick={goBack}
-                  className="text-sm text-primary hover:underline mt-1"
-                >
+                <button type="button" onClick={goBack} className="text-sm text-primary hover:underline mt-1">
                   Change
                 </button>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Label
+                  htmlFor="password"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                >
                   Password
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
                   <Input
                     id="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -266,7 +261,7 @@ export default function Login() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                   </button>
@@ -287,24 +282,25 @@ export default function Login() {
                 className="w-full h-12 rounded-xl text-base font-semibold bg-foreground text-background hover:bg-foreground/90"
                 disabled={isLoading || !password.trim()}
               >
-                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Log In'}
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Log In"}
               </Button>
             </form>
           )}
 
           {/* MFA Step */}
-          {step === 'mfa' && (
+          {step === "mfa" && (
             <form onSubmit={handleMfaSubmit} className="space-y-6 animate-slide-up">
               <div className="text-center mb-4">
                 <Shield className="h-12 w-12 mx-auto text-primary mb-3" />
                 <h2 className="text-lg font-semibold text-foreground">Two-Factor Authentication</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Enter the 6-digit code sent to your email
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">Enter the 6-digit code sent to your email</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mfaCode" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <Label
+                  htmlFor="mfaCode"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                >
                   MFA Code
                 </Label>
                 <Input
@@ -326,7 +322,7 @@ export default function Login() {
                 className="w-full h-12 rounded-xl text-base font-semibold bg-foreground text-background hover:bg-foreground/90"
                 disabled={isLoading || mfaCode.length !== 6}
               >
-                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Verify'}
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verify"}
               </Button>
 
               <div className="text-center">
