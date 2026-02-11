@@ -21,7 +21,6 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import Accounting from "./pages/Accounting";
-import Tasks from "./pages/Tasks";
 import LeasesDashboard from "./pages/Leases";
 import VacantUnits from "./pages/leases/VacantUnits";
 import ListingsPage from "./pages/leases/Listings";
@@ -82,7 +81,7 @@ const App = () => (
               <Route path="/dashboard" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
               <Route path="/reports" element={<ProtectedPage><Reports /></ProtectedPage>} />
               <Route path="/accounting" element={<ProtectedPage><Accounting /></ProtectedPage>} />
-              <Route path="/tasks" element={<ProtectedPage><Tasks /></ProtectedPage>} />
+              {/* Tasks removed - merged into Dashboard */}
               <Route path="/leases" element={<ProtectedPage><LeasesDashboard /></ProtectedPage>} />
               <Route path="/leases/vacant-units" element={<ProtectedPage><VacantUnits /></ProtectedPage>} />
               <Route path="/leases/listings" element={<ProtectedPage><ListingsPage /></ProtectedPage>} />
