@@ -95,8 +95,9 @@ export default function Renewals() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">Renewals</h1>
-          <p className="text-sm text-muted-foreground">{renewalRows.length} lease{renewalRows.length !== 1 ? 's' : ''} expiring within 6 months</p>
+          <h1 className="text-2xl font-semibold text-foreground">Renewals</h1>
+          <div className="h-1 w-16 bg-secondary rounded-full mt-2" />
+          <p className="text-sm text-muted-foreground mt-1">{renewalRows.length} lease{renewalRows.length !== 1 ? 's' : ''} expiring within 6 months</p>
         </div>
         <Button size="sm" variant="outline" className="gap-1.5" onClick={() => {
           toast({ title: 'Bulk renewal offers sent', description: `${renewalRows.filter(r => r.renewalStatus === 'pending').length} offers queued` });

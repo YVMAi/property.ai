@@ -91,8 +91,9 @@ export default function VacantUnits() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Vacant Units</h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} vacant unit{filtered.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-2xl font-semibold text-foreground">Vacant Units</h1>
+          <div className="h-1 w-16 bg-secondary rounded-full mt-2" />
+          <p className="text-sm text-muted-foreground mt-1">{filtered.length} vacant unit{filtered.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
