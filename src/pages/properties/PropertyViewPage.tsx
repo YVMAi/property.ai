@@ -111,7 +111,7 @@ export default function PropertyViewPage() {
     setDraftLeases(prev => [...prev, newLease]);
   };
 
-
+  if (!property) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
         <Building2 className="h-16 w-16 text-muted-foreground/40 mb-4" />
