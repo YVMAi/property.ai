@@ -5,6 +5,9 @@ import LeasableItemsList from '@/components/properties/LeasableItemsList';
 import { useTenantsContext } from '@/contexts/TenantsContext';
 import { getTenantDisplayName } from '@/types/tenant';
 import type { ExtendedLease, LeaseFormData } from '@/types/lease';
+import LeaseSettingsForm from '@/components/properties/LeaseSettingsForm';
+import type { LeaseSettings } from '@/types/leaseSettings';
+import { DEFAULT_LEASE_SETTINGS } from '@/types/leaseSettings';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -47,6 +50,8 @@ export default function PropertyViewPage() {
   const [unitSearch, setUnitSearch] = useState('');
   const [addBankOpen, setAddBankOpen] = useState(false);
   const [draftLeases, setDraftLeases] = useState<ExtendedLease[]>([]);
+  const [leaseSettings, setLeaseSettings] = useState<LeaseSettings>({ ...DEFAULT_LEASE_SETTINGS });
+  const [leaseSettingsSaved, setLeaseSettingsSaved] = useState(false);
 
   const property = id ? getPropertyById(id) : undefined;
 
@@ -319,6 +324,36 @@ export default function PropertyViewPage() {
         <CardContent className="p-4 flex items-center gap-2 text-muted-foreground text-sm">
           <MapPin className="h-4 w-4" />
           Map embed for {property.address.street} ({property.mapCoords.lat}, {property.mapCoords.lng}) — requires Google Maps API key.
+        </CardContent>
+      </Card>
+
+      {/* Lease Settings */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-medium">Lease Settings</CardTitle>
+            <Button
+              size="sm"
+              className="gap-1.5"
+              onClick={() => {
+                setLeaseSettings(prev => ({
+                  ...prev,
+                  settingsHistory: [
+                    ...prev.settingsHistory,
+                    { date: new Date().toISOString(), user: 'Admin', changeSummary: 'Lease settings updated' }
+                  ]
+                }));
+                setLeaseSettingsSaved(true);
+                setTimeout(() => setLeaseSettingsSaved(false), 2000);
+              }}
+            >
+              <Check className="h-4 w-4" />
+              {leaseSettingsSaved ? 'Saved!' : 'Save Settings'}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <LeaseSettingsForm settings={leaseSettings} onChange={setLeaseSettings} showHistory />
         </CardContent>
       </Card>
 

@@ -34,8 +34,11 @@ import { AMENITIES_OPTIONS } from '@/data/propertiesMockData';
 import { US_STATE_OPTIONS, US_CITIES, DEFAULT_CITIES, getCityOptions } from '@/data/usLocations';
 import type { ExtendedLease, LeaseFormData } from '@/types/lease';
 import { getTenantDisplayName } from '@/types/tenant';
+import LeaseSettingsForm from '@/components/properties/LeaseSettingsForm';
+import type { LeaseSettings } from '@/types/leaseSettings';
+import { DEFAULT_LEASE_SETTINGS } from '@/types/leaseSettings';
 
-const STEPS = ['Details', 'Owner & Agreements', 'Leases & Documents'];
+const STEPS = ['Details', 'Owner & Agreements', 'Lease Settings', 'Leases & Documents'];
 
 // --- Formatting helpers ---
 const formatComma = (v: number | ''): string => {
@@ -106,6 +109,7 @@ export default function PropertyFormPage() {
   const [photoFiles, setPhotoFiles] = useState<{ name: string; url: string; tags: string[]; tagInput: string }[]>([]);
   const [activeTagDropdown, setActiveTagDropdown] = useState<number | null>(null);
   const [draftLeases, setDraftLeases] = useState<ExtendedLease[]>([]);
+  const [leaseSettings, setLeaseSettings] = useState<LeaseSettings>({ ...DEFAULT_LEASE_SETTINGS });
 
   // Master tag list – collects all tags ever used across photos
   const MASTER_TAGS = ['Exterior', 'Interior', 'Kitchen', 'Bathroom', 'Bedroom', 'Living Room', 'Garage', 'Pool', 'Garden', 'Lobby', 'Entrance', 'Aerial', 'Before Renovation', 'After Renovation'];
@@ -979,8 +983,13 @@ export default function PropertyFormPage() {
         onCreated={(gid) => setSelectedGroupIds(prev => [...prev, gid])}
       />
 
-      {/* Step 3: Leases & Documents */}
+      {/* Step 3: Lease Settings */}
       {step === 2 && (
+        <LeaseSettingsForm settings={leaseSettings} onChange={setLeaseSettings} />
+      )}
+
+      {/* Step 4: Leases & Documents */}
+      {step === 3 && (
         <>
         <Card>
           <CardHeader><CardTitle className="text-lg">Leases</CardTitle></CardHeader>
