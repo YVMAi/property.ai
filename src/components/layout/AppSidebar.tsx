@@ -65,7 +65,20 @@ const menuItems: MenuItem[] = [
   { title: 'Accounting', url: '/accounting', icon: Calculator },
   { title: 'Tasks', url: '/tasks', icon: ClipboardList },
   { title: 'Work Orders', url: '/work-orders', icon: Wrench },
-  { title: 'Leases', url: '/leases', icon: FileText },
+  {
+    title: 'Leases',
+    url: '/leases',
+    icon: FileText,
+    subItems: [
+      { title: 'Dashboard', url: '/leases' },
+      { title: 'Vacant Units', url: '/leases/vacant-units' },
+      { title: 'Listings', url: '/leases/listings' },
+      { title: 'Active Leases', url: '/leases/active' },
+      { title: 'Renewals', url: '/leases/renewals' },
+      { title: 'Create a Lease', url: '/leases/create' },
+      { title: 'Leasing Settings', url: '/leases/settings' },
+    ],
+  },
   { title: 'Properties', url: '/properties', icon: Building2 },
   {
     title: 'Users',
@@ -97,7 +110,11 @@ export default function AppSidebar() {
   const navigate = useNavigate();
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === 'collapsed';
-  const [openItems, setOpenItems] = useState<string[]>(['Users']);
+  const [openItems, setOpenItems] = useState<string[]>(() => {
+    const initial = ['Users'];
+    if (location.pathname.startsWith('/leases')) initial.push('Leases');
+    return initial;
+  });
   const [sidebarSearch, setSidebarSearch] = useState('');
   const { user, logout } = useAuth();
   const isOnSettings = location.pathname === '/settings';
@@ -107,10 +124,14 @@ export default function AppSidebar() {
     setSearchParams({ tab }, { replace: true });
   };
 
-  const isActive = (url: string) => location.pathname === url;
+  const isActive = (url: string) => {
+    if (url === '/leases') return location.pathname === '/leases';
+    return location.pathname === url;
+  };
   const isParentActive = (item: MenuItem) => {
     if (item.subItems) {
-      return item.subItems.some((sub) => location.pathname === sub.url);
+      return item.subItems.some((sub) => location.pathname === sub.url) ||
+        (item.url === '/leases' && location.pathname.startsWith('/leases'));
     }
     return false;
   };
