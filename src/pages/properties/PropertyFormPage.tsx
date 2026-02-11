@@ -5,6 +5,7 @@ import BulkUnitSetupDialog, { type BulkUnit } from '@/components/properties/Bulk
 import CreateGroupDialog from '@/components/properties/CreateGroupDialog';
 import BankAccountsSection from '@/components/properties/BankAccountsSection';
 import AddAgreementDialog from '@/components/properties/AddAgreementDialog';
+import LeasableItemsList from '@/components/properties/LeasableItemsList';
 import { useBankAccountsContext } from '@/contexts/BankAccountsContext';
 import type { PropertyBankLink } from '@/types/bankAccount';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
 import { useOwnersContext } from '@/contexts/OwnersContext';
+import { useTenantsContext } from '@/contexts/TenantsContext';
 import { usePropertyGroupsContext } from '@/contexts/PropertyGroupsContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -30,6 +32,8 @@ import {
 } from '@/types/property';
 import { AMENITIES_OPTIONS } from '@/data/propertiesMockData';
 import { US_STATE_OPTIONS, US_CITIES, DEFAULT_CITIES, getCityOptions } from '@/data/usLocations';
+import type { ExtendedLease, LeaseFormData } from '@/types/lease';
+import { getTenantDisplayName } from '@/types/tenant';
 
 const STEPS = ['Details', 'Owner & Agreements', 'Leases & Documents'];
 
@@ -83,6 +87,7 @@ export default function PropertyFormPage() {
   const { toast } = useToast();
   const { addProperty, updateProperty, getPropertyById } = usePropertiesContext();
   const { activeOwners, updateOwner: updateOwnerCtx } = useOwnersContext();
+  const { activeTenants } = useTenantsContext();
   const { groups, getGroupsForProperty, setPropertyGroups, getGroupPropertyCount } = usePropertyGroupsContext();
   const { getLinksForProperty, setPropertyBankLinks } = useBankAccountsContext();
   const isEdit = Boolean(id);
@@ -100,6 +105,7 @@ export default function PropertyFormPage() {
   const [addAgreementOpen, setAddAgreementOpen] = useState(false);
   const [photoFiles, setPhotoFiles] = useState<{ name: string; url: string; tags: string[]; tagInput: string }[]>([]);
   const [activeTagDropdown, setActiveTagDropdown] = useState<number | null>(null);
+  const [draftLeases, setDraftLeases] = useState<ExtendedLease[]>([]);
 
   // Master tag list – collects all tags ever used across photos
   const MASTER_TAGS = ['Exterior', 'Interior', 'Kitchen', 'Bathroom', 'Bedroom', 'Living Room', 'Garage', 'Pool', 'Garden', 'Lobby', 'Entrance', 'Aerial', 'Before Renovation', 'After Renovation'];
@@ -255,6 +261,53 @@ export default function PropertyFormPage() {
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
+  };
+
+  const handleCreateLease = (data: LeaseFormData, leasableLabel: string, unitId?: string) => {
+    const tenant = activeTenants.find(t => t.id === data.tenantId);
+    const tenantName = tenant ? getTenantDisplayName(tenant) : 'Unknown';
+    const now = new Date().toISOString();
+    const newLease: ExtendedLease = {
+      id: Math.random().toString(36).substring(2, 11),
+      propertyId: id || 'new',
+      unitId,
+      leasableLabel,
+      tenantId: data.tenantId,
+      tenantName,
+      leaseType: data.leaseType,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      rent: Number(data.rent) || 0,
+      paymentDueDay: data.paymentDueDay,
+      escalationEnabled: data.escalationEnabled,
+      escalationType: data.escalationType,
+      escalationValue: data.escalationValue ? Number(data.escalationValue) : undefined,
+      escalationSchedule: data.escalationSchedule,
+      additionalFees: data.additionalFees.map(f => ({ ...f, id: Math.random().toString(36).substring(2, 11) })),
+      lateFeeEnabled: data.lateFeeEnabled,
+      lateFeeType: data.lateFeeType,
+      lateFeeValue: data.lateFeeValue ? Number(data.lateFeeValue) : undefined,
+      lateGraceDays: data.lateGraceDays ? Number(data.lateGraceDays) : undefined,
+      securityDepositAmount: data.securityDepositAmount ? Number(data.securityDepositAmount) : undefined,
+      securityDueDate: data.securityDueDate || undefined,
+      securityRefundTerms: data.securityRefundTerms || undefined,
+      evictionNoticeDays: data.evictionNoticeDays ? Number(data.evictionNoticeDays) : undefined,
+      evictionGrounds: data.evictionGrounds.length > 0 ? data.evictionGrounds : undefined,
+      autoRenew: data.autoRenew,
+      autoRenewNoticeDays: data.autoRenewNoticeDays ? Number(data.autoRenewNoticeDays) : undefined,
+      sublettingAllowed: data.sublettingAllowed,
+      sublettingConditions: data.sublettingConditions || undefined,
+      insuranceRequired: data.insuranceRequired,
+      insuranceAmount: data.insuranceAmount ? Number(data.insuranceAmount) : undefined,
+      customClauses: data.customClauses || undefined,
+      documentIds: [],
+      status: 'draft',
+      history: [{ date: now, action: 'Created', user: 'Current User' }],
+      createdAt: now,
+      updatedAt: now,
+    };
+    setDraftLeases(prev => [...prev, newLease]);
+    toast({ title: 'Lease created (Draft)', description: `Lease for ${tenantName} on ${leasableLabel}` });
   };
 
   const handleSave = () => {
@@ -928,39 +981,24 @@ export default function PropertyFormPage() {
 
       {/* Step 3: Leases & Documents */}
       {step === 2 && (
+        <>
         <Card>
-          <CardHeader><CardTitle className="text-lg">Leases & Documents</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-lg">Leases</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 rounded-lg bg-muted/30 text-sm text-muted-foreground">
-              {needsUnits(form.type)
-                ? isStudentType(form.type)
-                  ? 'Leases are added at the bed level. You can manage leases after creating the property.'
-                  : 'Leases are added at the unit level. You can manage leases after creating the property.'
-                : 'Leases are added at the property level. You can manage leases after creating the property.'}
-            </div>
+            <LeasableItemsList
+              propertyType={form.type}
+              units={form.units.map((u, i) => ({ ...u, id: (u as any).id || `temp-${i}` }))}
+              leases={existing?.leases || []}
+              extendedLeases={draftLeases}
+              onCreateLease={handleCreateLease}
+              showExistingLeases={isEdit}
+            />
+          </CardContent>
+        </Card>
 
-            {existing && existing.leases.length > 0 && (
-              <div>
-                <Label className="mb-2 block">Existing Leases</Label>
-                <div className="space-y-2">
-                  {existing.leases.map((l) => (
-                    <div key={l.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30">
-                      <div>
-                        <p className="text-sm font-medium">{l.tenantName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {l.unitId || 'Property-level'} · ${l.rent}/mo · {l.startDate} to {l.endDate}
-                        </p>
-                      </div>
-                      <Badge variant={l.status === 'active' ? 'secondary' : 'outline'} className="text-xs">
-                        {l.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Document Upload */}
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Documents</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
             <div>
               <Label className="mb-2 block">Upload Documents</Label>
               <div
@@ -994,6 +1032,7 @@ export default function PropertyFormPage() {
             </div>
           </CardContent>
         </Card>
+        </>
       )}
 
       {/* Bulk Unit Setup Dialog */}

@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, MapPin, Edit, Building2, DollarSign, FileText, Users, ChevronDown, Wand2, Plus, Landmark, Check, Shield, X, Calendar, Download, FileCheck } from 'lucide-react';
+import LeasableItemsList from '@/components/properties/LeasableItemsList';
+import { useTenantsContext } from '@/contexts/TenantsContext';
+import { getTenantDisplayName } from '@/types/tenant';
+import type { ExtendedLease, LeaseFormData } from '@/types/lease';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,11 +40,13 @@ export default function PropertyViewPage() {
   const navigate = useNavigate();
   const { getPropertyById, changeStatus, updateProperty } = usePropertiesContext();
   const { activeOwners } = useOwnersContext();
+  const { activeTenants } = useTenantsContext();
   const { getGroupsForProperty } = usePropertyGroupsContext();
   const { getLinksForProperty, getAccountById, unlinkAccount, linkAccount, updateLink, accounts } = useBankAccountsContext();
   const [bulkOpen, setBulkOpen] = useState(false);
   const [unitSearch, setUnitSearch] = useState('');
   const [addBankOpen, setAddBankOpen] = useState(false);
+  const [draftLeases, setDraftLeases] = useState<ExtendedLease[]>([]);
 
   const property = id ? getPropertyById(id) : undefined;
 
@@ -59,7 +65,53 @@ export default function PropertyViewPage() {
     updateProperty(id, { units: [...property.units, ...mapped] });
   };
 
-  if (!property) {
+  const handleCreateLease = (data: LeaseFormData, leasableLabel: string, unitId?: string) => {
+    const tenant = activeTenants.find(t => t.id === data.tenantId);
+    const tenantName = tenant ? getTenantDisplayName(tenant) : 'Unknown';
+    const now = new Date().toISOString();
+    const newLease: ExtendedLease = {
+      id: Math.random().toString(36).substring(2, 11),
+      propertyId: id || '',
+      unitId,
+      leasableLabel,
+      tenantId: data.tenantId,
+      tenantName,
+      leaseType: data.leaseType,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      rent: Number(data.rent) || 0,
+      paymentDueDay: data.paymentDueDay,
+      escalationEnabled: data.escalationEnabled,
+      escalationType: data.escalationType,
+      escalationValue: data.escalationValue ? Number(data.escalationValue) : undefined,
+      escalationSchedule: data.escalationSchedule,
+      additionalFees: data.additionalFees.map(f => ({ ...f, id: Math.random().toString(36).substring(2, 11) })),
+      lateFeeEnabled: data.lateFeeEnabled,
+      lateFeeType: data.lateFeeType,
+      lateFeeValue: data.lateFeeValue ? Number(data.lateFeeValue) : undefined,
+      lateGraceDays: data.lateGraceDays ? Number(data.lateGraceDays) : undefined,
+      securityDepositAmount: data.securityDepositAmount ? Number(data.securityDepositAmount) : undefined,
+      securityDueDate: data.securityDueDate || undefined,
+      securityRefundTerms: data.securityRefundTerms || undefined,
+      evictionNoticeDays: data.evictionNoticeDays ? Number(data.evictionNoticeDays) : undefined,
+      evictionGrounds: data.evictionGrounds.length > 0 ? data.evictionGrounds : undefined,
+      autoRenew: data.autoRenew,
+      autoRenewNoticeDays: data.autoRenewNoticeDays ? Number(data.autoRenewNoticeDays) : undefined,
+      sublettingAllowed: data.sublettingAllowed,
+      sublettingConditions: data.sublettingConditions || undefined,
+      insuranceRequired: data.insuranceRequired,
+      insuranceAmount: data.insuranceAmount ? Number(data.insuranceAmount) : undefined,
+      customClauses: data.customClauses || undefined,
+      documentIds: [],
+      status: 'draft',
+      history: [{ date: now, action: 'Created', user: 'Current User' }],
+      createdAt: now,
+      updatedAt: now,
+    };
+    setDraftLeases(prev => [...prev, newLease]);
+  };
+
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
         <Building2 className="h-16 w-16 text-muted-foreground/40 mb-4" />
@@ -270,34 +322,20 @@ export default function PropertyViewPage() {
         </CardContent>
       </Card>
 
-      {/* Current Leases */}
+      {/* Leases */}
       <Card>
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-medium">Current Leases ({activeLeases.length})</CardTitle>
-            <Button size="sm" variant="outline" className="gap-1.5">
-              <FileText className="h-4 w-4" /> Add Lease
-            </Button>
-          </div>
+          <CardTitle className="text-base font-medium">Leases</CardTitle>
         </CardHeader>
         <CardContent>
-          {activeLeases.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No active leases</p>
-          ) : (
-            <div className="space-y-2">
-              {property.leases.map((l) => (
-                <div key={l.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <div>
-                    <p className="text-sm font-medium">{l.tenantName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {l.unitId ? `Unit ${l.unitId}` : 'Property-level'} · ${l.rent}/mo · {l.startDate} → {l.endDate}
-                    </p>
-                  </div>
-                  <Badge variant={l.status === 'active' ? 'secondary' : 'outline'} className="text-xs">{l.status}</Badge>
-                </div>
-              ))}
-            </div>
-          )}
+          <LeasableItemsList
+            propertyType={property.type}
+            units={property.units}
+            leases={property.leases}
+            extendedLeases={draftLeases}
+            onCreateLease={handleCreateLease}
+            showExistingLeases
+          />
         </CardContent>
       </Card>
 
