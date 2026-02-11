@@ -1,16 +1,18 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Plus, Download, MapPin, TrendingUp, Home, DollarSign, FileText, AlertTriangle, BarChart3, Tag, Settings2 } from 'lucide-react';
+import { Building2, Plus, Download, MapPin, TrendingUp, Home, DollarSign, FileText, AlertTriangle, BarChart3, Tag, Settings2, CheckSquare, Square } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
 import { useOwnersContext } from '@/contexts/OwnersContext';
 import { usePropertyGroupsContext } from '@/contexts/PropertyGroupsContext';
 import ManageGroupsDialog from '@/components/properties/ManageGroupsDialog';
+import CreateGroupDialog from '@/components/properties/CreateGroupDialog';
 import type { PropertyType } from '@/types/property';
 
 import multiFamilyImg from '@/assets/properties/multi-family.jpg';
@@ -58,7 +60,7 @@ export default function Properties() {
   const navigate = useNavigate();
   const { activeProperties, archivedProperties } = usePropertiesContext();
   const { activeOwners } = useOwnersContext();
-  const { groups, getGroupsForProperty, getPropertyIdsForGroups } = usePropertyGroupsContext();
+  const { groups, getGroupsForProperty, getPropertyIdsForGroups, bulkAssignGroup, getGroupPropertyCount } = usePropertyGroupsContext();
 
   // Filters
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -68,6 +70,12 @@ export default function Properties() {
   const [showMap, setShowMap] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const [manageGroupsOpen, setManageGroupsOpen] = useState(false);
+  const [createGroupOpen, setCreateGroupOpen] = useState(false);
+
+  // Bulk select
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkGroupTarget, setBulkGroupTarget] = useState<string>('');
 
   const displayProperties = showArchived ? archivedProperties : activeProperties;
 
@@ -128,6 +136,37 @@ export default function Properties() {
     return o.ownerType === 'company' ? o.companyName : `${o.firstName} ${o.lastName}`;
   };
 
+  // Bulk helpers
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkAssign = () => {
+    if (!bulkGroupTarget || selectedIds.size === 0) return;
+    if (bulkGroupTarget === '__new__') {
+      setCreateGroupOpen(true);
+      return;
+    }
+    bulkAssignGroup(Array.from(selectedIds), bulkGroupTarget);
+    setSelectedIds(new Set());
+    setBulkMode(false);
+    setBulkGroupTarget('');
+  };
+
+  // Group-level metrics when filtered
+  const groupMetrics = useMemo(() => {
+    if (groupFilter.length === 0) return null;
+    const props = filteredProperties;
+    const totalUnitsInGroup = props.reduce((s, p) => s + (p.units.length || 1), 0);
+    const activeLeasesInGroup = props.flatMap(p => p.leases).filter(l => l.status === 'active').length;
+    const totalRentInGroup = props.flatMap(p => p.leases).filter(l => l.status === 'active').reduce((s, l) => s + l.rent, 0);
+    return { count: props.length, units: totalUnitsInGroup, activeLeases: activeLeasesInGroup, totalRent: totalRentInGroup };
+  }, [groupFilter, filteredProperties]);
+
   if (totalProperties === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in">
@@ -153,7 +192,17 @@ export default function Properties() {
             {totalProperties} properties · {occupancyPct}% occupied
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={() => setManageGroupsOpen(true)} className="gap-1.5">
+            <Tag className="h-4 w-4" /> Manage Groups
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            setBulkMode(!bulkMode);
+            if (bulkMode) { setSelectedIds(new Set()); setBulkGroupTarget(''); }
+          }} className="gap-1.5">
+            {bulkMode ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+            {bulkMode ? 'Exit Select' : 'Select Mode'}
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowMap(!showMap)} className="gap-1.5">
             <MapPin className="h-4 w-4" /> {showMap ? 'Hide Map' : 'Map View'}
           </Button>
@@ -203,7 +252,7 @@ export default function Properties() {
               <div className="min-w-[180px]">
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Group</label>
                 <SearchableSelect
-                  options={groups.map(g => ({ value: g.id, label: g.name }))}
+                  options={groups.map(g => ({ value: g.id, label: `${g.name} (${getGroupPropertyCount(g.id)})` }))}
                   value={groupFilter.length > 0 ? groupFilter[groupFilter.length - 1] : ''}
                   onValueChange={(v) => {
                     setGroupFilter(prev =>
@@ -241,11 +290,6 @@ export default function Properties() {
               >
                 {showArchived ? 'Show Active' : 'Show Archived'}
               </Button>
-              {groups.length > 0 && (
-                <Button variant="ghost" size="sm" onClick={() => setManageGroupsOpen(true)} className="gap-1 text-xs">
-                  <Settings2 className="h-3.5 w-3.5" /> Groups
-                </Button>
-              )}
             </div>
           </div>
         </CardContent>
@@ -497,27 +541,66 @@ export default function Properties() {
         </Card>
       )}
 
+      {/* Group Metrics Banner */}
+      {groupMetrics && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex flex-wrap gap-6 items-center">
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Filtered Group Metrics</span>
+              </div>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <span><strong>{groupMetrics.count}</strong> properties</span>
+                <span><strong>{groupMetrics.units}</strong> units</span>
+                <span><strong>{groupMetrics.activeLeases}</strong> active leases</span>
+                <span>Total Rent: <strong>${groupMetrics.totalRent.toLocaleString()}</strong>/mo</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Property Cards Grid */}
       <div>
         <h2 className="text-lg font-medium text-foreground mb-3">
           {showArchived ? 'Archived' : 'All'} Properties ({filteredProperties.length})
+          {bulkMode && selectedIds.size > 0 && (
+            <span className="text-sm font-normal text-muted-foreground ml-2">· {selectedIds.size} selected</span>
+          )}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredProperties.map((p) => {
             const photoSrc = PROPERTY_IMAGE_OVERRIDES[p.id] || PROPERTY_TYPE_IMAGES[p.type] || multiFamilyImg;
+            const isSelected = selectedIds.has(p.id);
+            const propertyGroups = getGroupsForProperty(p.id);
             return (
               <Card
                 key={p.id}
-                className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.01] overflow-hidden"
-                onClick={() => navigate(`/properties/${p.id}`)}
+                className={`cursor-pointer hover:shadow-md transition-all hover:scale-[1.01] overflow-hidden ${
+                  bulkMode && isSelected ? 'ring-2 ring-primary' : ''
+                }`}
+                onClick={() => {
+                  if (bulkMode) { toggleSelect(p.id); } else { navigate(`/properties/${p.id}`); }
+                }}
               >
-                <div className="h-40 overflow-hidden">
+                <div className="h-40 overflow-hidden relative">
                   <img
                     src={photoSrc}
                     alt={`${p.address.street} property`}
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     loading="lazy"
                   />
+                  {bulkMode && (
+                    <div className="absolute top-2 left-2">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelect(p.id)}
+                        className="h-5 w-5 bg-background/80 backdrop-blur-sm"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
                 </div>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
@@ -532,17 +615,24 @@ export default function Properties() {
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     <Badge variant="outline" className="text-xs">{PROPERTY_TYPE_LABELS[p.type]}</Badge>
                     {p.units.length > 0 && <Badge variant="outline" className="text-xs">{p.units.length} units</Badge>}
-                    {getGroupsForProperty(p.id).slice(0, 2).map(g => (
+                    {propertyGroups.slice(0, 2).map(g => (
                       <Badge
                         key={g.id}
-                        className="text-xs"
+                        className="text-xs cursor-pointer hover:opacity-80 transition-opacity"
                         style={{ backgroundColor: g.color, color: 'hsl(0,0%,20%)' }}
+                        title={g.description}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!groupFilter.includes(g.id)) {
+                            setGroupFilter(prev => [...prev, g.id]);
+                          }
+                        }}
                       >
                         {g.name}
                       </Badge>
                     ))}
-                    {getGroupsForProperty(p.id).length > 2 && (
-                      <Badge variant="outline" className="text-xs">+{getGroupsForProperty(p.id).length - 2}</Badge>
+                    {propertyGroups.length > 2 && (
+                      <Badge variant="outline" className="text-xs">+{propertyGroups.length - 2}</Badge>
                     )}
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -555,7 +645,57 @@ export default function Properties() {
           })}
         </div>
       </div>
+
+      {/* Bulk Assignment Bottom Bar */}
+      {bulkMode && selectedIds.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border shadow-lg p-4">
+          <div className="container flex flex-wrap items-center justify-center gap-3">
+            <span className="text-sm font-medium">{selectedIds.size} properties selected</span>
+            <Select value={bulkGroupTarget} onValueChange={setBulkGroupTarget}>
+              <SelectTrigger className="w-[220px] h-9">
+                <SelectValue placeholder="Assign to group..." />
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map(g => (
+                  <SelectItem key={g.id} value={g.id}>
+                    <span className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full inline-block" style={{ backgroundColor: g.color }} />
+                      {g.name} ({getGroupPropertyCount(g.id)})
+                    </span>
+                  </SelectItem>
+                ))}
+                <SelectItem value="__new__">
+                  <span className="flex items-center gap-1 text-primary">
+                    <Plus className="h-3 w-3" /> Create New Group
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={handleBulkAssign} disabled={!bulkGroupTarget}>
+              Assign
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { setBulkMode(false); setSelectedIds(new Set()); setBulkGroupTarget(''); }}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
       <ManageGroupsDialog open={manageGroupsOpen} onOpenChange={setManageGroupsOpen} />
+      <CreateGroupDialog
+        open={createGroupOpen}
+        onOpenChange={setCreateGroupOpen}
+        onCreated={(groupId) => {
+          if (selectedIds.size > 0) {
+            bulkAssignGroup(Array.from(selectedIds), groupId);
+            setSelectedIds(new Set());
+            setBulkMode(false);
+          }
+        }}
+      />
+
+      {/* Spacer for bulk bar */}
+      {bulkMode && selectedIds.size > 0 && <div className="h-20" />}
     </div>
   );
 }
