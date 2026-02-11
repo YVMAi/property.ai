@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import DashboardAIChat from '@/components/dashboard/DashboardAIChat';
 import DashboardQuickActions from '@/components/dashboard/DashboardQuickActions';
 import DashboardFeed from '@/components/dashboard/DashboardFeed';
 import DashboardKPIs from '@/components/dashboard/DashboardKPIs';
@@ -23,9 +22,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* AI Chat */}
-      <DashboardAIChat />
-
       {/* Quick Actions */}
       <DashboardQuickActions onCreateTask={() => setTaskDialogOpen(true)} />
 

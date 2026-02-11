@@ -50,6 +50,7 @@ import VendorPortal from "./pages/workorders/VendorPortal";
 import ServiceRequestViewPage from "./pages/workorders/ServiceRequestViewPage";
 import CreateRFPPage from "./pages/workorders/CreateRFPPage";
 import CreateWOPage from "./pages/workorders/CreateWOPage";
+import AIChat from "./pages/AIChat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,7 @@ const App = () => (
               
               {/* Protected Routes */}
               <Route path="/dashboard" element={<ProtectedPage><Dashboard /></ProtectedPage>} />
+              <Route path="/ai-chat" element={<ProtectedPage><AIChat /></ProtectedPage>} />
               <Route path="/reports" element={<ProtectedPage><Reports /></ProtectedPage>} />
               <Route path="/accounting" element={<ProtectedPage><Accounting /></ProtectedPage>} />
               {/* Tasks removed - merged into Dashboard */}
