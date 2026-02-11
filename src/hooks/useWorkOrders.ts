@@ -169,13 +169,83 @@ export function useWorkOrders() {
     setWorkOrders(prev => prev.map(wo => wo.id === id ? { ...wo, ownerApproved: true, updatedAt: now } : wo));
   }, []);
 
+  const submitVendorQuote = useCallback((rfpId: string, vendorId: string, quote: { estimatedCost: number; estimatedDays: number; notes?: string }) => {
+    setRFPs(prev => prev.map(r => {
+      if (r.id !== rfpId) return r;
+      return {
+        ...r,
+        vendorQuotes: r.vendorQuotes.map(q =>
+          q.vendorId === vendorId
+            ? { ...q, status: 'accepted' as const, estimatedCost: quote.estimatedCost, estimatedDays: quote.estimatedDays, submittedAt: new Date().toISOString() }
+            : q
+        ),
+      };
+    }));
+  }, []);
+
+  const declineRFPQuote = useCallback((rfpId: string, vendorId: string) => {
+    setRFPs(prev => prev.map(r => {
+      if (r.id !== rfpId) return r;
+      return {
+        ...r,
+        vendorQuotes: r.vendorQuotes.map(q =>
+          q.vendorId === vendorId ? { ...q, status: 'declined' as const } : q
+        ),
+      };
+    }));
+  }, []);
+
+  const declineVendorWO = useCallback((id: string) => {
+    setWorkOrders(prev => prev.map(wo => {
+      if (wo.id !== id) return wo;
+      return { ...wo, vendorId: undefined, vendorName: undefined, vendorAccepted: false, status: 'open', updatedAt: now };
+    }));
+  }, []);
+
+  const approveRequestToRFP = useCallback((id: string, vendors: { vendorId: string; vendorName: string }[], deadline?: string, message?: string) => {
+    setServiceRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' as ServiceRequestStatus } : r));
+    const req = serviceRequests.find(r => r.id === id);
+    if (!req) return;
+    const rfp: RFP = {
+      id: `RFP-${String(++rfpCounter).padStart(3, '0')}`, requestId: req.id,
+      description: req.description, propertyId: req.propertyId, propertyName: req.propertyName,
+      unitId: req.unitId, unitNumber: req.unitNumber, priority: req.priority, status: 'open',
+      attachments: [...req.attachments], vendorQuotes: vendors.map(v => ({ vendorId: v.vendorId, vendorName: v.vendorName, status: 'pending' as const })),
+      createdAt: new Date().toISOString(),
+    };
+    setRFPs(prev => [rfp, ...prev]);
+    return rfp;
+  }, [serviceRequests]);
+
+  const approveRequestToWO = useCallback((id: string, vendorId?: string, vendorName?: string, estimatedCost?: number, dueDate?: string) => {
+    setServiceRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' as ServiceRequestStatus } : r));
+    const req = serviceRequests.find(r => r.id === id);
+    if (!req) return;
+    const wo: WorkOrder = {
+      id: `WO-${String(++woCounter).padStart(3, '0')}`, requestId: req.id,
+      propertyId: req.propertyId, propertyName: req.propertyName, unitId: req.unitId, unitNumber: req.unitNumber,
+      description: req.description, priority: req.priority,
+      vendorId, vendorName, vendorAccepted: false,
+      status: vendorId ? 'assigned' : 'open',
+      estimatedCost: estimatedCost || 0, dueDate: dueDate || '',
+      completionPhotos: [], ownerApprovalNeeded: false,
+      attachments: [...req.attachments], notes: '', history: [
+        { id: crypto.randomUUID(), workOrderId: '', statusTo: vendorId ? 'assigned' : 'open', timestamp: new Date().toISOString(), userId: 'admin', userName: 'Admin', userRole: 'pm' },
+      ], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    };
+    wo.history[0].workOrderId = wo.id;
+    setWorkOrders(prev => [wo, ...prev]);
+    return wo;
+  }, [serviceRequests]);
+
   const getWorkOrderById = useCallback((id: string) => workOrders.find(wo => wo.id === id), [workOrders]);
   const getServiceRequestById = useCallback((id: string) => serviceRequests.find(r => r.id === id), [serviceRequests]);
   const getRFPById = useCallback((id: string) => rfps.find(r => r.id === id), [rfps]);
 
   return {
     serviceRequests, pendingRequests, rejectedRequests, createRequest, approveRequest, rejectRequest, addRequestNote, getServiceRequestById,
-    rfps, openRFPs, sendRFPToVendors, selectRFPVendor, getRFPById,
-    workOrders, createWorkOrder, updateWOStatus, acceptVendorWO, completeWO, approveOwnerWO, getWorkOrderById,
+    rfps, openRFPs, sendRFPToVendors, selectRFPVendor, getRFPById, submitVendorQuote, declineRFPQuote,
+    workOrders, createWorkOrder, updateWOStatus, acceptVendorWO, declineVendorWO, completeWO, approveOwnerWO, getWorkOrderById,
+    approveRequestToRFP, approveRequestToWO,
   };
 }
