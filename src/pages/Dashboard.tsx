@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import DashboardPromptBar from '@/components/dashboard/DashboardPromptBar';
 import DashboardQuickActions from '@/components/dashboard/DashboardQuickActions';
 import DashboardFeed from '@/components/dashboard/DashboardFeed';
 import DashboardKPIs from '@/components/dashboard/DashboardKPIs';
@@ -22,6 +23,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* AI Prompt Bar */}
+      <DashboardPromptBar />
+
       {/* Quick Actions */}
       <DashboardQuickActions onCreateTask={() => setTaskDialogOpen(true)} />
 
