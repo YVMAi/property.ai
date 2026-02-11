@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, Trash2, ChevronDown, ChevronUp, Calendar as CalendarIcon,
-  FileText, Upload, X, ExternalLink,
+  FileText, Upload, X, ExternalLink, Building2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -32,9 +32,17 @@ import {
 interface LeaseCreationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  leasableLabel: string;
+  leasableLabel?: string;
   unitId?: string;
   onSave: (data: LeaseFormData) => void;
+  /** When true, shows property/unit selectors inside the modal */
+  showPropertySelector?: boolean;
+  propertyOptions?: { value: string; label: string }[];
+  onPropertySelect?: (propertyId: string) => void;
+  selectedPropertyId?: string;
+  unitOptions?: { value: string; label: string }[];
+  onUnitSelect?: (unitId: string) => void;
+  selectedUnitId?: string;
 }
 
 const EVICTION_GROUNDS = ['Non-Payment', 'Lease Breach', 'Criminal Activity', 'Other'];
@@ -45,6 +53,13 @@ export default function LeaseCreationModal({
   leasableLabel,
   unitId,
   onSave,
+  showPropertySelector = false,
+  propertyOptions = [],
+  onPropertySelect,
+  selectedPropertyId,
+  unitOptions = [],
+  onUnitSelect,
+  selectedUnitId,
 }: LeaseCreationModalProps) {
   const navigate = useNavigate();
   const { activeTenants } = useTenantsContext();
@@ -87,6 +102,8 @@ export default function LeaseCreationModal({
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
+    if (showPropertySelector && !selectedPropertyId) errs.property = 'Select a property';
+    if (showPropertySelector && !selectedUnitId) errs.unit = 'Select a unit';
     if (!form.tenantId) errs.tenantId = 'Select a tenant';
     if (!form.startDate) errs.startDate = 'Start date required';
     if (!form.endDate) errs.endDate = 'End date required';
@@ -120,10 +137,46 @@ export default function LeaseCreationModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg">Create Lease — {leasableLabel}</DialogTitle>
+          <DialogTitle className="text-lg">
+            Create Lease{leasableLabel ? ` — ${leasableLabel}` : ''}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5">
+          {/* Property & Unit Selector (for global create) */}
+          {showPropertySelector && (
+            <div className="p-3 rounded-lg border border-border bg-muted/30 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <Label className="text-sm font-medium">Property & Unit</Label>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Property *</Label>
+                  <SearchableSelect
+                    options={propertyOptions}
+                    value={selectedPropertyId || ''}
+                    onValueChange={(v) => onPropertySelect?.(v)}
+                    placeholder="Search properties..."
+                  />
+                </div>
+                {selectedPropertyId && unitOptions.length > 0 && (
+                  <div>
+                    <Label className="text-xs">Unit / Leasable Item *</Label>
+                    <Select value={selectedUnitId || ''} onValueChange={(v) => onUnitSelect?.(v)}>
+                      <SelectTrigger><SelectValue placeholder="Select unit..." /></SelectTrigger>
+                      <SelectContent>
+                        {unitOptions.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Tenant */}
           <div>
             <Label>Tenant *</Label>

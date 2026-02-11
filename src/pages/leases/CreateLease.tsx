@@ -1,11 +1,5 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { SearchableSelect } from '@/components/ui/searchable-select';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePropertiesContext } from '@/contexts/PropertiesContext';
 import { PROPERTY_TYPE_LABELS } from '@/types/property';
 import LeaseCreationModal from '@/components/properties/LeaseCreationModal';
@@ -17,7 +11,6 @@ export default function CreateLease() {
   const { activeProperties } = usePropertiesContext();
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
   const [selectedUnitId, setSelectedUnitId] = useState('');
-  const [showModal, setShowModal] = useState(false);
 
   const propertyOptions = useMemo(
     () => activeProperties.map((p) => ({
@@ -29,7 +22,7 @@ export default function CreateLease() {
 
   const selectedProperty = activeProperties.find((p) => p.id === selectedPropertyId);
 
-  const leasableOptions = useMemo(() => {
+  const unitOptions = useMemo(() => {
     if (!selectedProperty) return [];
     if (selectedProperty.units.length === 0) {
       return [{ value: '__entire__', label: 'Entire Property' }];
@@ -44,7 +37,7 @@ export default function CreateLease() {
     if (!selectedProperty) return '';
     if (selectedUnitId === '__entire__') return `${selectedProperty.name} — Entire Property`;
     const unit = selectedProperty.units.find((u) => u.id === selectedUnitId);
-    return unit ? `${selectedProperty.name} — Unit ${unit.unitNumber}` : '';
+    return unit ? `${selectedProperty.name} — Unit ${unit.unitNumber}` : selectedProperty.name;
   }, [selectedProperty, selectedUnitId]);
 
   const handleSave = (data: LeaseFormData) => {
@@ -53,63 +46,19 @@ export default function CreateLease() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/leases')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Create a Lease</h1>
-          <p className="text-sm text-muted-foreground">Select a property and unit to begin</p>
-        </div>
-      </div>
-
-      <Card className="max-w-xl">
-        <CardHeader>
-          <CardTitle className="text-base">Step 1: Select Property & Unit</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Property *</Label>
-            <SearchableSelect
-              options={propertyOptions}
-              value={selectedPropertyId}
-              onValueChange={(v) => { setSelectedPropertyId(v); setSelectedUnitId(''); }}
-              placeholder="Search properties..."
-            />
-          </div>
-
-          {selectedProperty && (
-            <div>
-              <Label>Unit / Leasable Item *</Label>
-              <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
-                <SelectTrigger><SelectValue placeholder="Select unit..." /></SelectTrigger>
-                <SelectContent>
-                  {leasableOptions.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {selectedUnitId && (
-            <Button className="w-full gap-1.5" onClick={() => setShowModal(true)}>
-              <Plus className="h-4 w-4" /> Continue to Lease Details
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      {showModal && (
-        <LeaseCreationModal
-          open={showModal}
-          onOpenChange={setShowModal}
-          leasableLabel={leasableLabel}
-          unitId={selectedUnitId === '__entire__' ? undefined : selectedUnitId}
-          onSave={handleSave}
-        />
-      )}
-    </div>
+    <LeaseCreationModal
+      open={true}
+      onOpenChange={(open) => { if (!open) navigate('/leases'); }}
+      leasableLabel={leasableLabel || undefined}
+      unitId={selectedUnitId === '__entire__' ? undefined : selectedUnitId}
+      onSave={handleSave}
+      showPropertySelector
+      propertyOptions={propertyOptions}
+      onPropertySelect={(id) => { setSelectedPropertyId(id); setSelectedUnitId(''); }}
+      selectedPropertyId={selectedPropertyId}
+      unitOptions={unitOptions}
+      onUnitSelect={setSelectedUnitId}
+      selectedUnitId={selectedUnitId}
+    />
   );
 }
