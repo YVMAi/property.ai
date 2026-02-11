@@ -22,7 +22,13 @@ import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import Accounting from "./pages/Accounting";
 import Tasks from "./pages/Tasks";
-import Leases from "./pages/Leases";
+import LeasesDashboard from "./pages/Leases";
+import VacantUnits from "./pages/leases/VacantUnits";
+import ListingsPage from "./pages/leases/Listings";
+import ActiveLeases from "./pages/leases/ActiveLeases";
+import RenewalsPage from "./pages/leases/Renewals";
+import CreateLease from "./pages/leases/CreateLease";
+import LeasingSettings from "./pages/leases/LeasingSettings";
 import Properties from "./pages/Properties";
 import PropertyFormPage from "./pages/properties/PropertyFormPage";
 import PropertyViewPage from "./pages/properties/PropertyViewPage";
@@ -77,7 +83,13 @@ const App = () => (
               <Route path="/reports" element={<ProtectedPage><Reports /></ProtectedPage>} />
               <Route path="/accounting" element={<ProtectedPage><Accounting /></ProtectedPage>} />
               <Route path="/tasks" element={<ProtectedPage><Tasks /></ProtectedPage>} />
-              <Route path="/leases" element={<ProtectedPage><Leases /></ProtectedPage>} />
+              <Route path="/leases" element={<ProtectedPage><LeasesDashboard /></ProtectedPage>} />
+              <Route path="/leases/vacant-units" element={<ProtectedPage><VacantUnits /></ProtectedPage>} />
+              <Route path="/leases/listings" element={<ProtectedPage><ListingsPage /></ProtectedPage>} />
+              <Route path="/leases/active" element={<ProtectedPage><ActiveLeases /></ProtectedPage>} />
+              <Route path="/leases/renewals" element={<ProtectedPage><RenewalsPage /></ProtectedPage>} />
+              <Route path="/leases/create" element={<ProtectedPage><CreateLease /></ProtectedPage>} />
+              <Route path="/leases/settings" element={<ProtectedPage><LeasingSettings /></ProtectedPage>} />
               <Route path="/properties" element={<ProtectedPage><Properties /></ProtectedPage>} />
               <Route path="/properties/new" element={<ProtectedPage><PropertyFormPage /></ProtectedPage>} />
               <Route path="/properties/:id" element={<ProtectedPage><PropertyViewPage /></ProtectedPage>} />
