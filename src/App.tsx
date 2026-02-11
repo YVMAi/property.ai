@@ -28,6 +28,7 @@ import ActiveLeases from "./pages/leases/ActiveLeases";
 import RenewalsPage from "./pages/leases/Renewals";
 import CreateLease from "./pages/leases/CreateLease";
 import LeasingSettings from "./pages/leases/LeasingSettings";
+import PostListing from "./pages/leases/PostListing";
 import Properties from "./pages/Properties";
 import PropertyFormPage from "./pages/properties/PropertyFormPage";
 import PropertyViewPage from "./pages/properties/PropertyViewPage";
@@ -92,6 +93,7 @@ const App = () => (
               <Route path="/leases/active" element={<ProtectedPage><ActiveLeases /></ProtectedPage>} />
               <Route path="/leases/renewals" element={<ProtectedPage><RenewalsPage /></ProtectedPage>} />
               <Route path="/leases/create" element={<ProtectedPage><CreateLease /></ProtectedPage>} />
+              <Route path="/leases/post-listing" element={<ProtectedPage><PostListing /></ProtectedPage>} />
               <Route path="/leases/settings" element={<ProtectedPage><LeasingSettings /></ProtectedPage>} />
               <Route path="/properties" element={<ProtectedPage><Properties /></ProtectedPage>} />
               <Route path="/properties/new" element={<ProtectedPage><PropertyFormPage /></ProtectedPage>} />
