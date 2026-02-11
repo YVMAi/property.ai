@@ -204,7 +204,7 @@ export default function Listings() {
                         <p className="text-xs text-muted-foreground">{inq.email}</p>
                         <p className="text-sm">{inq.message}</p>
                         <Button size="sm" variant="outline" className="h-7 text-xs gap-1 mt-1" onClick={() => {
-                          navigate('/leases/create');
+                          navigate(`/leases/create`);
                           setSelectedListing(null);
                         }}>
                           <UserPlus className="h-3 w-3" /> Convert to Lease
