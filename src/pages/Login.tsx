@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, Shield } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, Shield, BarChart3, Users, Zap, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type LoginStep = 'email' | 'password' | 'mfa';
@@ -16,7 +16,7 @@ export default function Login() {
   const [mfaCode, setMfaCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { checkEmail, login, verifyMfa } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -24,7 +24,7 @@ export default function Login() {
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    
+
     setIsLoading(true);
     const { exists } = await checkEmail(email);
     setIsLoading(false);
@@ -87,7 +87,6 @@ export default function Login() {
   };
 
   const handleMfaChange = (value: string) => {
-    // Only allow digits and max 6 characters
     const cleaned = value.replace(/\D/g, '').slice(0, 6);
     setMfaCode(cleaned);
   };
@@ -102,59 +101,129 @@ export default function Login() {
     }
   };
 
+  const features = [
+    { icon: BarChart3, label: 'Real-time ROI Analytics' },
+    { icon: Users, label: 'Automated Tenant Vetting' },
+    { icon: Zap, label: 'Predictive Maintenance AI' },
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md animate-fade-in">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-secondary-foreground tracking-tight">
-            Property<span className="text-primary">AI</span>
-          </h1>
-          <p className="text-muted-foreground mt-2">Property Management System</p>
+    <div className="min-h-screen flex">
+      {/* Left Panel — Dark branding */}
+      <div className="hidden lg:flex lg:w-[48%] relative bg-[hsl(220,20%,12%)] text-white flex-col justify-between p-10 overflow-hidden">
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,45%,20%)] via-[hsl(220,20%,12%)] to-[hsl(220,20%,8%)]" />
+
+        <div className="relative z-10">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 mb-20">
+            <div className="h-9 w-9 rounded-lg bg-[hsl(210,50%,78%)] flex items-center justify-center">
+              <Building2 className="h-5 w-5 text-[hsl(220,30%,15%)]" />
+            </div>
+            <span className="text-xl font-semibold tracking-tight">
+              Property<span className="text-[hsl(210,50%,78%)]">AI</span>
+            </span>
+          </div>
+
+          {/* Headline */}
+          <div className="max-w-md">
+            <h1 className="text-4xl font-bold leading-tight mb-4">
+              The future of{' '}
+              <span className="text-[hsl(120,30%,77%)]">intelligent</span>{' '}
+              management.
+            </h1>
+            <p className="text-[hsl(220,10%,65%)] text-base leading-relaxed mb-10">
+              Automate your portfolio with AI-driven insights, tenant matching, and predictive maintenance.
+            </p>
+
+            {/* Feature pills */}
+            <div className="space-y-3">
+              {features.map(({ icon: Icon, label }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.08] backdrop-blur-sm w-fit"
+                >
+                  <Icon className="h-4.5 w-4.5 text-[hsl(210,50%,78%)]" />
+                  <span className="text-sm font-medium text-white/90">{label}</span>
+                  <div className="h-1.5 w-1.5 rounded-full bg-[hsl(120,30%,77%)] ml-2" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-card rounded-xl shadow-elevated p-8 border border-border/50">
+        <p className="relative z-10 text-xs text-[hsl(220,10%,50%)]">
+          Trusted by 2,000+ Property Managers worldwide.
+        </p>
+      </div>
+
+      {/* Right Panel — Login form */}
+      <div className="flex-1 flex items-center justify-center bg-background p-6 sm:p-10">
+        <div className="w-full max-w-md animate-fade-in">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center gap-2.5 mb-10">
+            <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center">
+              <Building2 className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="text-xl font-semibold tracking-tight text-foreground">
+              Property<span className="text-primary">AI</span>
+            </span>
+          </div>
+
+          {/* Welcome heading */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
+            <p className="text-muted-foreground mt-1">Enter your details to access your dashboard.</p>
+          </div>
+
           {/* Step Indicator */}
-          <div className="flex items-center justify-center gap-2 mb-8">
+          <div className="flex items-center gap-2 mb-8">
             {['email', 'password', 'mfa'].map((s, i) => (
               <div
                 key={s}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  step === s ? 'w-8 bg-primary' : 
-                  ['email', 'password', 'mfa'].indexOf(step) > i ? 'w-2 bg-primary' : 'w-2 bg-border'
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  step === s
+                    ? 'w-8 bg-primary'
+                    : ['email', 'password', 'mfa'].indexOf(step) > i
+                    ? 'w-2 bg-primary'
+                    : 'w-2 bg-border'
                 }`}
               />
             ))}
           </div>
 
+          {/* Email Step */}
           {step === 'email' && (
             <form onSubmit={handleEmailSubmit} className="space-y-6 animate-slide-up">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-foreground">
-                  Email Address
+                <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Work Email
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="name@company.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className="pl-11 h-12 rounded-xl"
                     autoFocus
                     aria-label="Email Address"
                   />
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={isLoading || !email.trim()}>
+              <Button
+                type="submit"
+                className="w-full h-12 rounded-xl text-base font-semibold gap-2 bg-foreground text-background hover:bg-foreground/90"
+                disabled={isLoading || !email.trim()}
+              >
                 {isLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>
-                    Next
+                    Continue
                     <ArrowRight className="h-5 w-5" />
                   </>
                 )}
@@ -162,9 +231,10 @@ export default function Login() {
             </form>
           )}
 
+          {/* Password Step */}
           {step === 'password' && (
             <form onSubmit={handlePasswordSubmit} className="space-y-6 animate-slide-up">
-              <div className="text-center mb-4">
+              <div className="text-center mb-2">
                 <p className="text-sm text-muted-foreground">Logging in as</p>
                 <p className="font-medium text-foreground">{email}</p>
                 <button
@@ -177,28 +247,28 @@ export default function Login() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
+                    className="pl-11 pr-11 h-12 rounded-xl"
                     autoFocus
                     aria-label="Password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
                   </button>
                 </div>
               </div>
@@ -212,16 +282,17 @@ export default function Login() {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={isLoading || !password.trim()}>
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  'Log In'
-                )}
+              <Button
+                type="submit"
+                className="w-full h-12 rounded-xl text-base font-semibold bg-foreground text-background hover:bg-foreground/90"
+                disabled={isLoading || !password.trim()}
+              >
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Log In'}
               </Button>
             </form>
           )}
 
+          {/* MFA Step */}
           {step === 'mfa' && (
             <form onSubmit={handleMfaSubmit} className="space-y-6 animate-slide-up">
               <div className="text-center mb-4">
@@ -233,7 +304,7 @@ export default function Login() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mfaCode" className="text-sm font-medium text-foreground">
+                <Label htmlFor="mfaCode" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   MFA Code
                 </Label>
                 <Input
@@ -243,19 +314,19 @@ export default function Login() {
                   placeholder="000000"
                   value={mfaCode}
                   onChange={(e) => handleMfaChange(e.target.value)}
-                  className="text-center text-2xl tracking-[0.5em] font-mono"
+                  className="text-center text-2xl tracking-[0.5em] font-mono h-14 rounded-xl"
                   maxLength={6}
                   autoFocus
                   aria-label="Enter MFA Code"
                 />
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={isLoading || mfaCode.length !== 6}>
-                {isLoading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  'Verify'
-                )}
+              <Button
+                type="submit"
+                className="w-full h-12 rounded-xl text-base font-semibold bg-foreground text-background hover:bg-foreground/90"
+                disabled={isLoading || mfaCode.length !== 6}
+              >
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Verify'}
               </Button>
 
               <div className="text-center">
@@ -269,20 +340,27 @@ export default function Login() {
               </div>
             </form>
           )}
-        </div>
 
-        {/* Demo credentials */}
-        <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border/50">
-          <p className="text-xs text-muted-foreground text-center mb-2">Demo Credentials</p>
-          <p className="text-xs text-center text-foreground/80">
-            Email: <span className="font-mono">admin@propertyai.com</span>
-          </p>
-          <p className="text-xs text-center text-foreground/80">
-            Password: <span className="font-mono">password123</span>
-          </p>
-          <p className="text-xs text-center text-foreground/80">
-            MFA: <span className="font-mono">123456</span>
-          </p>
+          {/* Demo sandbox credentials */}
+          <div className="mt-10 p-4 rounded-xl bg-muted/50 border border-border/50">
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="h-2 w-2 rounded-full bg-secondary" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Environment: Demo Sandbox
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="px-2.5 py-1 rounded-md bg-background border border-border text-xs font-mono text-foreground/70">
+                USR: admin@propertyai.com
+              </span>
+              <span className="px-2.5 py-1 rounded-md bg-background border border-border text-xs font-mono text-foreground/70">
+                PWD: password123
+              </span>
+              <span className="px-2.5 py-1 rounded-md bg-background border border-border text-xs font-mono text-foreground/70">
+                MFA: 123456
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
