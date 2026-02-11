@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Download, Eye, FileText, X, UserPlus } from 'lucide-react';
+import { Plus, Search, Download, Eye, FileText } from 'lucide-react';
+import { VendorSelector } from '@/components/workorders/VendorSelector';
 import { useWorkOrdersContext } from '@/contexts/WorkOrdersContext';
 import { useVendorsContext } from '@/contexts/VendorsContext';
 import { Button } from '@/components/ui/button';
@@ -138,12 +139,11 @@ export default function WorkOrdersDashboard() {
   const [srRfpVendors, setSrRfpVendors] = useState<string[]>([]);
   const [srRfpDeadline, setSrRfpDeadline] = useState('');
   const [srRfpMessage, setSrRfpMessage] = useState('');
-  const [srRfpVendorSearch, setSrRfpVendorSearch] = useState('');
 
   // SR → Direct WO modal
   const [srWoOpen, setSrWoOpen] = useState(false);
   const [srWoId, setSrWoId] = useState('');
-  const [srWoVendor, setSrWoVendor] = useState('');
+  const [srWoVendorSelection, setSrWoVendorSelection] = useState<string[]>([]);
   const [srWoCost, setSrWoCost] = useState('');
   const [srWoDueDate, setSrWoDueDate] = useState('');
 
@@ -196,13 +196,12 @@ export default function WorkOrdersDashboard() {
     setSrRfpVendors([]);
     setSrRfpDeadline('');
     setSrRfpMessage('');
-    setSrRfpVendorSearch('');
     setSrRfpOpen(true);
   };
 
   const handleOpenSrWo = (id: string) => {
     setSrWoId(id);
-    setSrWoVendor('');
+    setSrWoVendorSelection([]);
     setSrWoCost('');
     setSrWoDueDate('');
     setSrWoOpen(true);
@@ -223,11 +222,12 @@ export default function WorkOrdersDashboard() {
   };
 
   const handleCreateDirectWO = () => {
-    const vendor = activeVendors.find(v => v.id === srWoVendor);
+    const vendorId = srWoVendorSelection[0];
+    const vendor = vendorId ? activeVendors.find(v => v.id === vendorId) : undefined;
     const vendorName = vendor ? (vendor.companyName || `${vendor.firstName} ${vendor.lastName}`) : undefined;
-    approveRequestToWO(srWoId, srWoVendor || undefined, vendorName, srWoCost ? Number(srWoCost) : undefined, srWoDueDate || undefined);
+    approveRequestToWO(srWoId, vendorId || undefined, vendorName, srWoCost ? Number(srWoCost) : undefined, srWoDueDate || undefined);
     setSrWoOpen(false);
-    toast({ title: 'Work Order Created', description: srWoVendor ? 'WO sent to vendor for acceptance.' : 'Work order created (unassigned).' });
+    toast({ title: 'Work Order Created', description: vendorId ? 'WO sent to vendor for acceptance.' : 'Work order created (unassigned).' });
   };
 
   const handleCreateWO = () => {
@@ -271,15 +271,6 @@ export default function WorkOrdersDashboard() {
     a.href = url; a.download = 'work_orders.csv'; a.click();
     URL.revokeObjectURL(url);
   };
-
-  const toggleVendor = (vid: string) => {
-    setSrRfpVendors(prev => prev.includes(vid) ? prev.filter(v => v !== vid) : [...prev, vid]);
-  };
-
-  const filteredVendorList = activeVendors.filter(v => {
-    const name = v.companyName || `${v.firstName} ${v.lastName}`;
-    return name.toLowerCase().includes(srRfpVendorSearch.toLowerCase());
-  });
 
   const createButtons = (
     <>
@@ -544,57 +535,15 @@ export default function WorkOrdersDashboard() {
               {/* Vendor Selection */}
               <div>
                 <Label className="mb-2 block">Select Vendors</Label>
-                <div className="relative mb-2">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Search vendors…"
-                    value={srRfpVendorSearch}
-                    onChange={e => setSrRfpVendorSearch(e.target.value)}
-                    className="pl-8 h-9 text-sm"
-                  />
-                </div>
-                {/* Selected badges */}
-                {srRfpVendors.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {srRfpVendors.map(vid => {
-                      const v = activeVendors.find(av => av.id === vid);
-                      const name = v ? (v.companyName || `${v.firstName} ${v.lastName}`) : vid;
-                      return (
-                        <Badge key={vid} variant="outline" className="bg-secondary/30 text-secondary-foreground gap-1 pr-1">
-                          {name}
-                          <button onClick={() => toggleVendor(vid)} className="ml-1 hover:bg-secondary/50 rounded-full p-0.5"><X className="h-3 w-3" /></button>
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                )}
-                {/* Vendor list */}
-                <div className="border rounded-lg max-h-40 overflow-y-auto">
-                  {filteredVendorList.length === 0 ? (
-                    <p className="text-sm text-muted-foreground p-3 text-center">No vendors found</p>
-                  ) : (
-                    filteredVendorList.map(v => {
-                      const name = v.companyName || `${v.firstName} ${v.lastName}`;
-                      const selected = srRfpVendors.includes(v.id);
-                      return (
-                        <div
-                          key={v.id}
-                          className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer hover:bg-muted/50 transition-colors ${selected ? 'bg-secondary/20' : ''}`}
-                          onClick={() => toggleVendor(v.id)}
-                        >
-                          <div>
-                            <p className="font-medium">{name}</p>
-                            <p className="text-xs text-muted-foreground">{v.categories.join(', ')}</p>
-                          </div>
-                          {selected && <Badge className="bg-secondary text-secondary-foreground border-0 text-xs">Selected</Badge>}
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-                <Button variant="outline" size="sm" className="mt-2 text-xs" onClick={() => navigate('/users/vendors/new')}>
-                  <UserPlus className="h-3.5 w-3.5 mr-1" /> Add New Vendor
-                </Button>
+                <VendorSelector
+                  vendors={activeVendors}
+                  mode="multi"
+                  selected={srRfpVendors}
+                  onSelectionChange={setSrRfpVendors}
+                  taskDescription={srForRfp.description}
+                  taskCategory={srForRfp.category}
+                  taskRegion=""
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -639,20 +588,16 @@ export default function WorkOrdersDashboard() {
               <Separator />
 
               <div>
-                <Label>Assign Vendor</Label>
-                <Select value={srWoVendor} onValueChange={setSrWoVendor}>
-                  <SelectTrigger><SelectValue placeholder="Select vendor (optional)" /></SelectTrigger>
-                  <SelectContent>
-                    {activeVendors.map(v => (
-                      <SelectItem key={v.id} value={v.id}>
-                        {v.companyName || `${v.firstName} ${v.lastName}`} — {v.categories.join(', ')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="sm" className="mt-2 text-xs" onClick={() => navigate('/users/vendors/new')}>
-                  <UserPlus className="h-3.5 w-3.5 mr-1" /> Add New Vendor
-                </Button>
+                <Label className="mb-2 block">Assign Vendor</Label>
+                <VendorSelector
+                  vendors={activeVendors}
+                  mode="single"
+                  selected={srWoVendorSelection}
+                  onSelectionChange={setSrWoVendorSelection}
+                  taskDescription={srForWo.description}
+                  taskCategory={srForWo.category}
+                  taskRegion=""
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
