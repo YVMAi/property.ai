@@ -157,9 +157,13 @@ export function useListingFormState() {
       toast({ title: 'Validation error', description: 'Please fill in all required fields.', variant: 'destructive' });
       return;
     }
-    toast({ title: 'Listing published to Zillow', description: 'It may take a few minutes to appear on Zillow.' });
+    if (form.listingStatus === 'draft') {
+      toast({ title: 'Listing saved as draft', description: 'You can publish it from the Listings page.' });
+    } else {
+      toast({ title: 'Listing published to Zillow', description: 'It may take a few minutes to appear on Zillow.' });
+    }
     navigate('/leases/listings');
-  }, [navigate, validateStep]);
+  }, [navigate, validateStep, form.listingStatus]);
 
   const suggestRent = useCallback(() => {
     // AI placeholder – generates a suggestion based on property data

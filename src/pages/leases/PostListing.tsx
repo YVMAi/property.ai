@@ -9,6 +9,7 @@ import ListingStepTenantCriteria from '@/components/listings/ListingStepTenantCr
 import ListingStepRentalFees from '@/components/listings/ListingStepRentalFees';
 import ListingStepLeaseAvailability from '@/components/listings/ListingStepLeaseAvailability';
 import ListingStepPreview from '@/components/listings/ListingStepPreview';
+import ListingStepStatus from '@/components/listings/ListingStepStatus';
 
 const STEPS = [
   'Property & Unit',
@@ -157,11 +158,20 @@ export default function PostListing() {
           )}
 
           {f.step === 6 && (
-            <ListingStepPreview
-              form={f.form}
-              selectedProperty={f.selectedProperty}
-              moveInTotal={f.moveInTotal}
-            />
+            <div className="space-y-6">
+              <ListingStepStatus
+                form={f.form}
+                errors={f.errors}
+                onStatusChange={(v) => f.updateForm('listingStatus', v)}
+                onExpiryChange={(v) => f.updateForm('expiryDate', v)}
+                readOnly={f.mode === 'view'}
+              />
+              <ListingStepPreview
+                form={f.form}
+                selectedProperty={f.selectedProperty}
+                moveInTotal={f.moveInTotal}
+              />
+            </div>
           )}
         </CardContent>
       </Card>
@@ -180,13 +190,12 @@ export default function PostListing() {
           {isLastStep ? (
             <>
               {!isViewMode && (
-                <Button variant="outline" onClick={f.handleSaveDraft}>
-                  <Save className="h-4 w-4 mr-1" /> Save as Draft
-                </Button>
-              )}
-              {!isViewMode && (
                 <Button className="btn-primary gap-1.5" onClick={f.handlePublish}>
-                  <ExternalLink className="h-4 w-4" /> Publish to Zillow
+                  {f.form.listingStatus === 'draft' ? (
+                    <><Save className="h-4 w-4" /> Save as Draft</>
+                  ) : (
+                    <><ExternalLink className="h-4 w-4" /> Publish to Zillow</>
+                  )}
                 </Button>
               )}
               {isViewMode && (
