@@ -1,219 +1,207 @@
-import { useState, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Image, MapPin } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, ArrowLeft, ExternalLink, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { usePropertiesContext } from '@/contexts/PropertiesContext';
-import { PROPERTY_TYPE_LABELS } from '@/types/property';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
+import { useListingFormState } from '@/hooks/useListingFormState';
+import ListingStepPropertyUnit from '@/components/listings/ListingStepPropertyUnit';
+import ListingStepPropertyDetails from '@/components/listings/ListingStepPropertyDetails';
+import ListingStepUnitDetails from '@/components/listings/ListingStepUnitDetails';
+import ListingStepTenantCriteria from '@/components/listings/ListingStepTenantCriteria';
+import ListingStepRentalFees from '@/components/listings/ListingStepRentalFees';
+import ListingStepLeaseAvailability from '@/components/listings/ListingStepLeaseAvailability';
+import ListingStepPreview from '@/components/listings/ListingStepPreview';
+
+const STEPS = [
+  'Property & Unit',
+  'Property Details',
+  'Unit Details',
+  'Tenant Criteria',
+  'Rental & Fees',
+  'Lease & Availability',
+  'Preview & Post',
+];
 
 export default function PostListing() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { activeProperties } = usePropertiesContext();
-
-  const prePropertyId = searchParams.get('propertyId') || '';
-  const preUnitId = searchParams.get('unitId') || '';
-
-  const [selectedPropertyId, setSelectedPropertyId] = useState(prePropertyId);
-  const [selectedUnitId, setSelectedUnitId] = useState(preUnitId);
-  const [description, setDescription] = useState('');
-  const [rent, setRent] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-
-  const selectedProperty = activeProperties.find((p) => p.id === selectedPropertyId);
-
-  const vacantUnits = useMemo(() => {
-    if (!selectedProperty) return [];
-    const activeLeaseUnitIds = new Set(
-      selectedProperty.leases.filter((l) => l.status === 'active').map((l) => l.unitId || l.propertyId)
-    );
-    if (selectedProperty.units.length === 0) {
-      if (!activeLeaseUnitIds.has(selectedProperty.id)) {
-        return [{ id: selectedProperty.id, label: 'Entire Property' }];
-      }
-      return [];
-    }
-    return selectedProperty.units
-      .filter((u) => !activeLeaseUnitIds.has(u.id))
-      .map((u) => ({ id: u.id, label: `Unit ${u.unitNumber}` }));
-  }, [selectedProperty]);
-
-  // Auto-generate description when property/unit selected
-  const autoDescription = useMemo(() => {
-    if (!selectedProperty) return '';
-    const unit = selectedProperty.units.find((u) => u.id === selectedUnitId);
-    const parts = [
-      `${PROPERTY_TYPE_LABELS[selectedProperty.type]} at ${selectedProperty.address.street}, ${selectedProperty.address.city}, ${selectedProperty.address.state} ${selectedProperty.address.zip}.`,
-    ];
-    if (unit) {
-      parts.push(`Unit ${unit.unitNumber} — ${unit.size} sqft, ${unit.bedrooms} bed / ${unit.bathrooms} bath.`);
-    }
-    if (selectedProperty.amenities.length > 0) {
-      parts.push(`Amenities: ${selectedProperty.amenities.join(', ')}.`);
-    }
-    return parts.join(' ');
-  }, [selectedProperty, selectedUnitId]);
-
-  const handleSaveDraft = () => {
-    toast({ title: 'Listing saved as draft', description: 'You can publish it from the Listings page.' });
-    navigate('/leases/listings');
-  };
-
-  const handlePublish = () => {
-    toast({ title: 'Listing published to Zillow', description: 'It may take a few minutes to appear on Zillow.' });
-    navigate('/leases/listings');
-  };
+  const f = useListingFormState();
+  const isViewMode = f.mode === 'view';
+  const isLastStep = f.step === STEPS.length - 1;
 
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/leases/listings')}>
-          <ArrowLeft className="h-4 w-4" />
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => f.navigate('/leases/listings')} className="shrink-0">
+          <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Post Listing to Zillow</h1>
-          <div className="h-1 w-16 bg-secondary rounded-full mt-2" />
-          <p className="text-sm text-muted-foreground mt-1">
-            Zillow Rentals Feed integration will auto-fill property details, photos, and rent from your property data.
+          <h1 className="text-2xl font-semibold text-foreground">
+            {isViewMode ? 'View Listing' : f.mode === 'edit' ? 'Edit Listing' : 'Create Listing'}
+          </h1>
+          <p className="text-muted-foreground mt-0.5">
+            Step {f.step + 1} of {STEPS.length}: {STEPS[f.step]}
           </p>
         </div>
       </div>
 
-      {/* Property & Unit Selection */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Property & Unit</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Select Property</Label>
-            <Select value={selectedPropertyId} onValueChange={(v) => { setSelectedPropertyId(v); setSelectedUnitId(''); }}>
-              <SelectTrigger><SelectValue placeholder="Choose a property..." /></SelectTrigger>
-              <SelectContent>
-                {activeProperties.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    <div className="flex items-center gap-2">
-                      <span>{p.name}</span>
-                      <Badge variant="outline" className="text-xs">{PROPERTY_TYPE_LABELS[p.type]}</Badge>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {selectedProperty && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 text-sm">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span>{selectedProperty.address.street}, {selectedProperty.address.city}, {selectedProperty.address.state} {selectedProperty.address.zip}</span>
+      {/* Step indicators */}
+      <div className="flex items-center gap-2">
+        {STEPS.map((s, i) => (
+          <button
+            key={s}
+            onClick={() => { if (i < f.step) f.setStep(i); }}
+            className="flex items-center gap-2 flex-1 group"
+            disabled={i > f.step}
+          >
+            <div
+              className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-medium shrink-0 transition-colors ${
+                i < f.step
+                  ? 'bg-primary text-primary-foreground'
+                  : i === f.step
+                  ? 'bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-2'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {i < f.step ? <Check className="h-4 w-4" /> : i + 1}
             </div>
-          )}
+            <span className={`hidden lg:block text-xs truncate ${i <= f.step ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+              {s}
+            </span>
+            {i < STEPS.length - 1 && (
+              <div className={`hidden lg:block flex-1 h-0.5 rounded-full ml-1 ${i < f.step ? 'bg-primary' : 'bg-muted'}`} />
+            )}
+          </button>
+        ))}
+      </div>
 
-          {selectedProperty && vacantUnits.length > 0 && (
-            <div>
-              <Label>Select Vacant Unit</Label>
-              <Select value={selectedUnitId} onValueChange={setSelectedUnitId}>
-                <SelectTrigger><SelectValue placeholder="Choose a vacant unit..." /></SelectTrigger>
-                <SelectContent>
-                  {vacantUnits.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>{u.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {selectedProperty && vacantUnits.length === 0 && (
-            <p className="text-sm text-muted-foreground">No vacant units available for this property.</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Listing Details */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Listing Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Monthly Rent</Label>
-            <Input
-              type="number"
-              placeholder={selectedProperty?.marketRentAvg ? `Suggested: $${selectedProperty.marketRentAvg}` : 'Enter rent amount'}
-              value={rent}
-              onChange={(e) => setRent(e.target.value)}
+      {/* Step content */}
+      <Card className="border-border/50">
+        <CardContent className="pt-6">
+          {f.step === 0 && (
+            <ListingStepPropertyUnit
+              form={f.form}
+              activeProperties={f.activeProperties}
+              selectedProperty={f.selectedProperty}
+              vacantUnits={f.vacantUnits}
+              errors={f.errors}
+              onPropertyChange={(id) => { f.updateForm('propertyId', id); f.updateForm('unitId', ''); }}
+              onUnitChange={(id) => f.updateForm('unitId', id)}
+              onBulkToggle={(unitId, checked) => {
+                const current = f.form.bulkUnitIds;
+                f.updateForm('bulkUnitIds', checked ? [...current, unitId] : current.filter((u) => u !== unitId));
+              }}
             />
-          </div>
+          )}
 
-          <div>
-            <Label>Listing Description</Label>
-            <Textarea
-              placeholder="Auto-generated from property details..."
-              className="min-h-[120px]"
-              value={description || autoDescription}
-              onChange={(e) => setDescription(e.target.value)}
+          {f.step === 1 && (
+            <ListingStepPropertyDetails
+              amenities={f.form.propertyAmenities}
+              locationDescription={f.form.locationDescription}
+              photos={f.form.propertyPhotos}
+              onAmenitiesChange={(a) => f.updateForm('propertyAmenities', a)}
+              onLocationChange={(d) => f.updateForm('locationDescription', d)}
+              onPhotosChange={(p) => f.updateForm('propertyPhotos', p)}
+              readOnly={isViewMode}
             />
-            <p className="text-xs text-muted-foreground mt-1">This description will appear on your Zillow listing.</p>
-          </div>
+          )}
 
-          {selectedProperty && selectedProperty.photos.length > 0 && (
-            <div>
-              <Label className="mb-2 block">Property Photos</Label>
-              <div className="flex gap-2 flex-wrap">
-                {selectedProperty.photos.slice(0, 4).map((photo, i) => (
-                  <div key={i} className="h-20 w-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-                    <Image className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">Photos will be synced from property data.</p>
-            </div>
+          {f.step === 2 && (
+            <ListingStepUnitDetails
+              amenities={f.form.unitAmenities}
+              locationNotes={f.form.unitLocationNotes}
+              photos={f.form.unitPhotos}
+              onAmenitiesChange={(a) => f.updateForm('unitAmenities', a)}
+              onLocationChange={(d) => f.updateForm('unitLocationNotes', d)}
+              onPhotosChange={(p) => f.updateForm('unitPhotos', p)}
+              readOnly={isViewMode}
+            />
+          )}
+
+          {f.step === 3 && (
+            <ListingStepTenantCriteria
+              criteria={f.form.tenantCriteria}
+              houseRules={f.form.houseRules}
+              onCriteriaChange={(c) => f.updateForm('tenantCriteria', c)}
+              onRulesChange={(r) => f.updateForm('houseRules', r)}
+              readOnly={isViewMode}
+            />
+          )}
+
+          {f.step === 4 && (
+            <ListingStepRentalFees
+              form={f.form}
+              errors={f.errors}
+              moveInTotal={f.moveInTotal}
+              onRentChange={(v) => f.updateForm('rentalAmount', v)}
+              onDepositChange={(v) => f.updateForm('securityDeposit', v)}
+              onDepositDueChange={(v) => f.updateForm('depositDueOn', v)}
+              onSuggestRent={f.suggestRent}
+              addFee={f.addFee}
+              updateFee={f.updateFee}
+              removeFee={f.removeFee}
+              readOnly={isViewMode}
+            />
+          )}
+
+          {f.step === 5 && (
+            <ListingStepLeaseAvailability
+              leaseType={f.form.leaseType}
+              availableFrom={f.form.availableFrom}
+              minTermMonths={f.form.minTermMonths}
+              maxTermMonths={f.form.maxTermMonths}
+              errors={f.errors}
+              onLeaseTypeChange={(v) => f.updateForm('leaseType', v)}
+              onAvailableFromChange={(v) => f.updateForm('availableFrom', v)}
+              onMinTermChange={(v) => f.updateForm('minTermMonths', v)}
+              onMaxTermChange={(v) => f.updateForm('maxTermMonths', v)}
+              readOnly={isViewMode}
+            />
+          )}
+
+          {f.step === 6 && (
+            <ListingStepPreview
+              form={f.form}
+              selectedProperty={f.selectedProperty}
+              moveInTotal={f.moveInTotal}
+            />
           )}
         </CardContent>
       </Card>
 
-      {/* Contact Info */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Contact Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label>Email</Label>
-              <Input placeholder="leasing@company.com" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
-            </div>
-            <div>
-              <Label>Phone</Label>
-              <Input placeholder="(555) 000-0000" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Integration Note */}
-      <p className="text-xs text-muted-foreground">
-        Configure Zillow API credentials in{' '}
-        <button className="text-primary underline" onClick={() => navigate('/leases/settings')}>
-          Leasing Settings → Integrations
-        </button>
-      </p>
-
-      {/* Actions */}
-      <div className="flex justify-end gap-3 pb-6">
-        <Button variant="outline" onClick={() => navigate('/leases/listings')}>Cancel</Button>
-        <Button variant="outline" onClick={handleSaveDraft}>Save as Draft</Button>
-        <Button onClick={handlePublish} className="gap-1.5">
-          <ExternalLink className="h-4 w-4" /> Publish to Zillow
+      {/* Navigation */}
+      <div className="flex items-center justify-between pb-6">
+        <Button
+          variant="outline"
+          onClick={f.step === 0 ? () => f.navigate('/leases/listings') : f.handleBack}
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          {f.step === 0 ? 'Cancel' : 'Back'}
         </Button>
+
+        <div className="flex gap-2">
+          {isLastStep ? (
+            <>
+              {!isViewMode && (
+                <Button variant="outline" onClick={f.handleSaveDraft}>
+                  <Save className="h-4 w-4 mr-1" /> Save as Draft
+                </Button>
+              )}
+              {!isViewMode && (
+                <Button className="btn-primary gap-1.5" onClick={f.handlePublish}>
+                  <ExternalLink className="h-4 w-4" /> Publish to Zillow
+                </Button>
+              )}
+              {isViewMode && (
+                <Button className="btn-primary" onClick={() => f.navigate('/leases/post-listing?mode=edit')}>
+                  Edit Listing
+                </Button>
+              )}
+            </>
+          ) : (
+            <Button className="btn-primary" onClick={f.handleNext}>
+              Next
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
