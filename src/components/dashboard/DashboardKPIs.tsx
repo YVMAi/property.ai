@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import {
   Building2, Users, FileText, ClipboardList, TrendingUp, DollarSign, Percent,
   Calendar, Home, BarChart3, PieChart as PieChartIcon, Activity,
@@ -27,6 +28,7 @@ const trendColors: Record<string, string> = {
 };
 
 export default function DashboardKPIs() {
+  const { formatAmount, formatCompact, currencySymbol } = useCurrency();
   const {
     kpiWidgets, chartWidgets, editMode, setEditMode,
     addWidget, updateWidget, deleteWidget, duplicateWidget, resetToDefaults,
@@ -105,7 +107,9 @@ export default function DashboardKPIs() {
             <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">{widget.title}</span>
             <Icon className="h-3.5 w-3.5 text-primary" />
           </div>
-          <div className="text-xl font-bold text-foreground">{widget.value}</div>
+          <div className="text-xl font-bold text-foreground">
+            {widget.displayFormat === 'dollar' ? formatCompact(parseFloat(String(widget.value).replace(/[^0-9.]/g, '')) || 0) : widget.value}
+          </div>
           {widget.showTrend && widget.trendLabel && (
             <p className={`text-[10px] mt-0.5 flex items-center gap-0.5 ${trendColors[widget.trendDirection || 'neutral']}`}>
               <TrendingUp className="h-2.5 w-2.5" />
@@ -133,8 +137,8 @@ export default function DashboardKPIs() {
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={widget.chartData}>
                 <XAxis dataKey="month" tick={{ fontSize: 10 }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} label={{ value: 'Month', position: 'insideBottom', offset: -2, fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis tick={{ fontSize: 10 }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} label={{ value: 'Revenue ($)', angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip formatter={(v: number) => [`$${v.toLocaleString()}`, 'Revenue']} />
+                <YAxis tick={{ fontSize: 10 }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} tickFormatter={(v) => formatCompact(v)} label={{ value: 'Revenue', angle: -90, position: 'insideLeft', offset: 10, fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                <Tooltip formatter={(v: number) => [formatAmount(v), 'Revenue']} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Line type="monotone" dataKey="revenue" name="Revenue" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>

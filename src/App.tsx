@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { OwnersProvider } from "@/contexts/OwnersContext";
 import { TenantsProvider } from "@/contexts/TenantsContext";
 import { VendorsProvider } from "@/contexts/VendorsContext";
@@ -65,6 +66,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <AuthProvider>
+        <CurrencyProvider>
         <OwnersProvider>
           <PropertiesProvider>
           <PropertyGroupsProvider>
@@ -133,6 +135,7 @@ const App = () => (
           </PropertyGroupsProvider>
           </PropertiesProvider>
         </OwnersProvider>
+        </CurrencyProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

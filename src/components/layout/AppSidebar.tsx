@@ -23,6 +23,7 @@ import {
   Plug,
   HelpCircle,
   Plus,
+  Coins,
 } from 'lucide-react';
 import CreateActionsModal from './CreateActionsModal';
 import {
@@ -95,12 +96,13 @@ const menuItems: MenuItem[] = [
   { title: 'Files', url: '/files', icon: FolderOpen },
 ];
 
-export type SettingsTab = 'profile' | 'people' | 'billing' | 'connectors' | 'help';
+export type SettingsTab = 'profile' | 'people' | 'billing' | 'currency' | 'connectors' | 'help';
 
 const settingsMenuItems: { id: SettingsTab; title: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'profile', title: 'Profile', icon: User },
   { id: 'people', title: 'People', icon: Users },
   { id: 'billing', title: 'Billing', icon: CreditCard },
+  { id: 'currency', title: 'Currency', icon: Coins },
   { id: 'connectors', title: 'Connectors', icon: Plug },
   { id: 'help', title: 'Help & Support', icon: HelpCircle },
 ];
