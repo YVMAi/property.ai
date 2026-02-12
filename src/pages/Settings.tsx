@@ -7,6 +7,7 @@ import type { SettingsTab } from '@/components/layout/AppSidebar';
 import ProfileSection from '@/components/settings/ProfileSection';
 import PeopleSection from '@/components/settings/PeopleSection';
 import BillingSection from '@/components/settings/BillingSection';
+import CurrencySection from '@/components/settings/CurrencySection';
 import ConnectorsSection from '@/components/settings/ConnectorsSection';
 import HelpSupportSection from '@/components/settings/HelpSupportSection';
 
@@ -14,6 +15,7 @@ const TAB_TITLES: Record<SettingsTab, string> = {
   profile: 'Profile',
   people: 'People',
   billing: 'Billing',
+  currency: 'Currency',
   connectors: 'Connectors',
   help: 'Help & Support',
 };
@@ -40,6 +42,7 @@ export default function Settings() {
       case 'profile': return <ProfileSection />;
       case 'people': return <PeopleSection />;
       case 'billing': return <BillingSection />;
+      case 'currency': return <CurrencySection />;
       case 'connectors': return <ConnectorsSection />;
       case 'help': return <HelpSupportSection />;
     }
