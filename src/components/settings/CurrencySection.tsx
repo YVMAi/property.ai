@@ -111,7 +111,13 @@ export default function CurrencySection() {
                   <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]" align="start">
+              <PopoverContent
+                className="p-0 w-[var(--radix-popover-trigger-width)] bg-popover border border-border shadow-lg z-50"
+                align="start"
+                side="bottom"
+                sideOffset={4}
+                avoidCollisions={false}
+              >
                 <div className="flex items-center border-b border-border px-3 py-2">
                   <Search className="h-4 w-4 text-muted-foreground mr-2 shrink-0" />
                   <input
@@ -122,7 +128,7 @@ export default function CurrencySection() {
                     autoFocus
                   />
                 </div>
-                <ScrollArea className="max-h-72">
+                <ScrollArea className="h-72">
                   <div className="p-1">
                     {filtered.length === 0 ? (
                       <p className="py-4 text-center text-sm text-muted-foreground">No currencies found</p>
