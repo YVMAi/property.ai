@@ -72,7 +72,7 @@ export default function LeasingSettings() {
       </div>
 
       {/* Property Filter */}
-      <div className="max-w-3xl">
+      <div>
         <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card">
           <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
           <Label className="text-sm font-medium shrink-0">Scope</Label>
@@ -86,7 +86,7 @@ export default function LeasingSettings() {
         </div>
       </div>
 
-      <div className="max-w-3xl space-y-4">
+      <div className="space-y-4">
         {/* Invoice Generation */}
         <Card>
           <CardHeader className="pb-3">
