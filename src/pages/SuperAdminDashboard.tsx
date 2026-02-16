@@ -1,19 +1,22 @@
 import { useState } from 'react';
 import { useSuperAdmin } from '@/contexts/SuperAdminContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSAComms } from '@/contexts/SACommsContext';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building2, DollarSign, Users, AlertTriangle, Plus, CreditCard, FileText, BarChart3, Settings } from 'lucide-react';
+import { Building2, DollarSign, Users, AlertTriangle, Plus, CreditCard, FileText, BarChart3, Settings, Mail } from 'lucide-react';
 import SuperAdminLayout from '@/components/superadmin/SuperAdminLayout';
 import SuperAdminPMCList from '@/components/superadmin/SuperAdminPMCList';
 import SuperAdminLogs from '@/components/superadmin/SuperAdminLogs';
 import SuperAdminSubscriptions from '@/components/superadmin/SuperAdminSubscriptions';
 import SuperAdminTeam from '@/components/superadmin/SuperAdminTeam';
+import SuperAdminComms from '@/components/superadmin/SuperAdminComms';
 import AddPMCDialog from '@/components/superadmin/AddPMCDialog';
 
 export default function SuperAdminDashboard() {
   const { pmcs, totalRevenue, totalUsers, logs } = useSuperAdmin();
+  const { totalUnread } = useSAComms();
   const [showAddPMC, setShowAddPMC] = useState(false);
 
   const activePMCs = pmcs.filter(p => p.status === 'active').length;
@@ -69,12 +72,19 @@ export default function SuperAdminDashboard() {
         <Tabs defaultValue="pmcs">
           <TabsList className="bg-muted/60 p-1">
             <TabsTrigger value="pmcs" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> PMCs</TabsTrigger>
+            <TabsTrigger value="comms" className="gap-1.5 relative">
+              <Mail className="h-3.5 w-3.5" /> Communications
+              {totalUnread > 0 && (
+                <Badge className="ml-1 bg-destructive/80 text-white text-[9px] h-4 min-w-4 px-1 leading-none">{totalUnread}</Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="subscriptions" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Subscriptions</TabsTrigger>
             <TabsTrigger value="logs" className="gap-1.5"><FileText className="h-3.5 w-3.5" /> Logs</TabsTrigger>
             <TabsTrigger value="team" className="gap-1.5"><Settings className="h-3.5 w-3.5" /> Team</TabsTrigger>
           </TabsList>
 
           <TabsContent value="pmcs"><SuperAdminPMCList onAddNew={() => setShowAddPMC(true)} /></TabsContent>
+          <TabsContent value="comms"><SuperAdminComms /></TabsContent>
           <TabsContent value="subscriptions"><SuperAdminSubscriptions /></TabsContent>
           <TabsContent value="logs"><SuperAdminLogs /></TabsContent>
           <TabsContent value="team"><SuperAdminTeam /></TabsContent>

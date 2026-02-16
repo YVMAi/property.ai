@@ -101,3 +101,43 @@ export const STATUS_BADGE_COLORS: Record<PMCStatus, string> = {
   suspended: 'bg-destructive/30 text-destructive-foreground',
   trial: 'bg-primary/30 text-primary-foreground',
 };
+
+// ── Communications Types ──
+
+export type SACommType = 'chat' | 'email';
+
+export interface SAMessage {
+  id: string;
+  threadId: string;
+  senderId: string;
+  senderName: string;
+  senderType: 'super' | 'pmc';
+  content: string;
+  type: SACommType;
+  timestamp: string;
+  read: boolean;
+  attachments?: { name: string; url: string; size: string }[];
+  subject?: string;
+}
+
+export interface SAThread {
+  id: string;
+  pmcId: string;
+  pmcName: string;
+  pmcAdminEmail: string;
+  type: SACommType;
+  subject?: string;
+  lastMessage: string;
+  lastTimestamp: string;
+  unreadCount: number;
+  pinned?: boolean;
+  online?: boolean;
+}
+
+export interface SACommTemplate {
+  id: string;
+  name: string;
+  type: SACommType;
+  subject?: string;
+  body: string;
+}
