@@ -8,6 +8,7 @@ import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, Shield, BarChart3, Users,
 import { useToast } from "@/hooks/use-toast";
 
 type LoginStep = "email" | "password" | "mfa";
+type LoginTarget = "regular" | "super_admin";
 
 export default function Login() {
   const [step, setStep] = useState<LoginStep>("email");
@@ -16,6 +17,7 @@ export default function Login() {
   const [mfaCode, setMfaCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loginTarget, setLoginTarget] = useState<LoginTarget>("regular");
 
   const { checkEmail, login, verifyMfa } = useAuth();
   const navigate = useNavigate();
@@ -49,6 +51,7 @@ export default function Login() {
     setIsLoading(false);
 
     if (result.success && result.requiresMfa) {
+      if (result.isSuperAdmin) setLoginTarget("super_admin");
       setStep("mfa");
       toast({
         title: "MFA Code Sent",
@@ -72,11 +75,13 @@ export default function Login() {
     setIsLoading(false);
 
     if (result.success) {
-      toast({
-        title: "Welcome!",
-        description: "You have successfully logged in.",
-      });
-      navigate("/dashboard");
+      if (result.isSuperAdmin) {
+        toast({ title: "Super Admin Access", description: "Opening admin portal in a new tab." });
+        window.open('/super-admin', '_blank');
+      } else {
+        toast({ title: "Welcome!", description: "You have successfully logged in." });
+        navigate("/dashboard");
+      }
     } else if (result.error) {
       toast({
         title: "Verification Failed",
@@ -354,6 +359,15 @@ export default function Login() {
               </span>
               <span className="px-2.5 py-1 rounded-md bg-background border border-border text-xs font-mono text-foreground/70">
                 MFA: 123456
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-border/30">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Super Admin:</span>
+              <span className="px-2.5 py-1 rounded-md bg-background border border-border text-xs font-mono text-foreground/70">
+                USR: super@pmshq.com
+              </span>
+              <span className="px-2.5 py-1 rounded-md bg-background border border-border text-xs font-mono text-foreground/70">
+                PWD: superadmin123
               </span>
             </div>
           </div>

@@ -8,14 +8,15 @@ interface User {
   name: string;
   avatar?: string;
   role: UserRole;
+  isSuperAdmin?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; requiresMfa?: boolean }>;
-  verifyMfa: (code: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; requiresMfa?: boolean; isSuperAdmin?: boolean }>;
+  verifyMfa: (code: string) => Promise<{ success: boolean; error?: string; isSuperAdmin?: boolean }>;
   logout: () => void;
   requestPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
   resetPassword: (token: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
@@ -28,6 +29,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const DEMO_USERS = [
   { id: '1', email: 'admin@propertyai.com', password: 'password123', name: 'Admin User', role: 'admin' as UserRole },
   { id: '2', email: 'manager@propertyai.com', password: 'password123', name: 'Property Manager', role: 'user' as UserRole },
+];
+
+// Super admin credentials (separate table in production)
+const DEMO_SUPER_ADMINS = [
+  { id: 'sa-1', email: 'super@pmshq.com', password: 'superadmin123', name: 'System Administrator' },
 ];
 
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
@@ -70,14 +76,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, lastActivity]);
 
   const checkEmail = async (email: string): Promise<{ exists: boolean; error?: string }> => {
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-    const exists = DEMO_USERS.some(u => u.email.toLowerCase() === email.toLowerCase());
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const exists = DEMO_USERS.some(u => u.email.toLowerCase() === email.toLowerCase()) ||
+      DEMO_SUPER_ADMINS.some(u => u.email.toLowerCase() === email.toLowerCase());
     return { exists };
   };
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; requiresMfa?: boolean }> => {
-    await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; requiresMfa?: boolean; isSuperAdmin?: boolean }> => {
+    await new Promise(resolve => setTimeout(resolve, 800));
     
+    // Check super admin table first
+    const superAdmin = DEMO_SUPER_ADMINS.find(
+      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    );
+    if (superAdmin) {
+      setPendingUser({ id: superAdmin.id, email: superAdmin.email, name: superAdmin.name, role: 'admin', isSuperAdmin: true });
+      return { success: true, requiresMfa: true, isSuperAdmin: true };
+    }
+
     const foundUser = DEMO_USERS.find(
       u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
     );
@@ -86,26 +102,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'Invalid credentials. Please try again.' };
     }
 
-    // Store pending user for MFA verification
     setPendingUser({ id: foundUser.id, email: foundUser.email, name: foundUser.name, role: foundUser.role });
-    
     return { success: true, requiresMfa: true };
   };
 
-  const verifyMfa = async (code: string): Promise<{ success: boolean; error?: string }> => {
-    await new Promise(resolve => setTimeout(resolve, 600)); // Simulate API call
+  const verifyMfa = async (code: string): Promise<{ success: boolean; error?: string; isSuperAdmin?: boolean }> => {
+    await new Promise(resolve => setTimeout(resolve, 600));
     
-    // Accept any 6-digit code for demo (in production, verify against sent code)
     if (code.length !== 6 || !/^\d+$/.test(code)) {
       return { success: false, error: 'Invalid MFA code. Please enter 6 digits.' };
     }
 
-    // For demo, accept code "123456" or any 6-digit number
     if (pendingUser) {
       setUser(pendingUser);
       localStorage.setItem('propertyai_user', JSON.stringify(pendingUser));
+      const isSuperAdmin = pendingUser.isSuperAdmin || false;
       setPendingUser(null);
-      return { success: true };
+      return { success: true, isSuperAdmin };
     }
 
     return { success: false, error: 'Session expired. Please login again.' };

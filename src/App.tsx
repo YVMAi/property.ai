@@ -13,6 +13,7 @@ import { PropertiesProvider } from "@/contexts/PropertiesContext";
 import { PropertyGroupsProvider } from "@/contexts/PropertyGroupsContext";
 import { BankAccountsProvider } from "@/contexts/BankAccountsContext";
 import { WorkOrdersProvider } from "@/contexts/WorkOrdersContext";
+import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 // Pages
@@ -54,6 +55,7 @@ import ServiceRequestViewPage from "./pages/workorders/ServiceRequestViewPage";
 import CreateRFPPage from "./pages/workorders/CreateRFPPage";
 import CreateWOPage from "./pages/workorders/CreateWOPage";
 import AIChat from "./pages/AIChat";
+import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -125,6 +127,9 @@ const App = () => (
               <Route path="/communications" element={<ProtectedPage><Communications /></ProtectedPage>} />
               <Route path="/files" element={<ProtectedPage><Files /></ProtectedPage>} />
               <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
+              
+              {/* Super Admin Portal */}
+              <Route path="/super-admin" element={<SuperAdminProvider><SuperAdminDashboard /></SuperAdminProvider>} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
