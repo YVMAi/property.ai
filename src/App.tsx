@@ -14,6 +14,7 @@ import { PropertyGroupsProvider } from "@/contexts/PropertyGroupsContext";
 import { BankAccountsProvider } from "@/contexts/BankAccountsContext";
 import { WorkOrdersProvider } from "@/contexts/WorkOrdersContext";
 import { SuperAdminProvider } from "@/contexts/SuperAdminContext";
+import { SACommsProvider } from "@/contexts/SACommsContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 // Pages
@@ -129,7 +130,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedPage><Settings /></ProtectedPage>} />
               
               {/* Super Admin Portal */}
-              <Route path="/super-admin" element={<SuperAdminProvider><SuperAdminDashboard /></SuperAdminProvider>} />
+              <Route path="/super-admin" element={<SuperAdminProvider><SACommsProvider><SuperAdminDashboard /></SACommsProvider></SuperAdminProvider>} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
