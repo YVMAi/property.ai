@@ -57,6 +57,8 @@ import CreateRFPPage from "./pages/workorders/CreateRFPPage";
 import CreateWOPage from "./pages/workorders/CreateWOPage";
 import AIChat from "./pages/AIChat";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import PortalLogin from "./pages/portals/PortalLogin";
+import PortalDashboard from "./pages/portals/PortalDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -131,6 +133,14 @@ const App = () => (
               
               {/* Super Admin Portal */}
               <Route path="/super-admin" element={<SuperAdminProvider><SACommsProvider><SuperAdminDashboard /></SACommsProvider></SuperAdminProvider>} />
+              
+              {/* Portal Login & Dashboard Routes */}
+              <Route path="/owner-login" element={<PortalLogin portalType="owner" />} />
+              <Route path="/tenant-login" element={<PortalLogin portalType="tenant" />} />
+              <Route path="/vendor-login" element={<PortalLogin portalType="vendor" />} />
+              <Route path="/owner-dashboard" element={<PortalDashboard portalType="owner" />} />
+              <Route path="/tenant-dashboard" element={<PortalDashboard portalType="tenant" />} />
+              <Route path="/vendor-dashboard" element={<PortalDashboard portalType="vendor" />} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

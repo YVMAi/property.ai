@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, Shield, BarChart3, Users, Zap, Building2 } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, Shield, BarChart3, Users, Zap, Building2, Home, Key, Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type LoginStep = "email" | "password" | "mfa";
@@ -342,8 +342,32 @@ export default function Login() {
             </form>
           )}
 
+          {/* Portal Buttons */}
+          <div className="mt-10">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">Access Your Portal</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { label: "Owner Portal", icon: Home, route: "/owner-login", accent: "hsl(120,30%,77%)", hoverBg: "hover:bg-[hsl(120,30%,95%)]" },
+                { label: "Tenant Portal", icon: Key, route: "/tenant-login", accent: "hsl(210,50%,78%)", hoverBg: "hover:bg-[hsl(210,50%,95%)]" },
+                { label: "Vendor Portal", icon: Wrench, route: "/vendor-login", accent: "hsl(30,60%,78%)", hoverBg: "hover:bg-[hsl(30,60%,95%)]" },
+              ].map(({ label, icon: BtnIcon, route, accent, hoverBg }) => (
+                <button
+                  key={route}
+                  type="button"
+                  onClick={() => window.open(route, '_blank')}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border border-border/60 bg-card transition-all duration-200 ${hoverBg} hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer group`}
+                >
+                  <div className="h-10 w-10 rounded-lg flex items-center justify-center transition-colors" style={{ backgroundColor: accent }}>
+                    <BtnIcon className="h-5 w-5 text-foreground" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Demo sandbox credentials */}
-          <div className="mt-10 p-4 rounded-xl bg-muted/50 border border-border/50">
+          <div className="mt-6 p-4 rounded-xl bg-muted/50 border border-border/50">
             <div className="flex items-center gap-2 mb-2.5">
               <div className="h-2 w-2 rounded-full bg-secondary" />
               <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
