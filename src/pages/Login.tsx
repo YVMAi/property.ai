@@ -173,6 +173,7 @@ export default function Login() {
 
           {/* Welcome heading */}
           <div className="mb-8">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">PMC Admin Login Portal</p>
             <h2 className="text-2xl font-bold text-foreground">Welcome back</h2>
             <p className="text-muted-foreground mt-1">Enter your details to access your dashboard.</p>
           </div>
