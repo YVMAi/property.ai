@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import {
   Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, Shield,
   Building2, Home, Key, Wrench, UserPlus, ArrowLeft, CheckCircle2,
+  BarChart3, DollarSign, FileText, ClipboardList, CreditCard, Send,
+  Settings, PieChart, Receipt, Hammer,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -13,6 +15,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 type PortalType = "owner" | "tenant" | "vendor";
 type LoginStep = "email" | "password" | "mfa";
 type ResetStep = "request" | "sent";
+
+interface PortalFeature {
+  icon: typeof Home;
+  label: string;
+}
 
 interface PortalConfig {
   type: PortalType;
@@ -22,35 +29,51 @@ interface PortalConfig {
   icon: typeof Home;
   dashboardRoute: string;
   placeholderSubtitle: string;
+  features: PortalFeature[];
 }
 
 const PORTAL_CONFIGS: Record<PortalType, PortalConfig> = {
   owner: {
     type: "owner",
     title: "Owner Portal",
-    tagline: "Manage your properties and payments",
+    tagline: "Manage your properties and payments effortlessly.",
     accentHsl: "hsl(120,30%,77%)",
     icon: Home,
     dashboardRoute: "/owner-dashboard",
     placeholderSubtitle: "This portal is coming soon with powerful features for Owners.",
+    features: [
+      { icon: PieChart, label: "Real-time portfolio overview" },
+      { icon: DollarSign, label: "Automated rent collection & reports" },
+      { icon: FileText, label: "Secure document access" },
+    ],
   },
   tenant: {
     type: "tenant",
     title: "Tenant Portal",
-    tagline: "Pay rent and submit requests",
+    tagline: "Pay rent and manage your lease in one place.",
     accentHsl: "hsl(210,50%,78%)",
     icon: Key,
     dashboardRoute: "/tenant-dashboard",
     placeholderSubtitle: "This portal is coming soon with powerful features for Tenants.",
+    features: [
+      { icon: CreditCard, label: "Easy rent payments" },
+      { icon: Send, label: "Submit maintenance requests" },
+      { icon: FileText, label: "View lease documents & notices" },
+    ],
   },
   vendor: {
     type: "vendor",
     title: "Vendor Portal",
-    tagline: "View work orders and invoices",
+    tagline: "View work orders and get paid faster.",
     accentHsl: "hsl(30,60%,78%)",
     icon: Wrench,
     dashboardRoute: "/vendor-dashboard",
     placeholderSubtitle: "This portal is coming soon with powerful features for Vendors.",
+    features: [
+      { icon: ClipboardList, label: "Assigned work orders" },
+      { icon: Receipt, label: "Submit quotes & invoices" },
+      { icon: Hammer, label: "Track payments & status" },
+    ],
   },
 };
 
@@ -337,13 +360,16 @@ export default function PortalLogin({ portalType }: { portalType: PortalType }) 
             </form>
           )}
 
-          {/* Create Account + Demo credentials */}
-          <div className="mt-8 text-center">
+          {/* Create Account — prominent */}
+          <div className="mt-8">
             <Dialog open={signupOpen} onOpenChange={setSignupOpen}>
               <DialogTrigger asChild>
-                <button className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
-                  <UserPlus className="h-4 w-4" /> Create Account
-                </button>
+                <Button
+                  className="w-full h-13 rounded-xl text-base font-semibold gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                  style={{ backgroundColor: config.accentHsl, color: "hsl(220,30%,15%)" }}
+                >
+                  <UserPlus className="h-5 w-5" /> Create Account
+                </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
@@ -399,13 +425,25 @@ function LeftPanel({ config }: { config: PortalConfig }) {
           </span>
         </div>
         <div className="max-w-md">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: config.accentHsl }}>
-              <Icon className="h-6 w-6 text-[hsl(220,30%,15%)]" />
-            </div>
-            <h1 className="text-3xl font-bold" style={{ color: config.accentHsl }}>{config.title}</h1>
+          <h1 className="text-4xl font-bold leading-tight mb-4">
+            {config.title.split(" ")[0]}{" "}
+            <span style={{ color: config.accentHsl }}>{config.title.split(" ").slice(1).join(" ")}</span>
+          </h1>
+          <p className="text-[hsl(220,10%,65%)] text-base leading-relaxed mb-10">
+            {config.tagline}
+          </p>
+          <div className="space-y-3">
+            {config.features.map(({ icon: FIcon, label }) => (
+              <div
+                key={label}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.06] border border-white/[0.08] backdrop-blur-sm w-fit"
+              >
+                <FIcon className="h-4.5 w-4.5" style={{ color: config.accentHsl }} />
+                <span className="text-sm font-medium text-white/90">{label}</span>
+                <div className="h-1.5 w-1.5 rounded-full ml-2" style={{ backgroundColor: config.accentHsl }} />
+              </div>
+            ))}
           </div>
-          <p className="text-[hsl(220,10%,65%)] text-lg leading-relaxed">{config.tagline}</p>
         </div>
       </div>
       <p className="relative z-10 text-xs text-[hsl(220,10%,50%)]">Powered by PropertyAI</p>
