@@ -7,10 +7,10 @@ import { Bell, LogOut, Search, Moon, Sun } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useTheme } from 'next-themes';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from
+'@/components/ui/dropdown-menu';
 
-export default function TenantPortalLayout({ children }: { children: React.ReactNode }) {
+export default function TenantPortalLayout({ children }: {children: React.ReactNode;}) {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const [searchValue, setSearchValue] = useState('');
@@ -34,8 +34,8 @@ export default function TenantPortalLayout({ children }: { children: React.React
                   placeholder="Search..."
                   value={searchValue}
                   onChange={(e) => setSearchValue(e.target.value)}
-                  className="pl-9 h-9 w-56 rounded-xl bg-muted/50 border-border text-sm"
-                />
+                  className="pl-9 h-9 w-56 rounded-xl bg-muted/50 border-border text-sm" />
+
                 <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none hidden md:inline-flex h-5 items-center gap-0.5 rounded border border-border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
                   ⌘K
                 </kbd>
@@ -46,8 +46,8 @@ export default function TenantPortalLayout({ children }: { children: React.React
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              >
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+
                 {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
 
@@ -69,13 +69,13 @@ export default function TenantPortalLayout({ children }: { children: React.React
           </header>
 
           {/* Content */}
-          <main className="flex-1 p-4 sm:p-6 overflow-auto">
+          <main className="flex-1 p-4 sm:p-6 overflow-auto bg-white">
             <div className="max-w-6xl mx-auto animate-fade-in">
               {children}
             </div>
           </main>
         </div>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>);
+
 }
