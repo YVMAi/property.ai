@@ -59,6 +59,9 @@ import AIChat from "./pages/AIChat";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import PortalLogin from "./pages/portals/PortalLogin";
 import PortalDashboard from "./pages/portals/PortalDashboard";
+import TenantPortalLayout from "./components/tenant-portal/TenantPortalLayout";
+import TenantDashboard from "./pages/tenant-portal/TenantDashboard";
+import TenantUnderDevelopment from "./pages/tenant-portal/TenantUnderDevelopment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -139,8 +142,15 @@ const App = () => (
               <Route path="/tenant-login" element={<PortalLogin portalType="tenant" />} />
               <Route path="/vendor-login" element={<PortalLogin portalType="vendor" />} />
               <Route path="/owner-dashboard" element={<PortalDashboard portalType="owner" />} />
-              <Route path="/tenant-dashboard" element={<PortalDashboard portalType="tenant" />} />
               <Route path="/vendor-dashboard" element={<PortalDashboard portalType="vendor" />} />
+              
+              {/* Tenant Portal */}
+              <Route path="/tenant-portal" element={<TenantPortalLayout><TenantDashboard /></TenantPortalLayout>} />
+              <Route path="/tenant-portal/communications" element={<TenantPortalLayout><TenantUnderDevelopment title="Communications" /></TenantPortalLayout>} />
+              <Route path="/tenant-portal/files" element={<TenantPortalLayout><TenantUnderDevelopment title="Files" /></TenantPortalLayout>} />
+              <Route path="/tenant-portal/profile" element={<TenantPortalLayout><TenantUnderDevelopment title="Profile Settings" /></TenantPortalLayout>} />
+              <Route path="/tenant-portal/notifications" element={<TenantPortalLayout><TenantUnderDevelopment title="Notifications" /></TenantPortalLayout>} />
+              <Route path="/tenant-portal/marketplace" element={<TenantPortalLayout><TenantUnderDevelopment title="Marketplace — Coming Soon" /></TenantPortalLayout>} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>

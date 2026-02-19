@@ -53,7 +53,7 @@ const PORTAL_CONFIGS: Record<PortalType, PortalConfig> = {
     tagline: "Pay rent and manage your lease in one place.",
     accentHsl: "hsl(210,50%,78%)",
     icon: Key,
-    dashboardRoute: "/tenant-dashboard",
+    dashboardRoute: "/tenant-portal",
     placeholderSubtitle: "This portal is coming soon with powerful features for Tenants.",
     features: [
       { icon: CreditCard, label: "Easy rent payments" },
