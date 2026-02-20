@@ -62,6 +62,7 @@ import PortalDashboard from "./pages/portals/PortalDashboard";
 import TenantPortalLayout from "./components/tenant-portal/TenantPortalLayout";
 import TenantDashboard from "./pages/tenant-portal/TenantDashboard";
 import TenantUnderDevelopment from "./pages/tenant-portal/TenantUnderDevelopment";
+import TenantMyLeases from "./pages/tenant-portal/TenantMyLeases";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -146,6 +147,7 @@ const App = () => (
               
               {/* Tenant Portal */}
               <Route path="/tenant-portal" element={<TenantPortalLayout><TenantDashboard /></TenantPortalLayout>} />
+              <Route path="/tenant-portal/my-leases" element={<TenantPortalLayout><TenantMyLeases /></TenantPortalLayout>} />
               <Route path="/tenant-portal/communications" element={<TenantPortalLayout><TenantUnderDevelopment title="Communications" /></TenantPortalLayout>} />
               <Route path="/tenant-portal/files" element={<TenantPortalLayout><TenantUnderDevelopment title="Files" /></TenantPortalLayout>} />
               <Route path="/tenant-portal/profile" element={<TenantPortalLayout><TenantUnderDevelopment title="Profile Settings" /></TenantPortalLayout>} />
