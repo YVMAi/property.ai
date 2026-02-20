@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Mail, FolderOpen, User, Bell, ShoppingBag,
-  ChevronLeft, ChevronRight, ChevronDown, Search, Building2, LogOut,
+  ChevronLeft, ChevronRight, ChevronDown, Search, Building2, LogOut, FileText,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -30,6 +30,7 @@ import {
 
 const menuItems = [
   { title: 'Dashboard', url: '/tenant-portal', icon: Home },
+  { title: 'My Leases', url: '/tenant-portal/my-leases', icon: FileText },
   { title: 'Communications', url: '/tenant-portal/communications', icon: Mail },
   { title: 'Files', url: '/tenant-portal/files', icon: FolderOpen },
   { title: 'Profile Settings', url: '/tenant-portal/profile', icon: User },
