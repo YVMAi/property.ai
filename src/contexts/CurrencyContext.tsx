@@ -81,8 +81,8 @@ export interface CurrencyChangeLogEntry {
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'propertyai_currency';
-const LOG_KEY = 'propertyai_currency_log';
+const STORAGE_KEY = 'truproperty_currency';
+const LOG_KEY = 'truproperty_currency_log';
 
 export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [currencyCode, setCurrencyCode] = useState<string>(() => {

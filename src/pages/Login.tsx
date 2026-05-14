@@ -377,7 +377,7 @@ export default function Login() {
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="px-2.5 py-1 rounded-md bg-background border border-border text-xs font-mono text-foreground/70">
-                USR: admin@propertyai.com
+                USR: admin@truproperty.ai
               </span>
               <span className="px-2.5 py-1 rounded-md bg-background border border-border text-xs font-mono text-foreground/70">
                 PWD: password123

@@ -27,8 +27,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Simulated users for demo
 const DEMO_USERS = [
-  { id: '1', email: 'admin@propertyai.com', password: 'password123', name: 'Admin User', role: 'admin' as UserRole },
-  { id: '2', email: 'manager@propertyai.com', password: 'password123', name: 'Property Manager', role: 'user' as UserRole },
+  { id: '1', email: 'admin@truproperty.ai', password: 'password123', name: 'Admin User', role: 'admin' as UserRole },
+  { id: '2', email: 'manager@truproperty.ai', password: 'password123', name: 'Property Manager', role: 'user' as UserRole },
 ];
 
 // Super admin credentials (separate table in production)
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check for existing session on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('propertyai_user');
+    const storedUser = localStorage.getItem('truproperty_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
