@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, ArrowRight, Loader2, Mail, Lock, Shield, BarChart3, Users, Zap, Building2, Home, Key, Wrench } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import truPropertyLogo from "@/assets/truproperty-logo.svg";
 
 type LoginStep = "email" | "password" | "mfa";
 type LoginTarget = "regular" | "super_admin";
@@ -121,13 +122,13 @@ export default function Login() {
 
         <div className="relative z-10">
           {/* Logo */}
-          <div className="flex items-center gap-2.5 mb-20">
-            <div className="h-9 w-9 rounded-lg bg-[hsl(210,50%,78%)] flex items-center justify-center">
-              <Building2 className="h-5 w-5 text-[hsl(220,30%,15%)]" />
-            </div>
-            <span className="text-xl font-semibold tracking-tight">
-              Property<span className="text-[hsl(210,50%,78%)]">AI</span>
-            </span>
+          <div className="flex items-center mb-20">
+            <img
+              src={truPropertyLogo}
+              alt="TruProperty.AI"
+              className="h-9 w-auto"
+              style={{ filter: "brightness(0) invert(1)" }}
+            />
           </div>
 
           {/* Headline */}
@@ -162,13 +163,8 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center bg-background p-6 sm:p-10">
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2.5 mb-10">
-            <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center">
-              <Building2 className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold tracking-tight text-foreground">
-              Property<span className="text-primary">AI</span>
-            </span>
+          <div className="lg:hidden flex items-center mb-10">
+            <img src={truPropertyLogo} alt="TruProperty.AI" className="h-8 w-auto dark:invert" />
           </div>
 
           {/* Welcome heading */}

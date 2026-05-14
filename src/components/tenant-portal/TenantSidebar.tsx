@@ -27,6 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import truPropertyLogo from '@/assets/truproperty-logo.svg';
 
 const menuItems = [
   { title: 'Dashboard', url: '/tenant-portal', icon: Home },
@@ -56,14 +57,13 @@ export default function TenantSidebar() {
       {/* Header */}
       <SidebarHeader className="p-4 border-b border-sidebar-border">
         <div className="flex items-center justify-between">
-          <div className={cn('flex items-center gap-3', collapsed && 'justify-center w-full')}>
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-              <Building2 className="h-5 w-5 text-primary-foreground" />
-            </div>
-            {!collapsed && (
-              <span className="text-lg font-semibold text-foreground tracking-tight">
-                Tenant<span className="text-primary">Portal</span>
-              </span>
+          <div className={cn('flex items-center', collapsed && 'justify-center w-full')}>
+            {collapsed ? (
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+                <Building2 className="h-5 w-5 text-primary-foreground" />
+              </div>
+            ) : (
+              <img src={truPropertyLogo} alt="TruProperty.AI" className="h-7 w-auto dark:invert" />
             )}
           </div>
           {!collapsed && (
