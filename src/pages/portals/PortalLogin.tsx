@@ -442,7 +442,7 @@ function LeftPanel({ config }: { config: PortalConfig }) {
           </div>
         </div>
       </div>
-      <p className="relative z-10 text-xs text-[hsl(220,10%,50%)]">Powered by PropertyAI</p>
+      <p className="relative z-10 text-xs text-[hsl(220,10%,50%)]">Powered by TruProperty.AI</p>
     </div>
   );
 }

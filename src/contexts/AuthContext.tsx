@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (pendingUser) {
       setUser(pendingUser);
-      localStorage.setItem('propertyai_user', JSON.stringify(pendingUser));
+      localStorage.setItem('truproperty_user', JSON.stringify(pendingUser));
       const isSuperAdmin = pendingUser.isSuperAdmin || false;
       setPendingUser(null);
       return { success: true, isSuperAdmin };
@@ -127,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setUser(null);
     setPendingUser(null);
-    localStorage.removeItem('propertyai_user');
+    localStorage.removeItem('truproperty_user');
   };
 
   const requestPasswordReset = async (email: string): Promise<{ success: boolean; error?: string }> => {
