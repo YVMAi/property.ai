@@ -43,17 +43,17 @@ interface AuditLog {
 }
 
 const DEMO_USERS: SystemUser[] = [
-  { id: '1', name: 'Admin User', email: 'admin@propertyai.com', role: 'admin', status: 'active', lastLogin: '2026-02-09 10:30', lastPasswordReset: '2026-01-15 08:00', isRemoved: false },
-  { id: '2', name: 'Property Manager', email: 'manager@propertyai.com', role: 'user', status: 'active', lastLogin: '2026-02-08 15:12', lastPasswordReset: null, isRemoved: false },
-  { id: '3', name: 'Sarah Wilson', email: 'sarah@propertyai.com', role: 'user', status: 'invitation_accepted', lastLogin: '2026-02-07 09:45', lastPasswordReset: '2026-02-01 12:00', isRemoved: false },
-  { id: '4', name: 'James Brown', email: 'james@propertyai.com', role: 'user', status: 'inactive', lastLogin: '2026-01-20 14:22', lastPasswordReset: null, isRemoved: false },
+  { id: '1', name: 'Admin User', email: 'admin@truproperty.ai', role: 'admin', status: 'active', lastLogin: '2026-02-09 10:30', lastPasswordReset: '2026-01-15 08:00', isRemoved: false },
+  { id: '2', name: 'Property Manager', email: 'manager@truproperty.ai', role: 'user', status: 'active', lastLogin: '2026-02-08 15:12', lastPasswordReset: null, isRemoved: false },
+  { id: '3', name: 'Sarah Wilson', email: 'sarah@truproperty.ai', role: 'user', status: 'invitation_accepted', lastLogin: '2026-02-07 09:45', lastPasswordReset: '2026-02-01 12:00', isRemoved: false },
+  { id: '4', name: 'James Brown', email: 'james@truproperty.ai', role: 'user', status: 'inactive', lastLogin: '2026-01-20 14:22', lastPasswordReset: null, isRemoved: false },
 ];
 
 const DEMO_LOGS: AuditLog[] = [
   { id: '1', user: 'Admin User', action: 'Logged in', actionType: 'login', timestamp: '2026-02-09 10:30' },
   { id: '2', user: 'Admin User', action: 'Changed role: Sarah Wilson → User', actionType: 'role_change', timestamp: '2026-02-09 09:15' },
   { id: '3', user: 'Property Manager', action: 'Logged in', actionType: 'login', timestamp: '2026-02-08 15:12' },
-  { id: '4', user: 'Admin User', action: 'Invited james@propertyai.com', actionType: 'invite', timestamp: '2026-02-06 11:00' },
+  { id: '4', user: 'Admin User', action: 'Invited james@truproperty.ai', actionType: 'invite', timestamp: '2026-02-06 11:00' },
   { id: '5', user: 'Sarah Wilson', action: 'Logged in', actionType: 'login', timestamp: '2026-02-07 09:45' },
   { id: '6', user: 'Admin User', action: 'Reset password for Sarah Wilson', actionType: 'password_reset', timestamp: '2026-02-01 12:00' },
   { id: '7', user: 'Admin User', action: 'Deactivated James Brown', actionType: 'status_change', timestamp: '2026-01-25 16:30' },
